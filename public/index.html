@@ -106,10 +106,10 @@
           <label for="content">订阅内容</label>
           <textarea id="content" name="content" placeholder="粘贴 Clash YAML、Base64 订阅或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
           <p class="hint">默认配置文件均支持 sing-box 1.14.x。</p>
+          <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择 YAML / TXT 文件，内容会合并提交；总大小上限为 2 MiB。</p>
           <div class="file-row">
-            <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml">
+            <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
           </div>
-          <p id="file-name" class="hint">可选择多个 YAML / TXT 文件；文件在浏览器中读取后合并提交，单次内容上限为 2 MiB。</p>
         </div>
 
         <div class="mode-panel" id="url-panel" role="tabpanel" aria-labelledby="url-tab" hidden>
@@ -163,6 +163,7 @@
     const tabs = [...document.querySelectorAll(".tab")];
     let activeMode = "paste";
     let customTemplate = null;
+    let uploadedFiles = [];
 
     template.addEventListener("change", () => {
       const customSelected = template.value === "custom";
@@ -220,22 +221,29 @@
     tabs.forEach((tab) => tab.addEventListener("click", () => selectMode(tab.id === "paste-tab" ? "paste" : "url")));
 
     file.addEventListener("change", async () => {
-      const selectedFiles = [...file.files];
-      if (!selectedFiles.length) {
-        fileName.textContent = "可选择多个 YAML / TXT 文件；文件在浏览器中读取后合并提交，单次内容上限为 2 MiB。";
-        return;
-      }
-      if (selectedFiles.some((selected) => selected.size > 2 * 1024 * 1024)) {
-        file.value = "";
-        fileName.textContent = "可选择多个 YAML / TXT 文件；文件在浏览器中读取后合并提交，单次内容上限为 2 MiB。";
-        status.textContent = "单个文件不能超过 2 MiB。";
+      const newlySelected = [...file.files];
+      file.value = "";
+      if (!newlySelected.length) return;
+
+      const combinedFiles = [...uploadedFiles, ...newlySelected];
+      if (combinedFiles.reduce((total, selected) => total + selected.size, 0) > 2 * 1024 * 1024) {
+        status.textContent = "已选择文件的总大小不能超过 2 MiB。";
         status.className = "status error";
         return;
       }
-      const texts = await Promise.all(selectedFiles.map((selected) => selected.text()));
-      content.value = texts.join("\n");
-      fileName.textContent = `已读取 ${selectedFiles.length} 个文件：${selectedFiles.map((selected) => selected.name).join("、")}`;
-      selectMode("paste");
+
+      try {
+        const texts = await Promise.all(combinedFiles.map((selected) => selected.text()));
+        uploadedFiles = combinedFiles;
+        content.value = texts.join("\n");
+        fileName.textContent = `已添加 ${uploadedFiles.length} 个文件：${uploadedFiles.map((selected) => selected.name).join("、")}`;
+        status.textContent = "";
+        status.className = "status";
+        selectMode("paste");
+      } catch (error) {
+        status.textContent = `读取文件失败：${error.message || "请重试。"}`;
+        status.className = "status error";
+      }
     });
 
     form.addEventListener("submit", async (event) => {
