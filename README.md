@@ -17,7 +17,7 @@
 
 1. 将本项目目录推送到 GitHub 仓库。
 2. 登录 [Vercel](https://vercel.com/)，选择 **Add New → Project**，导入该仓库。
-3. 确认 **Root Directory** 指向本项目目录。若仓库本身就是本项目，则使用仓库根目录。
+3. 在 **Root Directory** 中选择或填写本项目在仓库中的目录；若导入的仓库本身就是本项目，使用仓库根目录（`.`，也可以保留默认值）。这里不是终端命令，不要填写 `npm install --global vercel`。
 4. 保持 Python 项目自动检测设置；如 Vercel 要求选择框架，选择 **Other**。本项目不需要 Build Command 或 Output Directory。
 5. 点击 **Deploy**。部署完成后，API 地址为 `https://<项目名>.vercel.app/api`。
 
@@ -25,7 +25,7 @@
 
 ### 通过 Vercel CLI 部署
 
-在项目根目录执行：
+以下命令应在本地终端（项目根目录）执行，不要填入 Vercel 的 **Root Directory**：
 
 ```sh
 npm install --global vercel
