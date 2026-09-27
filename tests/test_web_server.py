@@ -53,7 +53,7 @@ class WebServerTests(unittest.TestCase):
         self.assertIn("iPhone 配置", page)
         self.assertIn('href="https://github.com/bacdown"', page)
         self.assertIn("<h1>yaml2sb · sing-box</h1>", page)
-        self.assertIn("将 YAML 配置文件或订阅链接转换为 sing-box JSON", page)
+        self.assertIn("修改 YAML 配置文件或订阅链接转换为 sing-box JSON", page)
         self.assertIn("可本地、Docker 及 Vercel 部署", page)
         self.assertIn("默认配置文件均支持 sing-box 1.14.x", page)
         self.assertIn("#f7f6f3", page)
