@@ -2,96 +2,16 @@
 """Serve the browser interface alongside the existing conversion API."""
 
 import argparse
-import ipaddress
 import json
 import logging
-import socket
-import urllib.error
-import urllib.parse
-import urllib.request
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
 from api.index import MAX_REQUEST_BYTES, convert_request, handler as ApiHandler
+from remote_subscription import fetch_remote_subscription, validate_public_url
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-WEB_PAGE = PROJECT_ROOT / "public" / "index.html"
-MAX_SUBSCRIPTION_BYTES = 2 * 1024 * 1024
-FETCH_TIMEOUT_SECONDS = 30
-MAX_REDIRECTS = 5
-
-
-def validate_public_url(url):
-    """Allow public HTTP(S) subscription URLs and reject private destinations."""
-    try:
-        parsed = urllib.parse.urlsplit(url)
-        port = parsed.port
-    except ValueError as exc:
-        raise ValueError("订阅链接格式无效") from exc
-
-    if (
-        parsed.scheme not in ("http", "https")
-        or not parsed.hostname
-        or parsed.username
-        or parsed.password
-    ):
-        raise ValueError("订阅链接必须是有效的 HTTP 或 HTTPS 公网地址")
-
-    try:
-        addresses = {
-            result[4][0]
-            for result in socket.getaddrinfo(
-                parsed.hostname,
-                port if port is not None else (443 if parsed.scheme == "https" else 80),
-                type=socket.SOCK_STREAM,
-            )
-        }
-    except socket.gaierror as exc:
-        raise ValueError("无法解析订阅链接的服务器地址") from exc
-
-    if not addresses or any(
-        not ipaddress.ip_address(address).is_global for address in addresses
-    ):
-        raise ValueError("订阅链接不能指向内网或非公网地址")
-
-    return parsed
-
-
-class PublicRedirectHandler(urllib.request.HTTPRedirectHandler):
-    max_redirections = MAX_REDIRECTS
-    max_repeats = MAX_REDIRECTS
-
-    def redirect_request(self, request, response, code, message, headers, new_url):
-        validate_public_url(new_url)
-        return super().redirect_request(
-            request, response, code, message, headers, new_url
-        )
-
-
-def fetch_remote_subscription(url):
-    """Fetch a bounded subscription response without following redirects to private hosts."""
-    validate_public_url(url)
-    opener = urllib.request.build_opener(
-        urllib.request.ProxyHandler({}),
-        PublicRedirectHandler(),
-    )
-    request = urllib.request.Request(
-        url,
-        headers={"User-Agent": "yaml2sb/1.0"},
-    )
-
-    try:
-        with opener.open(request, timeout=FETCH_TIMEOUT_SECONDS) as response:
-            data = response.read(MAX_SUBSCRIPTION_BYTES + 1)
-    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
-        raise ValueError(f"下载订阅失败：{exc}") from exc
-
-    if len(data) > MAX_SUBSCRIPTION_BYTES:
-        raise ValueError("订阅内容不能超过 2 MiB")
-
-    return data.decode("utf-8", errors="replace")
-
-
+WEB_PAGE = PROJECT_ROOT / "web" / "index.html"
 class WebHandler(ApiHandler):
     def do_GET(self):
         if self.path.rstrip("/") == "":
@@ -129,13 +49,19 @@ class WebHandler(ApiHandler):
             if not isinstance(payload, dict):
                 raise ValueError("请求 JSON 根节点必须是对象")
 
-            url = payload.get("url")
-            if not isinstance(url, str) or not url.strip():
-                raise ValueError("请提供订阅链接")
-
-            subscription = fetch_remote_subscription(url.strip())
+            urls = payload.get("urls")
+            if urls is None:
+                url = payload.get("url")
+                urls = [url.strip()] if isinstance(url, str) else []
+            if (
+                not isinstance(urls, list)
+                or not urls
+                or any(not isinstance(item, str) or not item.strip() for item in urls)
+            ):
+                raise ValueError("请提供至少一个有效订阅链接")
+            subscriptions = [fetch_remote_subscription(item.strip()) for item in urls]
             conversion_request = {
-                "content": subscription,
+                "contents": subscriptions,
                 **{
                     key: value
                     for key, value in payload.items()
