@@ -57,6 +57,10 @@ class WebServerTests(unittest.TestCase):
         self.assertIn("可本地、Docker 及 Vercel 部署", page)
         self.assertIn("默认配置文件均支持 sing-box 1.14.x", page)
         self.assertIn('const endpoint = "/api";', page)
+        self.assertIn('type="file" multiple', page)
+        self.assertIn("let uploadedFiles = [];", page)
+        self.assertLess(page.index('id="file-name"'), page.index('id="file"'))
+        self.assertIn("已添加 ${uploadedFiles.length} 个文件", page)
         self.assertIn("#f7f6f3", page)
 
     def test_existing_api_remains_available(self):
