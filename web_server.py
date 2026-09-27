@@ -15,7 +15,7 @@ from pathlib import Path
 from api.index import MAX_REQUEST_BYTES, convert_request, handler as ApiHandler
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-WEB_PAGE = PROJECT_ROOT / "web" / "index.html"
+WEB_PAGE = PROJECT_ROOT / "public" / "index.html"
 MAX_SUBSCRIPTION_BYTES = 2 * 1024 * 1024
 FETCH_TIMEOUT_SECONDS = 30
 MAX_REDIRECTS = 5
