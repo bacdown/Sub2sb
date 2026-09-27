@@ -21,7 +21,7 @@
 4. 保持 Python 项目自动检测设置；如 Vercel 要求选择框架，选择 **Other**。本项目不需要 Build Command 或 Output Directory。
 5. 点击 **Deploy**。部署完成后，API 地址为 `https://<项目名>.vercel.app/api`。
 
-部署配置位于 `vercel.json`。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
+部署配置位于项目根目录的 `vercel.json`，网页文件位于 `public/index.html` 并由 Vercel 直接作为静态页面提供，无需内部重写。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
 
 ### 通过 Vercel CLI 部署
 
