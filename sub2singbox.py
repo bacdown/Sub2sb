@@ -1278,9 +1278,15 @@ def build_config(outbounds, template=None):
 
 def convert_content(content, template=None):
     """将一段订阅内容转换为 sing-box 配置。"""
-    outbounds = filter_subscription_info_nodes(
-        parse_subscription_content(content)
-    )
+    return convert_contents([content], template)
+
+
+def convert_contents(contents, template=None):
+    """将多段订阅内容合并转换为 sing-box 配置。"""
+    outbounds = []
+    for content in contents:
+        outbounds.extend(parse_subscription_content(content))
+    outbounds = filter_subscription_info_nodes(outbounds)
     return build_config(outbounds, template), len(outbounds)
 
 
