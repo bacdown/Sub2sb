@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yaml2sb"
+version = "1.0.0"
+description = "Convert proxy subscriptions into sing-box JSON configurations"
+requires-python = ">=3.9"
+dependencies = [
+    "PyYAML>=6.0.2,<7",
+]
+
+[tool.setuptools]
+py-modules = ["converter", "sub2singbox"]
