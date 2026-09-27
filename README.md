@@ -17,15 +17,15 @@
 
 1. 将本项目目录推送到 GitHub 仓库。
 2. 登录 [Vercel](https://vercel.com/)，选择 **Add New → Project**，导入该仓库。
-3. 在 **Root Directory** 中选择或填写本项目在仓库中的目录；若导入的仓库本身就是本项目，使用仓库根目录（`.`，也可以保留默认值）。这里不是终端命令，不要填写 `npm install --global vercel`。
+3. 确认 **Root Directory** 指向本项目目录。若仓库本身就是本项目，则使用仓库根目录。
 4. 保持 Python 项目自动检测设置；如 Vercel 要求选择框架，选择 **Other**。本项目不需要 Build Command 或 Output Directory。
 5. 点击 **Deploy**。部署完成后，API 地址为 `https://<项目名>.vercel.app/api`。
 
-部署配置位于项目根目录的 `vercel.json`，网页文件位于 `public/index.html` 并由 Vercel 直接作为静态页面提供，无需内部重写。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
+部署配置位于 `vercel.json`。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
 
 ### 通过 Vercel CLI 部署
 
-以下命令应在本地终端（项目根目录）执行，不要填入 Vercel 的 **Root Directory**：
+在项目根目录执行：
 
 ```sh
 npm install --global vercel
@@ -147,8 +147,8 @@ python3 sub2singbox.py ./subscription.yaml \
 
 网页版支持两种输入方式：
 
-1. 粘贴订阅内容，或选择本地 YAML / TXT 文件。
-2. 输入远程 HTTP(S) 订阅链接，由服务端下载内容。
+1. 粘贴订阅内容，或一次选择多个本地 YAML / TXT 文件，内容会合并转换。
+2. 输入一条或多条远程 HTTP(S) 订阅链接（每行一条），由服务端下载并合并转换。
 
 两种方式都可以选择手机、OpenWrt 或 Momo 内置模板（文件整理在 `templates/` 目录），也可以上传自定义 sing-box JSON 模板；页面会检查 JSON 根节点及 `outbounds` 必要项，通过校验后才允许转换。下载结果为转换后的 sing-box JSON。远程下载仅允许公网 HTTP(S) 地址，单次下载最大 2 MiB，并会检查重定向目标。
 
