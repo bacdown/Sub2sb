@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY api ./api
-COPY public ./public
+COPY web ./web
 COPY converter.py sub2singbox.py web_server.py ./
 COPY templates ./templates
 
