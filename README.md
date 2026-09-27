@@ -15,6 +15,8 @@
 
 ### 通过 Vercel 网站部署
 
+![yaml2sb 网页界面示例](./docs/images/vercel-web-ui.png)
+
 1. 将本项目目录推送到 GitHub 仓库。
 2. 登录 [Vercel](https://vercel.com/)，选择 **Add New → Project**，导入该仓库。
 3. 确认 **Root Directory** 指向本项目目录。若仓库本身就是本项目，则使用仓库根目录。
