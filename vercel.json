@@ -3,11 +3,6 @@
     "api/index.py": {
       "includeFiles": "templates/*.json"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/web/index.html"
-    }
-  ]
+  }
 }
+
