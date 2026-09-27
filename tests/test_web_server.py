@@ -56,6 +56,7 @@ class WebServerTests(unittest.TestCase):
         self.assertIn("修改 YAML 配置文件或订阅链接转换为 sing-box JSON", page)
         self.assertIn("可本地、Docker 及 Vercel 部署", page)
         self.assertIn("默认配置文件均支持 sing-box 1.14.x", page)
+        self.assertIn('const endpoint = "/api";', page)
         self.assertIn("#f7f6f3", page)
 
     def test_existing_api_remains_available(self):
@@ -147,6 +148,22 @@ class WebServerTests(unittest.TestCase):
 
         self.assertEqual(status, 200)
         self.assertEqual(result["node_count"], 1)
+
+    def test_vercel_api_accepts_remote_url_list(self):
+        with patch("api.index.fetch_remote_subscription", return_value=SAMPLE_SUBSCRIPTION) as fetch:
+            status, result = self.post_json(
+                "/api",
+                {
+                    "urls": [
+                        "https://subscriptions.example/first",
+                        "https://subscriptions.example/second",
+                    ],
+                },
+            )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(result["node_count"], 2)
+        self.assertEqual(fetch.call_count, 2)
 
     def test_link_endpoint_rejects_private_destinations(self):
         request = Request(
