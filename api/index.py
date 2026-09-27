@@ -10,7 +10,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from converter import convert_content
+from converter import convert_contents
+from remote_subscription import fetch_remote_subscription
 
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
 DEFAULT_TEMPLATE = "config_phone.json"
@@ -57,8 +58,14 @@ def convert_request(payload):
     if not isinstance(payload, dict):
         raise ValueError("请求 JSON 根节点必须是对象")
 
-    content = payload.get("content")
-    if not isinstance(content, str) or not content.strip():
+    contents = payload.get("contents")
+    if contents is None:
+        contents = [payload.get("content")]
+    if (
+        not isinstance(contents, list)
+        or not contents
+        or any(not isinstance(content, str) or not content.strip() for content in contents)
+    ):
         raise ValueError("请在 content 字段中提供 YAML 或订阅文本")
 
     if "template_json" in payload:
@@ -71,8 +78,29 @@ def convert_request(payload):
             raise ValueError("template 必须是模板文件名")
         template = _load_named_template(template_name)
 
-    config, node_count = convert_content(content, template)
+    config, node_count = convert_contents(contents, template)
     return {"config": config, "node_count": node_count}
+
+
+def _request_with_remote_urls(payload):
+    urls = payload.get("urls")
+    if urls is None:
+        url = payload.get("url")
+        urls = [url] if isinstance(url, str) else []
+    if (
+        not isinstance(urls, list)
+        or not urls
+        or any(not isinstance(url, str) or not url.strip() for url in urls)
+    ):
+        raise ValueError("请提供至少一个有效订阅链接")
+    return {
+        "contents": [fetch_remote_subscription(url.strip()) for url in urls],
+        **{
+            key: value
+            for key, value in payload.items()
+            if key in ("template", "template_json")
+        },
+    }
 
 
 class handler(BaseHTTPRequestHandler):
@@ -127,6 +155,8 @@ class handler(BaseHTTPRequestHandler):
 
             raw_body = self.rfile.read(content_length)
             payload = json.loads(raw_body.decode("utf-8"))
+            if isinstance(payload, dict) and ("url" in payload or "urls" in payload):
+                payload = _request_with_remote_urls(payload)
             result = convert_request(payload)
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             self._send_json(400, {"error": f"请求 JSON 无效：{exc}"})
