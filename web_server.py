@@ -11,7 +11,7 @@ from api.index import MAX_REQUEST_BYTES, convert_request, handler as ApiHandler
 from remote_subscription import fetch_remote_subscription, validate_public_url
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-WEB_PAGE = PROJECT_ROOT / "web" / "index.html"
+WEB_PAGE = PROJECT_ROOT / "public" / "index.html"
 class WebHandler(ApiHandler):
     def do_GET(self):
         if self.path.rstrip("/") == "":
