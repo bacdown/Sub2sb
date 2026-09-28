@@ -36,6 +36,10 @@ class WebHandler(ApiHandler):
             super().do_POST()
             return
 
+        if not self._is_authorized():
+            self._send_unauthorized()
+            return
+
         try:
             content_length = int(self.headers.get("Content-Length", "0"))
             if content_length <= 0:
