@@ -111,6 +111,39 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
 
 转换时会保留模板配置并追加节点。模板中的策略组若要引用新节点，需使用脚本支持的组名（例如 `手动选择`、`自动选择` 和地区策略组）；其他模板可只提供 `outbounds`，由客户端按需调整策略组。
 
+### 使用自定义制作配置
+
+网页选择 **自定义制作配置** 后，可从 iPhone、OpenWrt 或 Momo 配置开始制作。界面采用横向表单布局；未开放的配置部分保持所选基础配置默认值。国内和国际 DNS 均可直接点击选中或取消，每类最多选择两项；提供阿里云、腾讯 DNSPod、114DNS、Cloudflare、Google Public DNS、Quad9 等主流公共 DNS 及 DoH、DoT、DoQ、DoH3、UDP 等类型，也可直接点击添加自定义 DNS。已选择的 DNS 会显示在下方，可逐项移除；配置中的本地、Hosts 和 FakeIP DNS 作为内部依赖保留，不单独提供选择。
+
+应用分流和规则集都在“匹配规则与顺序”中选择：名称对应具体应用分流，目标出站可选地区及手动/自动组，不提供直连选项；自定义应用名称会生成对应的 selector 组，所选出站作为该应用组的默认首选。规则集链接可在同一区域展开添加，名称和链接均可自定义，并选择 sing-box `binary` 或 `source` 格式。创建规则的表单与规则列表采用统一的字体和控件样式，添加后可上下移动或删除；未改动的模板默认出站保持原样。
+
+程序会清理被取消规则集对应的规则和分流组引用；移除 DNS 服务器后，其余配置中指向该服务器的 DNS 引用会改指剩余可用 DNS。地区、手动/自动组和“延迟辅助”会作为出站保留，但不会作为应用名称显示。“延迟辅助”和直连不会出现在匹配目标出站选择器中；模板中已有的直连规则保持原样。
+
+同一功能也可通过 API 使用。`GET /api/options?template=config_phone.json` 返回对应基础模板可选的 DNS、分流组和规则集；分流组带有 `application` 标识，界面据此将应用组与地区出站区分，`matching_targets` 不包含应用组、直连或“延迟辅助”。配置了 `YAML2SB_API_KEY` 时，读取该接口也需要 API 密钥。转换请求的 `template_options` 可以传入 `dns_servers`、`custom_dns_servers`、`groups`、`custom_groups`、`rule_sets`、`custom_rule_sets`、`custom_matching_rules`、`rule_destinations`、`rule_order` 和 `rule_outbounds`。`custom_groups` 可通过 `rule_sets` 将规则集加入应用分流组；`custom_matching_rules` 可按名称、规则集和初始出站新增应用分流及匹配规则；`rule_order` 使用 `/api/options` 返回的匹配规则索引字符串，以及新增规则集对应的 `custom:<tag>` 或自定义匹配规则的 `builder-<序号>` 排列。`custom_dns_servers` 中的 DNS 对象按 sing-box DNS server 字段传入，例如 `{"tag":"doh","type":"https","server":"dns.example","server_port":443,"path":"/dns-query"}`。未提供 DNS 选择时，使用基础模板默认 DNS；被取消的内部 DNS 依赖仍会保留。
+
+```json
+{
+  "content": "proxies:\n  - name: Japan 01\n    type: vless\n    server: example.com\n    port: 443\n    uuid: 00000000-0000-0000-0000-000000000000\n    tls: true",
+  "template": "config_phone.json",
+  "template_options": {
+    "custom_dns_servers": [
+      {"tag": "custom-dns", "type": "https", "server": "1.1.1.1"}
+    ],
+    "custom_groups": [
+      {"tag": "Games", "rule_sets": ["geosite-youtube"]}
+    ],
+    "custom_rule_sets": [
+      {
+        "tag": "geosite-games",
+        "url": "https://example.com/games.srs",
+        "format": "binary",
+        "outbound": "Games"
+      }
+    ]
+  }
+}
+```
+
 ### 请求与错误
 
 - 请求体最大为 **2 MiB**。
