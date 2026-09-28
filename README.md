@@ -140,7 +140,20 @@ python3 sub2singbox.py ./subscription.yaml \
 ## 注意事项
 
 - 订阅链接通常包含私密凭据。不要将真实订阅链接、节点密码、UUID 或完整配置提交到公开仓库，也不要在公开 issue 或日志中粘贴。
-- Vercel API 当前没有身份验证，且 CORS 允许跨域访问。公开部署后，任何能访问部署 URL 的人都可以调用转换接口；如需限制使用，请在前置服务或 Vercel 层添加访问控制，并留意调用量。
+- 可选的令牌认证：当前代码支持通过设置 Vercel 环境变量 YAML2SB_API_KEY 启用简单的 token 保护。将该变量设置为一个强随机字符串后，服务端会拒绝未携带密钥的请求（保持向后兼容：未设置时仍为公开）。支持的认证方式：
+  - HTTP Header: Authorization: Bearer <key>
+  - HTTP Header: X-API-Key: <key>
+  - 查询字符串: ?api_key=<key>
+
+  例如：
+
+  ```sh
+  curl -H "Authorization: Bearer $YAML2SB_API_KEY" -H 'Content-Type: application/json' \
+    -X POST https://<项目名>.vercel.app/api --data-binary @request.json
+  ```
+
+  如果需要更强的访问控制（OAuth、IP 限制、速率限制等），建议在 Vercel 前置一层认证/反向代理（例如 Cloudflare Access、NGINX、Caddy 或自托管的 proxy）。
+- 本地网页版和 Docker 部署也支持相同的 `YAML2SB_API_KEY` 令牌认证。启用后，`/api` 和 `/fetch` 需要 Bearer 或 `X-API-Key` 请求头；首页仍可打开，网页转换表单中填写 API 访问密钥即可使用。未设置该变量时，API 不启用令牌认证。
 - 自定义模板通过请求提交；内置模板通过文件名白名单选择，不允许传入任意文件路径。
 - 转换结果会携带订阅中的节点认证信息。请妥善保存响应内容，避免公开分享。
 - 输出是转换后的 sing-box 配置，不代表配置一定符合所有 sing-box 版本或运行环境的要求；部署/导入前请使用目标 sing-box 版本验证。
@@ -196,4 +209,10 @@ python3 web_server.py
 python3 web_server.py --host 0.0.0.0 --port 8080
 ```
 
-网页和转换 API 均未配置身份验证。Docker Compose 会将服务端口映射到宿主机；不要直接暴露到公网。若需公网访问，请先在反向代理或其他前置层增加身份验证、HTTPS 和访问控制。
+默认未启用令牌认证。若需启用，可在启动进程前设置 `YAML2SB_API_KEY`：
+
+```sh
+YAML2SB_API_KEY='替换为强随机密钥' python3 web_server.py
+```
+
+Docker Compose 会把当前环境中的 `YAML2SB_API_KEY` 传给容器；可在启动前导出该变量或放入 Compose `.env` 文件。直接运行 Docker 镜像时使用 `-e YAML2SB_API_KEY='替换为强随机密钥'`。启用后，网页首页仍可打开，在页面的“API 访问密钥”栏输入密钥；调用 API 的客户端使用 `Authorization: Bearer <密钥>` 或 `X-API-Key: <密钥>` 请求头。密钥未设置时仍是公开访问，因此不要直接把未保护的服务暴露到公网；公网部署还应使用 HTTPS、访问控制和适当的用量限制。
