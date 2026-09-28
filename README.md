@@ -119,6 +119,18 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
 python3 -m pip install -r requirements.txt
 ```
 
+直接运行脚本会启动交互式菜单，可逐行输入订阅链接或文件路径、选择模板并指定输出位置：
+
+```sh
+python3 sub2singbox.py
+```
+
+也可以显式启动菜单：
+
+```sh
+python3 sub2singbox.py --interactive
+```
+
 转换远程订阅链接（模板文件位于 `templates/` 目录）：
 
 ```sh
@@ -135,7 +147,9 @@ python3 sub2singbox.py ./subscription.yaml \
   -o ./sing-box-openwrt.json
 ```
 
-也可以一次传入多个链接或文件；`-c/--config` 模板参数必填，`-o/--output` 可选。不指定输出路径时，输出到第一个本地输入文件所在目录；如果输入全是链接，则输出到当前目录。
+也可以一次传入多个链接或文件；使用非交互命令行参数时，`-c/--config` 模板参数必填，`-o/--output` 可选。不指定输出路径时，输出到第一个本地输入文件所在目录；如果输入全是链接，则输出到当前目录。
+
+如果远程地址下载成功但内容无法识别，程序会显示响应的 `Content-Type` 和字节数，不会打印响应正文或 URL 中的凭据。请确认使用的是服务商提供的 Clash/Mihomo 订阅地址，而非管理页面或登录链接；也可在服务商处导出订阅文件后作为本地文件转换。
 
 ## 注意事项
 
