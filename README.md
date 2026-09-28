@@ -2,6 +2,18 @@
 
 将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。提供本地网页版、Docker 部署、Vercel HTTP API 和命令行用法。
 
+## 项目 Wiki
+
+按主题查看使用说明：
+
+- [Wiki 首页](./wiki/Home.md)
+- [快速上手](./wiki/Getting-Started.md)
+- [支持的格式和协议](./wiki/Supported-Formats.md)
+- [模板和策略组](./wiki/Templates.md)
+- [HTTP API](./wiki/API.md)
+- [部署方式](./wiki/Deployment.md)
+- [常见问题](./wiki/Troubleshooting.md)
+
 ## 支持范围
 
 - Clash YAML 中的 `proxies` 节点
