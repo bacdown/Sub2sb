@@ -22,7 +22,31 @@
       background: #f7f6f3;
     }
     main { width: min(760px, 100%); margin: auto; }
-    header { margin-bottom: 28px; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+    .header-copy { min-width: 0; }
+    .github-link {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid #e3e2de;
+      border-radius: 20px;
+      color: #37352f;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .github-link:hover { color: #000; background: #f1f1ef; }
+    .github-link:focus-visible { outline: 2px solid #37352f; outline-offset: 3px; }
+    .github-link svg { display: block; width: 22px; height: 22px; fill: currentColor; }
+    @media (max-width: 480px) {
+      header { flex-wrap: wrap; }
+      .header-copy { flex-basis: 100%; }
+      .github-link { margin-left: auto; }
+    }
     .eyebrow { color: #787774; font-size: 13px; letter-spacing: .08em; }
     h1 { margin: 9px 0 8px; font-size: clamp(28px, 6vw, 40px); letter-spacing: -.04em; }
     .intro { margin: 0; color: #787774; line-height: 1.7; }
@@ -91,8 +115,16 @@
 <body>
   <main>
     <header>
-      <h1>yaml2sb · sing-box</h1>
-      <p class="intro">修改 YAML 配置文件或订阅链接转换为 sing-box JSON。可本地、Docker 及 Vercel 部署。</p>
+      <div class="header-copy">
+        <h1>yaml2sb · sing-box</h1>
+        <p class="intro">修改 YAML 配置文件或订阅链接转换为 sing-box JSON。可本地、Docker 及 Vercel 部署。</p>
+      </div>
+      <a class="github-link" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener noreferrer" aria-label="访问 yaml2sb 项目主页（原作者：bacdown）" title="yaml2sb 项目主页 · 原作者 bacdown">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2.1c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.8 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.9 4.2 19 4.5 19 4.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.5-2.8 5.5-5.4 5.8.4.3.8 1 .8 2v3c0 .3.2.7.8.6A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
+        </svg>
+        <span>bacdown</span>
+      </a>
     </header>
 
     <section class="card" aria-label="配置转换">
