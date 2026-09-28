@@ -1,0 +1,6 @@
+.git
+.venv
+.vercel
+__pycache__
+*.py[cod]
+sing-box*.json

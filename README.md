@@ -2,6 +2,10 @@
 
 将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。提供本地网页版、Docker 部署、Vercel HTTP API 和命令行用法。
 
+## 许可证
+
+本项目采用 [MIT License](LICENSE)。
+
 ## 项目 Wiki
 
 请前往 [GitHub Wiki](https://github.com/bacdown/yaml2sb/wiki) 查看使用说明。
