@@ -3,6 +3,8 @@
 import json
 import logging
 import sys
+import os
+import urllib.parse
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 
@@ -20,6 +22,10 @@ TEMPLATE_FILES = {
     "config_openwrt.json",
     "momo.json",
 }
+
+# When set, the Vercel serverless function requires requests to present this
+# key. Leave unset to keep the API public (backwards compatible behaviour).
+API_KEY = os.environ.get("YAML2SB_API_KEY")
 
 
 def _load_named_template(name):
@@ -109,23 +115,60 @@ class handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        # Allow Authorization and X-API-Key for token-based access
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
         self.end_headers()
         self.wfile.write(body)
 
     def do_OPTIONS(self):
+        # Always allow preflight so browsers can check CORS before sending credentials
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
         self.send_header("Content-Length", "0")
         self.end_headers()
 
+    def _is_authorized(self):
+        # If no API key is configured, API remains public (backwards compatible).
+        if not API_KEY:
+            return True
+
+        # Authorization: Bearer <key>
+        auth_hdr = self.headers.get("Authorization")
+        if auth_hdr:
+            parts = auth_hdr.split()
+            if len(parts) == 2 and parts[0].lower() == "bearer" and parts[1] == API_KEY:
+                return True
+
+        # X-API-Key header
+        if self.headers.get("X-API-Key") == API_KEY:
+            return True
+
+        # query parameter ?api_key=...
+        try:
+            qs = urllib.parse.urlparse(self.path).query
+            params = urllib.parse.parse_qs(qs)
+            if params.get("api_key") and API_KEY in params.get("api_key"):
+                return True
+        except Exception:
+            pass
+
+        return False
+
+    def _send_unauthorized(self):
+        self._send_json(401, {"error": "Unauthorized"})
+
     def do_GET(self):
+        # Allow preflight and other OPTIONS without auth
         if self.path.rstrip("/") not in ("/", "/api"):
             self._send_json(404, {"error": "Not found"})
+            return
+
+        if not self._is_authorized():
+            self._send_unauthorized()
             return
 
         self._send_json(
@@ -144,6 +187,11 @@ class handler(BaseHTTPRequestHandler):
         )
 
     def do_POST(self):
+        # Require authorization before reading body to avoid unnecessary work
+        if not self._is_authorized():
+            self._send_unauthorized()
+            return
+
         try:
             content_length = int(self.headers.get("Content-Length", "0"))
             if content_length <= 0:
