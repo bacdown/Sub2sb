@@ -18,10 +18,10 @@
     body {
       min-height: 100vh;
       margin: 0;
-      padding: 54px 20px;
-      background: #f7f6f3;
+      padding: 32px 24px;
+      background: #f3f4f5;
     }
-    main { width: min(760px, 100%); margin: auto; }
+    main { width: min(1200px, 100%); margin: auto; }
     header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
     .header-copy { min-width: 0; }
     .github-link {
@@ -51,9 +51,9 @@
     h1 { margin: 9px 0 8px; font-size: clamp(28px, 6vw, 40px); letter-spacing: -.04em; }
     .intro { margin: 0; color: #787774; line-height: 1.7; }
     .card {
-      padding: clamp(20px, 5vw, 34px);
-      border: 1px solid #e9e8e4;
-      border-radius: 12px;
+      padding: clamp(18px, 3vw, 30px);
+      border: 1px solid #d9dcdf;
+      border-radius: 5px;
       background: #fff;
       box-shadow: 0 2px 8px rgb(15 15 15 / 4%);
     }
@@ -85,6 +85,61 @@
     input[type="url"], input[type="password"], select { min-height: 48px; padding: 0 13px; }
     .custom-template-panel { margin-top: 16px; }
     .custom-template-panel input[type="file"] { width: 100%; }
+    .base-template-controls { display: flex; align-items: center; gap: 10px; }
+    .base-template-controls select { min-width: 0; flex: 1; }
+    .base-template-controls button { flex: none; white-space: nowrap; }
+    .compose-panel { grid-column: 1 / -1; margin-top: 6px; padding: 18px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
+    .compose-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 18px; }
+    .compose-section { min-width: 0; padding: 16px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
+    .compose-section:first-child, .compose-section:last-child { grid-column: 1 / -1; }
+    .compose-section h3 { margin: 0 0 10px; font-size: 15px; }
+    .choice-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 8px; max-height: 220px; overflow: auto; padding: 2px; }
+    .choice { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 13px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; }
+    .choice input { flex: none; margin: 2px 0 0; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: center; gap: 10px; margin-top: 10px; }
+    .form-row input, .form-row select { min-width: 0; min-height: 38px; padding: 0 10px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; }
+    .custom-dns-fields .form-row input, .custom-dns-fields .form-row select, .custom-dns-fields .form-row button { font-size: 13px; }
+    .secondary { min-height: 38px; padding: 0 12px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; cursor: pointer; }
+    .secondary:hover { background: #f1f1ef; }
+    .added-list { display: grid; gap: 7px; margin: 10px 0 0; padding: 0; list-style: none; }
+    .added-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid #e9e8e4; border-radius: 6px; background: #fff; font-size: 13px; overflow-wrap: anywhere; }
+    .remove-item { flex: none; border: 0; background: transparent; color: #c4554d; cursor: pointer; }
+    .dns-selection-status { min-height: 0; margin: 6px 0 0; }
+    .dns-selection-status.error { color: #c4554d; }
+    .choice-group { min-width: 0; margin: 12px 0 0; padding: 12px; border: 1px solid #d9dcdf; border-radius: 4px; }
+    .choice-group legend { padding: 0 5px; font-size: 13px; font-weight: 700; }
+    .dns-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .dns-grid .choice-group { margin-top: 10px; }
+    .dns-option-list { display: grid; gap: 4px; max-height: 220px; overflow-y: auto; padding: 5px; border: 1px solid #e3e2de; border-radius: 6px; background: #fff; }
+    .dns-option { display: flex; align-items: center; gap: 8px; min-height: 38px; margin: 0; padding: 6px 8px; border-radius: 4px; color: #37352f; font-size: 13px; font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; cursor: pointer; }
+    .dns-option:hover { background: #f1f1ef; }
+    .dns-option input { flex: none; margin: 0; }
+    .dns-option.is-disabled { color: #9b9a97; cursor: not-allowed; }
+    .dns-option.is-disabled:hover { background: transparent; }
+    .dns-option-add { width: 100%; min-height: 38px; border: 0; background: transparent; text-align: left; font: inherit; cursor: pointer; }
+    .dns-option-add:hover { background: #f1f1ef; }
+    .dns-select-hint { margin-top: 5px; }
+    .match-builder { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(190px, 1.2fr) minmax(190px, 1.2fr) auto; align-items: end; gap: 10px; padding: 14px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
+    .match-builder label { margin-bottom: 6px; font-size: 13px; }
+    .match-builder select, .match-builder input { width: 100%; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
+    .match-builder .secondary { font-size: 13px; }
+    .match-name-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+    .rule-link-details { margin-top: 12px; padding: 12px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; font-size: 13px; }
+    .rule-link-details summary { cursor: pointer; font-weight: 600; }
+    .rule-link-fields { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(220px, 1.4fr) minmax(150px, .8fr) auto; align-items: end; gap: 10px; margin-top: 12px; }
+    .rule-link-fields label { margin-bottom: 6px; font-size: 13px; }
+    .rule-link-fields input, .rule-link-fields select { width: 100%; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
+    .rule-link-fields .secondary, .rule-actions select { font-size: 13px; }
+    .rule-order-list { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+    .rule-order-item { display: grid; grid-template-columns: minmax(140px, .7fr) minmax(150px, 1fr) minmax(190px, 1.2fr) auto; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
+    .rule-summary { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
+    .rule-group-name { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+    .rule-set-name { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
+    .rule-actions { display: flex; align-items: center; gap: 6px; }
+    .rule-actions select { width: 100%; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; }
+    .rule-default-outbound, .rule-order-item .remove-item { font-size: 13px; }
+    .rule-column-label { color: #787774; font-size: 11px; }
+    .move-rule { min-width: 34px; min-height: 34px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; cursor: pointer; }
     code { color: #5f5e5a; }
     .file-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #787774; font-size: 13px; }
     input[type="file"] { max-width: 100%; color: #5f5e5a; }
@@ -110,6 +165,21 @@
     footer a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
     footer a:hover { color: #000; text-decoration-color: currentColor; }
     @media (min-width: 600px) { .options { grid-template-columns: 1fr 1fr; align-items: start; } }
+    @media (max-width: 800px) {
+      body { padding: 20px 12px; }
+      .compose-grid { grid-template-columns: 1fr; }
+      .compose-section:first-child, .compose-section:last-child { grid-column: auto; }
+      .match-builder { grid-template-columns: 1fr 1fr; }
+      .rule-link-fields { grid-template-columns: 1fr 1fr; }
+      .rule-order-item { grid-template-columns: 1fr; }
+      .rule-order-item.rule-header { display: none; }
+      .rule-actions { justify-content: flex-end; }
+    }
+    @media (max-width: 520px) {
+      .dns-grid, .match-builder, .rule-link-fields { grid-template-columns: 1fr; }
+      .match-name-fields { grid-template-columns: 1fr; }
+      .base-template-controls { align-items: stretch; flex-direction: column; }
+    }
   </style>
 </head>
 <body>
@@ -157,6 +227,7 @@
               <option value="config_phone.json">iPhone 配置</option>
               <option value="config_openwrt.json">OpenWrt 配置</option>
               <option value="momo.json">Momo 配置</option>
+              <option value="compose">自定义制作配置</option>
               <option value="custom">上传自定义模板</option>
             </select>
             <div id="custom-template-panel" class="custom-template-panel" hidden>
@@ -173,6 +244,121 @@
             <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
           </div>
         </div>
+        <section id="compose-panel" class="compose-panel" aria-label="自定义配置制作" hidden>
+          <p class="hint">以所选内置配置为底稿。未开放的配置项保持原样；DNS、分流组和规则集的未选择项会从配置中移除。</p>
+          <label for="base-template">基础配置</label>
+          <div class="base-template-controls">
+            <select id="base-template">
+              <option value="config_phone.json">iPhone 配置</option>
+              <option value="config_openwrt.json">OpenWrt 配置</option>
+              <option value="momo.json">Momo 配置</option>
+            </select>
+            <button id="reload-options" class="secondary" type="button">读取 / 刷新基础配置选项</button>
+          </div>
+          <div class="compose-grid">
+            <section class="compose-section">
+              <h3>DNS</h3>
+              <p class="hint">分别在国内和国际 DNS 下拉框中多选要保留的服务器，每类最多选择两项。模板所需的本地、Hosts 和 FakeIP DNS 会保留在配置中，不在此处显示。</p>
+              <div class="dns-grid">
+                <fieldset class="choice-group">
+                  <legend>国内 DNS</legend>
+                  <div id="dns-domestic-options" class="dns-option-list" role="group" aria-label="国内 DNS 多选"></div>
+                  <p class="hint dns-select-hint">点击 DNS 项即可选中或取消，每类最多选择两项。</p>
+                </fieldset>
+                <fieldset class="choice-group">
+                  <legend>国际 DNS</legend>
+                  <div id="dns-international-options" class="dns-option-list" role="group" aria-label="国际 DNS 多选"></div>
+                  <p class="hint dns-select-hint">点击 DNS 项即可选中或取消，每类最多选择两项。</p>
+                </fieldset>
+              </div>
+              <p id="dns-selection-status" class="hint dns-selection-status" aria-live="polite"></p>
+              <div id="custom-dns-fields" class="custom-dns-fields" hidden>
+                <h3 style="margin-top:18px">自定义 DNS 服务器</h3>
+                <div class="form-row">
+                <input id="new-dns-tag" type="text" placeholder="标签，例如 custom-dns" aria-label="自定义 DNS 标签">
+                <select id="new-dns-type" aria-label="自定义 DNS 类型">
+                  <option value="https">HTTPS</option>
+                  <option value="tls">TLS</option>
+                  <option value="quic">QUIC</option>
+                  <option value="h3">HTTP/3</option>
+                  <option value="udp">UDP</option>
+                  <option value="tcp">TCP</option>
+                  <option value="local">本地 DNS</option>
+                </select>
+                <select id="new-dns-category" aria-label="自定义 DNS 类型分类">
+                  <option value="domestic">国内 DNS</option>
+                  <option value="international">国际 DNS</option>
+                </select>
+                <input id="new-dns-server" type="text" placeholder="服务器地址，例如 1.1.1.1 或 dns.example" aria-label="DNS 服务器地址">
+                <input id="new-dns-port" type="number" min="1" max="65535" placeholder="端口（可选）" aria-label="DNS 服务器端口">
+                <input id="new-dns-path" type="text" placeholder="DoH 路径（可选），例如 /dns-query" aria-label="DoH 路径">
+                <button id="add-dns" class="secondary" type="button">添加 DNS</button>
+              </div>
+              </div>
+              <h3 style="margin-top:16px">已选择的 DNS</h3>
+              <ul id="custom-dns-list" class="added-list"></ul>
+            </section>
+            <section class="compose-section">
+              <h3>匹配规则与顺序</h3>
+              <p class="hint">在此选择具体应用分流名称、规则集和目标出站，添加后可调整匹配优先顺序。地区选择仅作为目标出站，不会出现在应用名称中。</p>
+              <div class="match-builder">
+                <div>
+                  <label for="match-name">应用分流</label>
+                  <div class="match-name-fields">
+                    <select id="match-name" aria-label="应用分流名称"></select>
+                    <input id="new-match-name" type="text" placeholder="新增应用分流名称" aria-label="自定义应用分流名称" hidden>
+                    <button id="add-match-name" class="secondary" type="button" hidden>添加应用</button>
+                  </div>
+                </div>
+                <div>
+                  <label for="match-rule-set">规则集</label>
+                  <select id="match-rule-set" aria-label="匹配规则规则集"></select>
+                </div>
+                <div>
+                  <label for="match-outbound">出站</label>
+                  <select id="match-outbound" aria-label="匹配规则出站"></select>
+                </div>
+                <button id="add-match-rule" class="secondary" type="button">添加匹配规则</button>
+              </div>
+              <details class="rule-link-details">
+                <summary>添加自定义规则集链接</summary>
+                <div class="rule-link-fields">
+                  <div>
+                    <label for="new-rule-tag">规则集名称</label>
+                    <input id="new-rule-tag" type="text" placeholder="例如 geosite-example" aria-label="自定义规则集标签">
+                  </div>
+                  <div>
+                    <label for="new-rule-url">规则集链接</label>
+                    <input id="new-rule-url" type="url" placeholder="https://example.com/rules.srs" aria-label="自定义规则集链接">
+                  </div>
+                  <div>
+                    <label for="new-rule-format">规则集格式</label>
+                    <select id="new-rule-format" aria-label="规则集格式">
+                      <option value="binary">binary（.srs）</option>
+                      <option value="source">source（JSON）</option>
+                    </select>
+                  </div>
+                  <button id="add-rule-set" class="secondary" type="button">添加规则集</button>
+                </div>
+                <ul id="custom-rule-list" class="added-list"></ul>
+              </details>
+              <div class="rule-order-item rule-header">
+                <span class="rule-column-label">应用分流</span>
+                <span class="rule-column-label">规则集 / 匹配条件</span>
+                <span class="rule-column-label">出站（地区 / 手动自动）</span>
+                <span class="rule-column-label">顺序 / 删除</span>
+              </div>
+              <ol id="matching-rule-list" class="rule-order-list"></ol>
+            </section>
+          </div>
+          <div hidden aria-hidden="true">
+            <div id="group-choices"></div>
+            <div id="rule-set-choices"></div>
+            <div id="new-group-rule-sets"></div>
+            <ul id="custom-group-list"></ul>
+          </div>
+          <p id="compose-status" class="status" role="status" aria-live="polite"></p>
+        </section>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </form>
     </section>
@@ -192,6 +378,24 @@
     const template = document.querySelector("#template");
     const customTemplatePanel = document.querySelector("#custom-template-panel");
     const customTemplateFile = document.querySelector("#custom-template-file");
+    const composePanel = document.querySelector("#compose-panel");
+    const baseTemplate = document.querySelector("#base-template");
+    const composeStatus = document.querySelector("#compose-status");
+    const dnsDomesticOptions = document.querySelector("#dns-domestic-options");
+    const dnsInternationalOptions = document.querySelector("#dns-international-options");
+    const dnsOptionLists = [dnsDomesticOptions, dnsInternationalOptions];
+    const MAX_DNS_SERVERS_PER_CATEGORY = 2;
+    const dnsSelectionStatus = document.querySelector("#dns-selection-status");
+    const customDnsFields = document.querySelector("#custom-dns-fields");
+    const groupChoices = document.querySelector("#group-choices");
+    const ruleSetChoices = document.querySelector("#rule-set-choices");
+    const customDnsList = document.querySelector("#custom-dns-list");
+    const customGroupList = document.querySelector("#custom-group-list");
+    const customRuleList = document.querySelector("#custom-rule-list");
+    const matchingRuleList = document.querySelector("#matching-rule-list");
+    const matchName = document.querySelector("#match-name");
+    const matchRuleSet = document.querySelector("#match-rule-set");
+    const matchOutbound = document.querySelector("#match-outbound");
     const apiKey = document.querySelector("#api-key");
     const templateStatus = document.querySelector("#template-status");
     const button = document.querySelector("#submit");
@@ -200,12 +404,826 @@
     let activeMode = "paste";
     let customTemplate = null;
     let uploadedFiles = [];
+    let configurationOptions = null;
+    let customDnsServers = [];
+    let customGroups = [];
+    let customRuleSets = [];
+    let customMatchNames = [];
+    let matchingRules = [];
+    let removedMatchingRuleIds = new Set();
+    let nextBuilderRuleId = 1;
+
+    const DNS_PRESETS = [
+      {
+        category: "domestic",
+        label: "阿里云 DNS（DoH）",
+        server: {
+          tag: "dns-alibaba-cloud-doh", type: "https", server: "dns.alidns.com",
+          server_port: 443, path: "/dns-query",
+        },
+      },
+      {
+        category: "domestic",
+        label: "腾讯 DNSPod（DoH）",
+        server: {
+          tag: "dns-tencent-dnspod-doh", type: "https", server: "doh.pub",
+          server_port: 443, path: "/dns-query",
+        },
+      },
+      {
+        category: "domestic",
+        label: "阿里云 DNS（DoT）",
+        server: {
+          tag: "dns-alibaba-cloud-dot", type: "tls", server: "dns.alidns.com",
+          server_port: 853,
+        },
+      },
+      {
+        category: "domestic",
+        label: "114DNS（UDP）",
+        server: { tag: "dns-114-udp", type: "udp", server: "114.114.114.114" },
+      },
+      {
+        category: "domestic",
+        label: "腾讯 DNSPod（UDP）",
+        server: {         tag: "dns-tencent-dnspod-udp", type: "udp", server: "119.29.29.29" },
+      },
+      {
+        category: "international",
+        label: "Cloudflare（DoH）",
+        server: {
+          tag: "dns-cloudflare-doh", type: "https", server: "cloudflare-dns.com",
+          server_port: 443, path: "/dns-query",
+        },
+      },
+      {
+        category: "international",
+        label: "Google Public DNS（DoH）",
+        server: {
+          tag: "dns-google-doh", type: "https", server: "dns.google",
+          server_port: 443, path: "/dns-query",
+        },
+      },
+      {
+        category: "international",
+        label: "Cloudflare（DoT）",
+        server: { tag: "dns-cloudflare-dot", type: "tls", server: "1.1.1.1", server_port: 853 },
+      },
+      {
+        category: "international",
+        label: "Quad9（DoT）",
+        server: { tag: "dns-quad9-dot", type: "tls", server: "dns.quad9.net", server_port: 853 },
+      },
+      {
+        category: "international",
+        label: "Cloudflare（DoQ）",
+        server: { tag: "dns-cloudflare-doq", type: "quic", server: "1.1.1.1", server_port: 853 },
+      },
+      {
+        category: "international",
+        label: "Cloudflare（DoH3）",
+        server: {
+          tag: "dns-cloudflare-h3", type: "h3", server: "cloudflare-dns.com",
+          server_port: 443, path: "/dns-query",
+        },
+      },
+      {
+        category: "international",
+        label: "Cloudflare（UDP）",
+        server: { tag: "dns-cloudflare-udp", type: "udp", server: "1.1.1.1" },
+      },
+    ];
+
+    function setComposeStatus(message, kind = "") {
+      composeStatus.textContent = message;
+      composeStatus.className = `status${kind ? ` ${kind}` : ""}`;
+    }
+
+    function apiHeaders() {
+      return apiKey.value ? { Authorization: `Bearer ${apiKey.value}` } : {};
+    }
+
+    function checkedValues(container) {
+      return [...container.querySelectorAll('input[type="checkbox"]:checked')]
+        .map((input) => input.value);
+    }
+
+    function addChoice(container, value, text, checked = true, disabled = false) {
+      const label = document.createElement("label");
+      label.className = "choice";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = value;
+      input.checked = checked;
+      input.disabled = disabled;
+      const caption = document.createElement("span");
+      caption.textContent = text;
+      label.append(input, caption);
+      container.append(label);
+    }
+
+    function selectedDnsValues() {
+      return dnsOptionLists.flatMap((list) =>
+        [...list.querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value),
+      );
+    }
+
+    function setDnsSelectionMessage(message, isError = false) {
+      dnsSelectionStatus.textContent = message;
+      dnsSelectionStatus.classList.toggle("error", isError);
+    }
+
+    function syncSelectedPresetDns() {
+      const selected = new Set(selectedDnsValues());
+      for (const preset of DNS_PRESETS) {
+        const key = `preset:${preset.server.tag}`;
+        const index = customDnsServers.findIndex((item) => item.tag === preset.server.tag);
+        if (selected.has(key) && index < 0) {
+          customDnsServers.push({
+            ...preset.server,
+            category: preset.category,
+            preset: true,
+            name: preset.label,
+          });
+        } else if (!selected.has(key) && index >= 0 && customDnsServers[index].preset) {
+          customDnsServers.splice(index, 1);
+        }
+      }
+    }
+
+    function renderDnsSelectors(preferredValues = selectedDnsValues(), selectTemplateDefaults = false) {
+      const selected = new Set(preferredValues);
+      let exceededLimit = false;
+      for (const list of dnsOptionLists) {
+        const category = list === dnsDomesticOptions ? "domestic" : "international";
+        let selectedCount = 0;
+        list.replaceChildren();
+        const addOption = (value, text, isSelected = false) => {
+          const option = document.createElement("label");
+          option.className = "dns-option";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = value;
+          checkbox.checked = isSelected && selectedCount < MAX_DNS_SERVERS_PER_CATEGORY;
+          checkbox.disabled = !checkbox.checked && selectedCount >= MAX_DNS_SERVERS_PER_CATEGORY;
+          if (checkbox.checked) selectedCount += 1;
+          else if (isSelected) exceededLimit = true;
+          if (checkbox.disabled) option.classList.add("is-disabled");
+          const caption = document.createElement("span");
+          caption.textContent = text;
+          option.append(checkbox, caption);
+          list.append(option);
+        };
+        for (const item of configurationOptions?.dns_servers || []) {
+          if (item.category !== category) continue;
+          const value = `template:${item.tag}`;
+          addOption(
+            value,
+            `${item.name} · ${item.server}（${item.type}）`,
+            selectTemplateDefaults || selected.has(value),
+          );
+        }
+        for (const preset of DNS_PRESETS.filter((item) => item.category === category)) {
+          const value = `preset:${preset.server.tag}`;
+          addOption(
+            value,
+            `${preset.label} · ${preset.server.server}（${preset.server.type}）`,
+            selected.has(value),
+          );
+        }
+        for (const item of customDnsServers.filter((server) => server.category === category && !server.preset)) {
+          const value = `custom:${item.tag}`;
+          addOption(value, `${item.name || item.tag} · ${item.server}（${item.type}）`, selected.has(value));
+        }
+        const addCustom = document.createElement("button");
+        addCustom.type = "button";
+        addCustom.className = "dns-option dns-option-add";
+        addCustom.textContent = "＋ 自定义添加…";
+        addCustom.addEventListener("click", () => {
+          customDnsFields.hidden = false;
+          document.querySelector("#new-dns-tag").focus();
+        });
+        list.append(addCustom);
+      }
+      if (exceededLimit) {
+        setDnsSelectionMessage(`每类最多选择 ${MAX_DNS_SERVERS_PER_CATEGORY} 项 DNS，已保留前两项。`, true);
+      }
+    }
+
+    function availableOutboundTags() {
+      const enabledGroups = new Set(checkedValues(groupChoices));
+      return [
+        ...(configurationOptions?.outbounds || []).filter((tag) => {
+          const group = configurationOptions.groups.find((item) => item.tag === tag);
+          return !group || !group.application || enabledGroups.has(tag);
+        }),
+        ...customGroups.map((item) => item.tag),
+      ];
+    }
+
+    function allRuleSetTags() {
+      return [
+        ...(configurationOptions?.rule_sets || []).map((item) => item.tag),
+        ...customRuleSets.map((item) => item.tag),
+      ];
+    }
+
+    function availableMatchingTargets() {
+      const enabledGroups = new Set(checkedValues(groupChoices));
+      return [
+        ...(configurationOptions?.matching_targets || []).filter((tag) => {
+          const group = configurationOptions.groups.find((item) => item.tag === tag);
+          return !group || !group.application || enabledGroups.has(tag);
+        }),
+      ];
+    }
+
+    function renderMatchBuilderOptions() {
+      const enabledGroups = new Set(checkedValues(groupChoices));
+      const selectedName = matchName.value;
+      const names = [
+        ...(configurationOptions?.groups || [])
+          .filter((group) => group.application && enabledGroups.has(group.tag))
+          .map((group) => group.tag),
+        ...customGroups.map((group) => group.tag),
+        ...customMatchNames,
+      ];
+      matchName.replaceChildren();
+      for (const name of [...new Set(names)]) {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        matchName.append(option);
+      }
+      const customNameOption = document.createElement("option");
+      customNameOption.value = "__custom__";
+      customNameOption.textContent = "＋ 添加自定义名称…";
+      matchName.append(customNameOption);
+      if ([...matchName.options].some((option) => option.value === selectedName)) {
+        matchName.value = selectedName;
+      }
+
+      const selectedRuleSet = matchRuleSet.value;
+      matchRuleSet.replaceChildren();
+      for (const tag of checkedValues(ruleSetChoices).concat(customRuleSets.map((item) => item.tag))) {
+        const option = document.createElement("option");
+        option.value = tag;
+        option.textContent = tag;
+        matchRuleSet.append(option);
+      }
+      const addRuleSetOption = document.createElement("option");
+      addRuleSetOption.value = "__add_rule_set__";
+      addRuleSetOption.textContent = "＋ 添加自定义规则集链接…";
+      matchRuleSet.append(addRuleSetOption);
+      if ([...matchRuleSet.options].some((option) => option.value === selectedRuleSet)) {
+        matchRuleSet.value = selectedRuleSet;
+      }
+
+      const selectedOutbound = matchOutbound.value;
+      matchOutbound.replaceChildren();
+      for (const tag of availableMatchingTargets()) {
+        const option = document.createElement("option");
+        option.value = tag;
+        option.textContent = tag;
+        matchOutbound.append(option);
+      }
+      if ([...matchOutbound.options].some((option) => option.value === selectedOutbound)) {
+        matchOutbound.value = selectedOutbound;
+      }
+    }
+
+    function matchRuleLabel(rule) {
+      const parts = Object.entries(rule.match).map(([key, value]) => {
+        const text = Array.isArray(value) ? value.join(", ") : JSON.stringify(value);
+        return `${key}: ${text}`;
+      });
+      return parts.join(" · ") || "匹配规则";
+    }
+
+    function syncMatchingRules() {
+      if (!configurationOptions) return;
+      const previous = new Map(matchingRules.map((item) => [item.id, item]));
+      const candidates = new Map();
+      const applicationNames = new Set(
+        configurationOptions.groups
+          .filter((group) => group.application)
+          .map((group) => group.tag),
+      );
+      for (const item of configurationOptions.matching_rules) {
+        const id = String(item.index);
+        if (removedMatchingRuleIds.has(id)) continue;
+        const existing = previous.get(id);
+        const ruleTags = Array.isArray(item.match.rule_set)
+          ? item.match.rule_set
+          : [item.match.rule_set].filter(Boolean);
+        const assignedGroup = customGroups.find((group) =>
+          group.rule_sets.some((tag) => ruleTags.includes(tag)),
+        );
+        candidates.set(id, {
+          ...item,
+          id,
+          name: existing?.name
+            || (applicationNames.has(item.outbound) ? item.outbound : (ruleTags[0] || "匹配规则")),
+          defaultOutbound: item.outbound,
+          outbound: assignedGroup?.tag || existing?.outbound || item.outbound,
+          destination: existing?.destination
+            || (applicationNames.has(item.outbound)
+              ? configurationOptions.groups.find((group) => group.tag === item.outbound)?.members?.[0]
+              : assignedGroup ? "默认代理" : undefined),
+        });
+      }
+      for (const item of matchingRules) {
+        if (item.id.startsWith("builder-") && allRuleSetTags().includes(item.match.rule_set)) {
+          candidates.set(item.id, item);
+        }
+      }
+      matchingRules = [
+        ...matchingRules
+          .map((item) => candidates.get(item.id))
+          .filter(Boolean),
+        ...[...candidates.entries()]
+          .filter(([id]) => !matchingRules.some((item) => item.id === id))
+          .map(([, item]) => item),
+      ];
+    }
+
+    function renderMatchingRules() {
+      matchingRuleList.replaceChildren();
+      const targets = availableMatchingTargets();
+      matchingRules.forEach((rule, index) => {
+        const row = document.createElement("li");
+        row.className = "rule-order-item";
+        const groupName = document.createElement("div");
+        groupName.className = "rule-group-name";
+        groupName.textContent = rule.name || "匹配规则";
+        const ruleSetName = document.createElement("div");
+        ruleSetName.className = "rule-set-name";
+        const ruleTags = Array.isArray(rule.match.rule_set)
+          ? rule.match.rule_set
+          : [rule.match.rule_set].filter(Boolean);
+        ruleSetName.textContent = ruleTags.length
+          ? ruleTags.join("、")
+          : matchRuleLabel(rule);
+        const actions = document.createElement("div");
+        actions.className = "rule-actions";
+        const selectedTarget = rule.destination || rule.outbound;
+        let outbound;
+        if (targets.includes(selectedTarget)) {
+          outbound = document.createElement("select");
+          outbound.setAttribute("aria-label", `第 ${index + 1} 条规则的出站`);
+          for (const tag of targets) {
+            const option = document.createElement("option");
+            option.value = tag;
+            option.textContent = tag;
+            outbound.append(option);
+          }
+          outbound.value = selectedTarget;
+          if (rule.destination !== undefined) rule.destination = outbound.value;
+          else rule.outbound = outbound.value;
+          outbound.addEventListener("change", () => {
+            if (rule.destination !== undefined) {
+              for (const matchingRule of matchingRules) {
+                if (matchingRule.outbound === rule.outbound && matchingRule.destination !== undefined) {
+                  matchingRule.destination = outbound.value;
+                }
+              }
+              renderMatchingRules();
+            } else {
+              rule.outbound = outbound.value;
+            }
+          });
+        } else {
+          outbound = document.createElement("span");
+          outbound.className = "rule-default-outbound";
+          outbound.textContent = rule.outbound || "默认出站";
+          outbound.setAttribute("aria-label", `第 ${index + 1} 条规则的默认出站`);
+        }
+        actions.append(outbound);
+        const orderActions = document.createElement("div");
+        orderActions.className = "rule-actions";
+        for (const [direction, label, disabled] of [
+          [-1, "上移", index === 0],
+          [1, "下移", index === matchingRules.length - 1],
+        ]) {
+          const move = document.createElement("button");
+          move.type = "button";
+          move.className = "move-rule";
+          move.textContent = direction < 0 ? "↑" : "↓";
+          move.setAttribute("aria-label", `${label}第 ${index + 1} 条规则`);
+          move.disabled = disabled;
+          move.addEventListener("click", () => {
+            [matchingRules[index], matchingRules[index + direction]] =
+              [matchingRules[index + direction], matchingRules[index]];
+            renderMatchingRules();
+          });
+          orderActions.append(move);
+        }
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove-item";
+        remove.textContent = "移除";
+        remove.setAttribute("aria-label", `移除第 ${index + 1} 条规则`);
+        remove.addEventListener("click", () => {
+          const [removed] = matchingRules.splice(index, 1);
+          removedMatchingRuleIds.add(removed.id);
+          const removedRuleSet = removed?.match?.rule_set;
+          const ruleSetTag = Array.isArray(removedRuleSet) ? null : removedRuleSet;
+          if (
+            typeof ruleSetTag === "string"
+            && customRuleSets.some((item) => item.tag === ruleSetTag)
+            && !matchingRules.some((item) => item.match.rule_set === ruleSetTag)
+            && !customGroups.some((group) => group.rule_sets.includes(ruleSetTag))
+          ) {
+            customRuleSets = customRuleSets.filter((item) => item.tag !== ruleSetTag);
+          }
+          syncMatchingRules();
+          renderCustomItems();
+        });
+        orderActions.append(remove);
+        row.append(groupName, ruleSetName, actions, orderActions);
+        matchingRuleList.append(row);
+      });
+    }
+
+    function renderAddedItems(container, items, labelFor, onRemove) {
+      container.replaceChildren();
+      items.forEach((item, index) => {
+        const row = document.createElement("li");
+        row.className = "added-item";
+        const text = document.createElement("span");
+        text.textContent = labelFor(item);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove-item";
+        remove.textContent = "移除";
+        remove.addEventListener("click", () => onRemove(index));
+        row.append(text, remove);
+        container.append(row);
+      });
+    }
+
+    function renderCustomItems() {
+      renderAddedItems(
+        customDnsList,
+        selectedDnsValues().map((value) => {
+          const [kind, tag] = value.split(":", 2);
+          if (kind === "template") {
+            const server = configurationOptions?.dns_servers.find((item) => item.tag === tag);
+            return { value, label: `${server?.name || tag} · ${server?.server || ""}（${server?.type || ""}）` };
+          }
+          const server = customDnsServers.find((item) => item.tag === tag);
+          const preset = DNS_PRESETS.find((item) => item.server.tag === tag);
+          return {
+            value,
+            label: `${server?.name || preset?.label || tag} · ${server?.server || preset?.server.server || ""}（${server?.type || preset?.server.type || ""}）`,
+          };
+        }),
+        (item) => item.label,
+        (index) => {
+          const selected = selectedDnsValues();
+          const [removed] = selected.splice(index, 1);
+          if (removed?.startsWith("custom:")) {
+            const tag = removed.slice("custom:".length);
+            customDnsServers = customDnsServers.filter((item) => item.tag !== tag);
+          }
+          renderDnsSelectors(selected);
+          syncSelectedPresetDns();
+          renderCustomItems();
+        },
+      );
+      renderAddedItems(customGroupList, customGroups, (item) => {
+        const members = item.rule_sets.length ? item.rule_sets.join(", ") : "无规则集";
+        return `${item.tag} · 规则集：${members}`;
+      }, (index) => {
+        customGroups.splice(index, 1);
+        renderCustomItems();
+      });
+      renderAddedItems(customRuleList, customRuleSets, (item) => `${item.tag} → ${item.outbound} · ${item.url}`, (index) => {
+        const [removed] = customRuleSets.splice(index, 1);
+        customGroups = customGroups.map((group) => ({
+          ...group,
+          rule_sets: group.rule_sets.filter((tag) => tag !== removed.tag),
+        }));
+        renderCustomItems();
+      });
+      syncSelectedPresetDns();
+      renderDnsSelectors();
+      renderMatchBuilderOptions();
+      syncMatchingRules();
+      renderMatchingRules();
+    }
+
+    async function loadConfigurationOptions(resetCustom = false) {
+      setComposeStatus("正在读取基础配置选项…");
+      try {
+        const response = await fetch(
+          `/api/options?template=${encodeURIComponent(baseTemplate.value)}`,
+          { headers: apiHeaders() },
+        );
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取配置选项失败。");
+        configurationOptions = result;
+        if (resetCustom) {
+          customDnsServers = [];
+          customGroups = [];
+          customRuleSets = [];
+          customMatchNames = [];
+          removedMatchingRuleIds = new Set();
+          nextBuilderRuleId = 1;
+          renderCustomItems();
+        }
+        renderDnsSelectors([], true);
+        renderCustomItems();
+        groupChoices.replaceChildren();
+        for (const item of result.groups.filter((group) => group.application)) {
+          addChoice(
+            groupChoices,
+            item.tag,
+            `${item.tag} · ${item.type}${item.required ? "（必需）" : ""}`,
+            true,
+            item.required,
+          );
+        }
+        ruleSetChoices.replaceChildren();
+        for (const item of result.rule_sets) {
+          addChoice(ruleSetChoices, item.tag, item.tag);
+        }
+        matchingRules = result.matching_rules.map((item) => ({
+          ...item,
+          id: String(item.index),
+          name: item.outbound,
+          defaultOutbound: item.outbound,
+        }));
+        syncMatchingRules();
+        renderMatchBuilderOptions();
+        renderMatchingRules();
+        setComposeStatus(`已读取 ${result.dns_servers.length} 个 DNS、${result.groups.filter((group) => group.application).length} 个应用分流组和 ${result.rule_sets.length} 个规则集。`, "success");
+      } catch (error) {
+        configurationOptions = null;
+        setComposeStatus(
+          `${error.message || "读取失败。"}${!apiKey.value ? " 若服务端启用了 API 密钥，请先填写密钥，再点击“读取 / 刷新基础配置选项”。" : ""}`,
+          "error",
+        );
+      }
+    }
+
+    function collectTemplateOptions() {
+      if (!configurationOptions) throw new Error("请先读取基础配置选项。");
+      const availableOutbounds = new Set(availableOutboundTags());
+      for (const group of customGroups) {
+        const removedRuleSet = group.rule_sets.find((tag) => !allRuleSetTags().includes(tag));
+        if (removedRuleSet) {
+          throw new Error(`分流组 ${group.tag} 引用的规则集 ${removedRuleSet} 不存在。`);
+        }
+      }
+      const staleRule = customRuleSets.find((item) => !availableOutbounds.has(item.outbound));
+      if (staleRule) {
+        throw new Error(`规则集 ${staleRule.tag} 指向的分流组已移除，请删除或重新添加该规则集。`);
+      }
+      return {
+        dns_servers: selectedDnsValues()
+          .filter((value) => value.startsWith("template:"))
+          .map((value) => value.slice("template:".length)),
+        custom_dns_servers: customDnsServers
+          .filter((item) => {
+            const key = `${item.preset ? "preset" : "custom"}:${item.tag}`;
+            return selectedDnsValues().includes(key);
+          })
+          .map((item) => Object.fromEntries(
+            Object.entries(item).filter(
+              ([key]) => !["category", "preset", "name"].includes(key),
+            ),
+          )),
+        groups: [
+          ...configurationOptions.groups
+            .filter((group) => !group.application)
+            .map((group) => group.tag),
+          ...new Set([
+            ...checkedValues(groupChoices),
+            ...matchingRules
+              .filter((item) => item.id.startsWith("builder-"))
+              .map((item) => item.name)
+              .filter((name) => configurationOptions.groups.some(
+                (group) => group.tag === name && group.application,
+              )),
+          ]),
+        ],
+        custom_groups: customGroups,
+        rule_sets: checkedValues(ruleSetChoices),
+        custom_rule_sets: customRuleSets,
+        rule_set_links_only: true,
+        custom_matching_rules: matchingRules
+          .filter((item) => item.id.startsWith("builder-"))
+          .map((item) => ({
+            id: item.id,
+            name: item.name,
+            rule_set: item.match.rule_set,
+            outbound: item.outbound,
+            destination: item.destination,
+          })),
+        rule_order: matchingRules.map((item) => item.id),
+        rule_outbounds: Object.fromEntries(
+          matchingRules
+            .filter((item) => item.destination === undefined && item.outbound !== "直连")
+            .map((item) => [item.id, item.outbound]),
+        ),
+        rule_destinations: Object.fromEntries(
+          matchingRules
+            .filter((item) => item.destination !== undefined && (
+              item.id.startsWith("builder-")
+              || availableOutboundTags().includes(item.outbound)
+            ))
+            .map((item) => [item.id, item.destination]),
+        ),
+      };
+    }
 
     template.addEventListener("change", () => {
       const customSelected = template.value === "custom";
       customTemplatePanel.hidden = !customSelected;
+      composePanel.hidden = template.value !== "compose";
       templateStatus.textContent = "";
       templateStatus.className = "status";
+      if (template.value === "compose") loadConfigurationOptions(true);
+    });
+
+    baseTemplate.addEventListener("change", () => loadConfigurationOptions(true));
+    document.querySelector("#reload-options").addEventListener("click", () => loadConfigurationOptions());
+    dnsOptionLists.forEach((list) => {
+      list.addEventListener("change", (event) => {
+        const changedOption = event.target;
+        if (!(changedOption instanceof HTMLInputElement) || changedOption.type !== "checkbox") return;
+        setDnsSelectionMessage("");
+        const selected = selectedDnsValues();
+        syncSelectedPresetDns();
+        renderDnsSelectors(selected);
+        renderCustomItems();
+      });
+    });
+    groupChoices.addEventListener("change", () => {
+      renderMatchBuilderOptions();
+      renderMatchingRules();
+    });
+    matchName.addEventListener("change", () => {
+      const customName = matchName.value === "__custom__";
+      document.querySelector("#new-match-name").hidden = !customName;
+      document.querySelector("#add-match-name").hidden = !customName;
+      if (customName) document.querySelector("#new-match-name").focus();
+    });
+    document.querySelector("#add-match-name").addEventListener("click", () => {
+      const input = document.querySelector("#new-match-name");
+      const name = input.value.trim();
+      const existingNames = [...matchName.options].map((option) => option.value);
+      if (!name) {
+        setComposeStatus("请填写自定义匹配规则名称。", "error");
+        return;
+      }
+      if (!/^[\p{L}\p{N}_.-]+$/u.test(name)) {
+        setComposeStatus("自定义名称只能包含字母、数字、下划线、连字符和点。", "error");
+        return;
+      }
+      if (existingNames.includes(name)) {
+        setComposeStatus(`匹配规则名称已存在：${name}`, "error");
+        return;
+      }
+      customMatchNames.push(name);
+      renderMatchBuilderOptions();
+      matchName.value = name;
+      input.value = "";
+      input.hidden = true;
+      document.querySelector("#add-match-name").hidden = true;
+      setComposeStatus(`已添加匹配规则名称：${name}`, "success");
+    });
+    matchRuleSet.addEventListener("change", () => {
+      if (matchRuleSet.value === "__add_rule_set__") {
+        matchRuleSet.value = "";
+        document.querySelector(".rule-link-details").open = true;
+        document.querySelector("#new-rule-tag").focus();
+        setComposeStatus("填写规则集名称和链接，添加后即可在匹配规则中选择。", "");
+      }
+    });
+    document.querySelector("#add-match-rule").addEventListener("click", () => {
+      const name = matchName.value.trim();
+      const ruleSet = matchRuleSet.value;
+      const outbound = matchOutbound.value;
+      if (!name || name === "__custom__") {
+        setComposeStatus("请选择或添加匹配规则名称。", "error");
+        return;
+      }
+      if (!ruleSet || ruleSet.startsWith("__")) {
+        setComposeStatus("请选择一个已添加的规则集。", "error");
+        return;
+      }
+      if (!outbound) {
+        setComposeStatus("请选择匹配规则的出站。", "error");
+        return;
+      }
+      for (const matchingRule of matchingRules) {
+        if (matchingRule.outbound === name && matchingRule.destination !== undefined) {
+          matchingRule.destination = outbound;
+        }
+      }
+      matchingRules.push({
+        id: `builder-${nextBuilderRuleId++}`,
+        name,
+        match: { rule_set: ruleSet },
+        outbound: name,
+        destination: outbound,
+      });
+      syncMatchingRules();
+      renderMatchingRules();
+      setComposeStatus(`已生成匹配规则：${name} · ${ruleSet} → ${outbound}`, "success");
+    });
+
+    document.querySelector("#new-dns-type").addEventListener("change", (event) => {
+      document.querySelector("#new-dns-server").disabled = event.target.value === "local";
+    });
+
+    document.querySelector("#add-dns").addEventListener("click", () => {
+      const type = document.querySelector("#new-dns-type").value;
+      const item = {
+        tag: document.querySelector("#new-dns-tag").value.trim(),
+        type,
+        category: document.querySelector("#new-dns-category").value,
+      };
+      const server = document.querySelector("#new-dns-server").value.trim();
+      if (type !== "local") item.server = server;
+      const port = document.querySelector("#new-dns-port").value;
+      const path = document.querySelector("#new-dns-path").value.trim();
+      if (path && !["https", "h3"].includes(type)) {
+        setComposeStatus("DoH 路径只适用于 HTTPS 或 HTTP/3 DNS。", "error");
+        return;
+      }
+      if (port && (!Number.isInteger(Number(port)) || Number(port) < 1 || Number(port) > 65535)) {
+        setComposeStatus("DNS 端口必须是 1 到 65535 的整数。", "error");
+        return;
+      }
+      if (port) item.server_port = Number(port);
+      if (path) item.path = path;
+      if (!item.tag || (type !== "local" && !server)) {
+        setComposeStatus("请填写 DNS 标签；非本地 DNS 还需要服务器地址。", "error");
+        return;
+      }
+      if (
+        customDnsServers.some((existing) => existing.tag === item.tag)
+        || configurationOptions.dns_servers.some((existing) => existing.tag === item.tag)
+      ) {
+        setComposeStatus(`DNS 标签已存在：${item.tag}`, "error");
+        return;
+      }
+      const categoryList = item.category === "domestic"
+        ? dnsDomesticOptions
+        : dnsInternationalOptions;
+      const categorySelectionCount = categoryList.querySelectorAll('input[type="checkbox"]:checked').length;
+      customDnsServers.push(item);
+      const selected = selectedDnsValues();
+      const categoryIsFull = categorySelectionCount >= MAX_DNS_SERVERS_PER_CATEGORY;
+      if (categoryIsFull) {
+        setDnsSelectionMessage(`已添加自定义 DNS；${item.category === "domestic" ? "国内" : "国际"} DNS 已满两项，服务器暂未选中。`);
+      } else {
+        selected.push(`custom:${item.tag}`);
+        setDnsSelectionMessage("");
+      }
+      renderDnsSelectors(selected);
+      document.querySelector("#new-dns-tag").value = "";
+      document.querySelector("#new-dns-server").value = "";
+      document.querySelector("#new-dns-port").value = "";
+      document.querySelector("#new-dns-path").value = "";
+      renderCustomItems();
+      customDnsFields.hidden = true;
+      setComposeStatus(
+        categoryIsFull
+          ? `已添加 DNS：${item.tag}；如需使用，请先取消该分类中一项 DNS。`
+          : `已添加 DNS：${item.tag}`,
+        "success",
+      );
+    });
+
+    document.querySelector("#add-rule-set").addEventListener("click", () => {
+      const item = {
+        tag: document.querySelector("#new-rule-tag").value.trim(),
+        url: document.querySelector("#new-rule-url").value.trim(),
+        format: document.querySelector("#new-rule-format").value,
+        outbound: "默认代理",
+      };
+      if (!item.tag || !item.url) {
+        setComposeStatus("请填写规则集名称和链接。", "error");
+        return;
+      }
+      if (
+        allRuleSetTags().includes(item.tag)
+      ) {
+        setComposeStatus(`规则集名称已存在：${item.tag}`, "error");
+        return;
+      }
+      customRuleSets.push(item);
+      document.querySelector("#new-rule-tag").value = "";
+      document.querySelector("#new-rule-url").value = "";
+      syncMatchingRules();
+      renderMatchingRules();
+      renderCustomItems();
+      document.querySelector(".rule-link-details").open = false;
+      setComposeStatus(`已添加规则集：${item.tag}`, "success");
     });
 
     customTemplateFile.addEventListener("change", async () => {
@@ -295,6 +1313,9 @@
         if (template.value === "custom") {
           if (!customTemplate) throw new Error("请上传并通过校验一个自定义 JSON 模板。");
           payload.template_json = customTemplate;
+        } else if (template.value === "compose") {
+          payload.template = baseTemplate.value;
+          payload.template_options = collectTemplateOptions();
         } else {
           payload.template = template.value;
         }
@@ -320,9 +1341,9 @@
         download.href = URL.createObjectURL(blob);
         const templateName = template.value === "custom"
           ? "custom"
-          : template.value === "config_phone.json"
+          : (template.value === "compose" ? baseTemplate.value : template.value) === "config_phone.json"
             ? "iphone"
-            : template.value.replace(".json", "");
+            : (template.value === "compose" ? baseTemplate.value : template.value).replace(".json", "");
         download.download = `sing-box-${templateName}.json`;
         document.body.append(download);
         download.click();
