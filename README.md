@@ -4,15 +4,7 @@
 
 ## 项目 Wiki
 
-按主题查看使用说明：
-
-- [Wiki 首页](./wiki/Home.md)
-- [快速上手](./wiki/Getting-Started.md)
-- [支持的格式和协议](./wiki/Supported-Formats.md)
-- [模板和策略组](./wiki/Templates.md)
-- [HTTP API](./wiki/API.md)
-- [部署方式](./wiki/Deployment.md)
-- [常见问题](./wiki/Troubleshooting.md)
+请前往 [GitHub Wiki](https://github.com/bacdown/yaml2sb/wiki) 查看使用说明。
 
 ## 支持范围
 
