@@ -2,21 +2,21 @@
   "dns": {
     "servers": [
       {"tag": "local", "type": "local", "prefer_go": true},
-      {"tag": "ali", "type": "https", "server": "223.5.5.5"},
-      {"tag": "tx", "type": "https", "server": "doh.pub", "domain_resolver": "hosts"},
-      {"tag": "google", "type": "https", "server": "8.8.8.8", "detour": "默认代理"},
+      {"tag": "alibaba-cloud-dns", "type": "https", "server": "223.5.5.5"},
+      {"tag": "tencent-dnspod-dns", "type": "https", "server": "doh.pub", "domain_resolver": "hosts"},
+      {"tag": "google-public-dns", "type": "https", "server": "8.8.8.8", "detour": "默认代理"},
       {"tag": "fakeip", "type": "fakeip", "inet4_range": "198.19.0.0/16", "inet6_range": "2001:db8::/32"},
       {"type": "hosts", "tag": "hosts", "predefined": {"doh.pub": ["1.12.12.21", "120.53.53.53"]}}
     ],
     "rules": [
       {"query_type": ["HTTPS", "SVCB"], "action": "reject"},
-      {"clash_mode": "Direct", "server": "ali"},
+      {"clash_mode": "Direct", "server": "alibaba-cloud-dns"},
       {"clash_mode": "Global", "server": "fakeip"},
-      {"rule_set": "geosite-fakeipfilter-cn", "server": "ali"},
+      {"rule_set": "geosite-fakeipfilter-cn", "server": "alibaba-cloud-dns"},
       {"query_type": ["A", "AAAA"], "server": "fakeip", "rewrite_ttl": 1},
-      {"rule_set": "geosite-cn", "server": "ali"}
+      {"rule_set": "geosite-cn", "server": "alibaba-cloud-dns"}
     ],
-    "final": "google",
+    "final": "google-public-dns",
     "strategy": "prefer_ipv4",
     "cache_capacity": 8192,
     "reverse_mapping": true
@@ -55,7 +55,7 @@
     {"tag": "自动选择", "type": "urltest", "outbounds": [], "url": "https://clients1.google.com/generate_204", "interval": "10m", "tolerance": 100},
     {"tag": "延迟辅助", "type": "urltest", "outbounds": ["直连"], "url": "http://connect.rom.miui.com/generate_204", "interval": "10m"},
     {"tag": "GLOBAL", "type": "selector", "outbounds": ["默认代理", "AI", "YouTube", "Google", "Github", "X", "Meta", "Telegram", "TikTok", "Netflix", "PayPal", "Steam", "Microsoft", "OneDrive", "Apple", "漏网之鱼", "日本自动", "狮城自动", "香港自动", "台湾自动", "美国自动", "日本手动", "狮城手动", "香港手动", "台湾手动", "美国手动", "手动选择", "自动选择", "延迟辅助", "直连"]},
-    {"tag": "直连", "type": "direct", "domain_resolver": "ali"}
+    {"tag": "直连", "type": "direct", "domain_resolver": "alibaba-cloud-dns"}
   ],
   "route": {
     "default_http_client": "rule-set-download",
@@ -125,7 +125,7 @@
       {"tag": "geosite-twitter", "type": "remote", "format": "binary", "url": "https://gh-proxy.com/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/twitter.srs"}
     ],
     "final": "漏网之鱼",
-    "default_domain_resolver": {"server": "ali"}
+    "default_domain_resolver": {"server": "alibaba-cloud-dns"}
   },
   "inbounds": [
     {
