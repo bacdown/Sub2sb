@@ -35,6 +35,7 @@ import re
 import sys
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 try:
     import yaml
@@ -54,6 +55,13 @@ SUPPORTED_URI_PREFIXES = (
     "hysteria2://",
     "hy2://",
     "tuic://",
+)
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+BUILTIN_TEMPLATES = (
+    ("1", "手机配置", "config_phone.json"),
+    ("2", "OpenWrt 配置", "config_openwrt.json"),
+    ("3", "Momo 配置", "momo.json"),
 )
 
 SUBSCRIPTION_INFO_KEYWORDS = (
@@ -129,6 +137,7 @@ def get_subscription(url):
 
     with urllib.request.urlopen(request, timeout=30) as response:
         data = response.read()
+        content_type = response.headers.get("Content-Type", "unknown").split(";", 1)[0]
 
     text = data.decode("utf-8", errors="replace").strip()
 
@@ -142,8 +151,19 @@ def get_subscription(url):
     if decoded and is_probably_subscription_text(decoded):
         return decoded
 
-    # 即使无法判断，也返回原始文本，后续会给出错误提示
-    return text
+    raise ValueError(
+        "订阅服务器返回的内容无法识别为受支持的 Clash YAML 或代理 URI "
+        f"（Content-Type: {content_type}, {len(data)} 字节）。"
+        "请检查是否使用了 Clash/Mihomo 订阅地址，而不是管理页面或登录链接。"
+    )
+
+
+def source_label(source):
+    """Avoid printing credentials from remote subscription URLs."""
+    if source.startswith(("http://", "https://")):
+        parsed = urllib.parse.urlsplit(source)
+        return f"{parsed.scheme}://{parsed.hostname or '订阅地址'}"
+    return source
 
 
 def node_name(parsed_uri, default_name):
@@ -1301,6 +1321,41 @@ def read_input(source):
         return file.read()
 
 
+def prompt_interactive_args():
+    """Collect CLI arguments through a short terminal menu."""
+    print("yaml2sb · sing-box 配置转换")
+    print("输入一个或多个订阅链接或本地文件路径，每行一个；空行结束：")
+    sources = []
+    while True:
+        source = input("> ").strip()
+        if not source:
+            if sources:
+                break
+            print("请至少输入一个订阅链接或文件路径。")
+            continue
+        sources.append(source)
+
+    print("\n选择 sing-box 模板：")
+    for number, label, _ in BUILTIN_TEMPLATES:
+        print(f"{number}. {label}")
+    print("4. 自定义模板文件")
+    while True:
+        choice = input("请选择 [1-4]（默认 1）：").strip() or "1"
+        if choice in ("1", "2", "3"):
+            config_path = str(PROJECT_ROOT / "templates" / BUILTIN_TEMPLATES[int(choice) - 1][2])
+            break
+        if choice == "4":
+            config_path = input("请输入 sing-box JSON 模板文件路径：").strip()
+            if config_path:
+                break
+            print("模板文件路径不能为空。")
+            continue
+        print("无效选项，请输入 1 到 4。")
+
+    output_path = input("输出文件路径（留空使用默认路径）：").strip() or None
+    return argparse.Namespace(subscription=sources, output=output_path, config=config_path)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="将 Clash YAML 或常见代理订阅转换为 sing-box 配置"
@@ -1308,7 +1363,7 @@ def main():
 
     parser.add_argument(
         "subscription",
-        nargs="+",
+        nargs="*",
         help="一个或多个订阅链接或本地订阅文件"
     )
 
@@ -1321,11 +1376,23 @@ def main():
     parser.add_argument(
         "-c",
         "--config",
-        required=True,
-        help="必填：指定平台的 sing-box 配置模板 JSON"
+        help="指定平台的 sing-box 配置模板 JSON"
+    )
+
+    parser.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="使用交互式菜单输入订阅、模板和输出路径"
     )
 
     args = parser.parse_args()
+    if args.interactive or not args.subscription:
+        if not sys.stdin.isatty():
+            parser.error("交互菜单需要终端；请提供订阅参数，或在终端中运行 -i")
+        args = prompt_interactive_args()
+    elif not args.config:
+        parser.error("使用命令行参数时必须通过 -c/--config 指定配置模板")
 
     try:
         outbounds = []
@@ -1333,7 +1400,7 @@ def main():
             content = read_input(source)
             source_outbounds = parse_subscription_content(content)
             if not source_outbounds:
-                print(f"[跳过] {source}: 没有解析到节点", file=sys.stderr)
+                print(f"[跳过] {source_label(source)}: 没有解析到节点", file=sys.stderr)
             outbounds.extend(source_outbounds)
 
         outbounds = filter_subscription_info_nodes(outbounds)
