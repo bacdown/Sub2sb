@@ -48,7 +48,7 @@
     .mode-panel { padding-top: 24px; }
     [hidden] { display: none !important; }
     label { display: block; margin: 0 0 9px; font-size: 14px; font-weight: 600; }
-    textarea, input[type="url"], select {
+    textarea, input[type="url"], input[type="password"], select {
       width: 100%;
       border: 1px solid #e3e2de;
       border-radius: 6px;
@@ -56,9 +56,9 @@
       background: #fff;
       color: #37352f;
     }
-    textarea:focus, input[type="url"]:focus, select:focus { border-color: #a5a4a0; box-shadow: 0 0 0 2px rgb(55 53 47 / 8%); }
+    textarea:focus, input[type="url"]:focus, input[type="password"]:focus, select:focus { border-color: #a5a4a0; box-shadow: 0 0 0 2px rgb(55 53 47 / 8%); }
     textarea { min-height: 230px; padding: 14px; resize: vertical; line-height: 1.55; }
-    input[type="url"], select { min-height: 48px; padding: 0 13px; }
+    input[type="url"], input[type="password"], select { min-height: 48px; padding: 0 13px; }
     .custom-template-panel { margin-top: 16px; }
     .custom-template-panel input[type="file"] { width: 100%; }
     code { color: #5f5e5a; }
@@ -135,6 +135,9 @@
             </div>
           </div>
           <div>
+            <label for="api-key">API 访问密钥（可选）</label>
+            <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
+            <p id="api-key-hint" class="hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
             <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
           </div>
         </div>
@@ -157,6 +160,7 @@
     const template = document.querySelector("#template");
     const customTemplatePanel = document.querySelector("#custom-template-panel");
     const customTemplateFile = document.querySelector("#custom-template-file");
+    const apiKey = document.querySelector("#api-key");
     const templateStatus = document.querySelector("#template-status");
     const button = document.querySelector("#submit");
     const status = document.querySelector("#status");
@@ -270,7 +274,10 @@
         }
         const response = await fetch(endpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(apiKey.value ? { Authorization: `Bearer ${apiKey.value}` } : {}),
+          },
           body: JSON.stringify(payload),
         });
         const result = await response.json();
