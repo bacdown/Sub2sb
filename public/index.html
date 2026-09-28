@@ -22,7 +22,30 @@
       background: #f7f6f3;
     }
     main { width: min(760px, 100%); margin: auto; }
-    header { margin-bottom: 28px; }
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .project-heading { min-width: 0; }
+    .project-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px 14px;
+      padding-top: 8px;
+      color: #787774;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: right;
+    }
+    .project-meta a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
+    .project-meta a:hover { color: #000; text-decoration-color: currentColor; }
+    .github-link { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .github-link svg { width: 19px; height: 19px; fill: currentColor; }
     .eyebrow { color: #787774; font-size: 13px; letter-spacing: .08em; }
     h1 { margin: 9px 0 8px; font-size: clamp(28px, 6vw, 40px); letter-spacing: -.04em; }
     .intro { margin: 0; color: #787774; line-height: 1.7; }
@@ -85,14 +108,27 @@
     footer { margin: 18px 3px 0; color: #787774; font-size: 12px; line-height: 1.7; }
     footer a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
     footer a:hover { color: #000; text-decoration-color: currentColor; }
+    @media (max-width: 480px) {
+      header { flex-wrap: wrap; }
+      .project-meta { width: 100%; padding-top: 0; }
+    }
     @media (min-width: 600px) { .options { grid-template-columns: 1fr 1fr; align-items: start; } }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <h1>yaml2sb · sing-box</h1>
-      <p class="intro">修改 YAML 配置文件或订阅链接转换为 sing-box JSON。可本地、Docker 及 Vercel 部署。</p>
+      <div class="project-heading">
+        <h1>yaml2sb · sing-box</h1>
+        <p class="intro">修改 YAML 配置文件或订阅链接转换为 sing-box JSON。可本地、Docker 及 Vercel 部署。</p>
+      </div>
+      <nav class="project-meta" aria-label="项目信息">
+        <a class="github-link" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <span>作者：<a href="https://github.com/bacdown" target="_blank" rel="noopener noreferrer">bacdown</a></span>
+      </nav>
     </header>
 
     <section class="card" aria-label="配置转换">
@@ -146,7 +182,6 @@
     </section>
 
     <footer>
-      项目作者：<a href="https://github.com/bacdown" target="_blank" rel="noopener noreferrer">bacdown</a> ·
       订阅链接可能包含私密凭据。请仅在可信环境中部署；公网开放服务前应配置身份验证与访问控制。
     </footer>
   </main>
