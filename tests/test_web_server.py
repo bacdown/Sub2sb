@@ -6,6 +6,7 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from api.index import _template_options, _load_named_template, convert_request
 from web_server import WebHandler, validate_public_url
 
 
@@ -60,6 +61,35 @@ class WebServerTests(unittest.TestCase):
         self.assertIn("可本地、Docker 及 Vercel 部署", page)
         self.assertIn("默认配置文件均支持 sing-box 1.14.x", page)
         self.assertIn('const endpoint = "/api";', page)
+        self.assertIn("自定义制作配置", page)
+        self.assertIn("/api/options?template=", page)
+        self.assertIn('id="dns-domestic-options"', page)
+        self.assertIn('id="dns-international-options"', page)
+        self.assertIn('type="checkbox"', page)
+        self.assertIn("点击 DNS 项即可选中或取消", page)
+        self.assertNotIn("按住 Ctrl / Command", page)
+        self.assertIn('class="base-template-controls"', page)
+        self.assertIn('id="reload-options"', page)
+        self.assertIn("MAX_DNS_SERVERS_PER_CATEGORY = 2", page)
+        self.assertNotIn('id="dns-builtin-choices"', page)
+        self.assertNotIn('id="dns-final"', page)
+        self.assertIn("匹配规则与顺序", page)
+        self.assertIn("出站（地区 / 手动自动）", page)
+        self.assertIn('id="match-name"', page)
+        self.assertIn('id="match-rule-set"', page)
+        self.assertIn('id="match-outbound"', page)
+        self.assertIn('id="add-match-rule"', page)
+        self.assertIn('remove.className = "remove-item"', page)
+        self.assertIn('remove.textContent = "移除"', page)
+        self.assertIn('class="rule-link-details"', page)
+        self.assertIn("已选择的 DNS", page)
+        self.assertNotIn("保留模板设置", page)
+        self.assertNotIn("<h3>应用分流</h3>", page)
+        self.assertNotIn("<h3>规则集</h3>", page)
+        self.assertNotIn('id="add-group"', page)
+        self.assertIn('id="group-choices"', page)
+        self.assertIn('id="rule-set-choices"', page)
+        self.assertIn("template_options", page)
         self.assertIn('type="file" multiple', page)
         self.assertIn("let uploadedFiles = [];", page)
         self.assertIn('id="api-key" type="password"', page)
@@ -117,12 +147,383 @@ class WebServerTests(unittest.TestCase):
         self.assertEqual(result["node_count"], 1)
         fetch.assert_called_once_with("https://subscriptions.example/sub")
 
+    def test_template_options_endpoint_requires_configured_api_key(self):
+        with patch("api.index.API_KEY", "test-secret"):
+            request = Request(self.base_url + "/api/options?template=config_phone.json")
+            with self.assertRaises(HTTPError) as error:
+                urlopen(request)
+            self.assertEqual(error.exception.code, 401)
+
+            request = Request(
+                self.base_url + "/api/options?template=config_phone.json",
+                headers={"X-API-Key": "test-secret"},
+            )
+            with urlopen(request) as response:
+                options = json.loads(response.read())
+
+        self.assertIn("dns_servers", options)
+        self.assertIn("groups", options)
+
     def test_existing_api_remains_available(self):
         with urlopen(self.base_url + "/api") as response:
             payload = json.loads(response.read())
 
         self.assertEqual(response.status, 200)
         self.assertEqual(payload["default_template"], "config_phone.json")
+
+    def test_template_options_endpoint_returns_profile_choices(self):
+        request = Request(
+            self.base_url + "/api/options?template=config_phone.json",
+        )
+        with urlopen(request) as response:
+            options = json.loads(response.read())
+
+        self.assertIn("dns_servers", options)
+        self.assertIn("groups", options)
+        self.assertIn("rule_sets", options)
+        self.assertIn(
+            "alibaba-cloud-dns",
+            [item["tag"] for item in options["dns_servers"]],
+        )
+        self.assertEqual(
+            next(item for item in options["dns_servers"] if item["tag"] == "alibaba-cloud-dns")["server"],
+            "223.5.5.5",
+        )
+        self.assertNotIn(
+            "ali",
+            [item["tag"] for item in options["dns_servers"]],
+        )
+        self.assertIn(
+            "google-public-dns",
+            [
+                item["tag"] for item in options["dns_servers"]
+                if item["category"] == "international"
+            ],
+        )
+        self.assertIn("YouTube", [item["tag"] for item in options["groups"]])
+        self.assertIn("日本自动", [item["tag"] for item in options["groups"]])
+        application_groups = {
+            item["tag"] for item in options["groups"] if item["application"]
+        }
+        self.assertIn("AI", application_groups)
+        self.assertIn("Google", application_groups)
+        self.assertNotIn("日本自动", application_groups)
+        self.assertNotIn("自动选择", application_groups)
+        self.assertNotIn("直连", options["matching_targets"])
+        self.assertNotIn("AI", options["matching_targets"])
+        self.assertIn("geosite-youtube", [item["tag"] for item in options["rule_sets"]])
+        rule_targets = {
+            item["tag"] for item in options["groups"] if item["rule_target"]
+        }
+        self.assertNotIn("日本手动", rule_targets)
+        self.assertNotIn("日本自动", rule_targets)
+        self.assertNotIn("延迟辅助", rule_targets)
+        self.assertTrue(options["matching_rules"])
+        self.assertNotIn("直连", options["rule_targets"])
+        self.assertNotIn("直连", options["matching_targets"])
+        self.assertIn("日本自动", options["matching_targets"])
+        self.assertNotIn("延迟辅助", options["matching_targets"])
+
+    def test_composed_template_options_customize_dns_groups_and_rule_sets(self):
+        template = _load_named_template("config_phone.json")
+        options = _template_options(template)
+        selected_rule_sets = [
+            item["tag"] for item in options["rule_sets"]
+            if item["tag"] != "geosite-youtube"
+        ]
+        selected_groups = [
+            item["tag"] for item in options["groups"]
+            if item["tag"] != "YouTube"
+        ]
+        selected_dns = [
+            item["tag"] for item in options["dns_servers"]
+            if item["tag"] != "tencent-dnspod-dns"
+        ]
+        configuration_options = {
+            "dns_servers": selected_dns,
+            "dns_final": "custom-dns",
+            "custom_dns_servers": [
+                {"tag": "custom-dns", "type": "https", "server": "1.1.1.1"},
+            ],
+            "groups": selected_groups,
+            "custom_groups": [
+                {"tag": "Games", "rule_sets": ["geosite-google"]},
+            ],
+            "rule_sets": selected_rule_sets,
+            "custom_rule_sets": [
+                {
+                    "tag": "geosite-games",
+                    "url": "https://example.com/games.srs",
+                    "format": "binary",
+                    "outbound": "Games",
+                },
+            ],
+        }
+
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": configuration_options,
+        })
+        config = result["config"]
+        outbound_tags = {item["tag"] for item in config["outbounds"]}
+
+        self.assertEqual(result["node_count"], 1)
+        self.assertEqual(config["dns"]["final"], "custom-dns")
+        self.assertNotIn("tencent-dnspod-dns", {item["tag"] for item in config["dns"]["servers"]})
+        self.assertIn("Games", outbound_tags)
+        self.assertNotIn("YouTube", outbound_tags)
+        self.assertTrue(all(
+            "YouTube" not in item.get("outbounds", [])
+            for item in config["outbounds"]
+        ))
+        self.assertNotIn(
+            "geosite-youtube",
+            {tag for item in config["route"]["rule_set"] for tag in (
+                item["tag"] if isinstance(item["tag"], list) else [item["tag"]]
+            )},
+        )
+        self.assertTrue(any(
+            item.get("rule_set") == "geosite-games" and item.get("outbound") == "Games"
+            for item in config["route"]["rules"]
+        ))
+        self.assertTrue(any(
+            item.get("rule_set") == "geosite-google" and item.get("outbound") == "Games"
+            for item in config["route"]["rules"]
+        ))
+        games_group = next(item for item in config["outbounds"] if item["tag"] == "Games")
+        self.assertIn("默认代理", games_group["outbounds"])
+
+    def test_empty_composition_options_preserve_each_builtin_template(self):
+        for template_name in ("config_phone.json", "config_openwrt.json", "momo.json"):
+            with self.subTest(template=template_name):
+                original = convert_request({
+                    "content": SAMPLE_SUBSCRIPTION,
+                    "template": template_name,
+                })
+                composed = convert_request({
+                    "content": SAMPLE_SUBSCRIPTION,
+                    "template": template_name,
+                    "template_options": {},
+                })
+                self.assertEqual(composed, original)
+
+    def test_composition_rejects_dns_final_not_in_selected_servers(self):
+        with self.assertRaisesRegex(ValueError, "已保留或新添加"):
+            convert_request({
+                "content": SAMPLE_SUBSCRIPTION,
+                "template": "config_phone.json",
+                "template_options": {
+                    "dns_servers": ["alibaba-cloud-dns"],
+                    "dns_final": "google",
+                },
+            })
+
+    def test_composition_reorders_default_match_rules_and_changes_targets(self):
+        template = _load_named_template("config_phone.json")
+        options = _template_options(template)
+        ordered_indexes = [
+            str(item["index"]) for item in reversed(options["matching_rules"])
+        ]
+        changed_rule = options["matching_rules"][0]
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {
+                "rule_order": ordered_indexes,
+                "rule_outbounds": {str(changed_rule["index"]): "手动选择"},
+            },
+        })
+
+        actual_matching = [
+            {key: value for key, value in rule.items() if key != "outbound"}
+            for rule in result["config"]["route"]["rules"]
+            if isinstance(rule, dict)
+            and isinstance(rule.get("outbound"), str)
+            and any(key not in ("outbound", "action") for key in rule)
+        ]
+        expected_matching = [
+            item["match"] for item in reversed(options["matching_rules"])
+        ]
+        self.assertEqual(actual_matching, expected_matching)
+        target_rule = next(
+            rule for rule in result["config"]["route"]["rules"]
+            if rule.get("outbound") == "手动选择"
+            and {
+                key: value for key, value in rule.items() if key != "outbound"
+            } == changed_rule["match"]
+        )
+        self.assertEqual(target_rule["outbound"], "手动选择")
+
+    def test_composition_removes_default_matching_rule_missing_from_order(self):
+        template = _load_named_template("config_phone.json")
+        options = _template_options(template)
+        removed_rule = options["matching_rules"][0]
+        remaining_order = [
+            str(item["index"])
+            for item in options["matching_rules"][1:]
+        ]
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {"rule_order": remaining_order},
+        })
+
+        matches = [
+            rule for rule in result["config"]["route"]["rules"]
+            if isinstance(rule, dict)
+            and isinstance(rule.get("outbound"), str)
+            and any(key not in ("outbound", "action") for key in rule)
+        ]
+        self.assertEqual(sum(
+            {key: value for key, value in rule.items() if key != "outbound"}
+            == removed_rule["match"]
+            for rule in matches
+        ), 1)
+
+    def test_composition_orders_custom_rule_group_with_default_rules(self):
+        template = _load_named_template("config_phone.json")
+        options = _template_options(template)
+        rule_order = [
+            "custom:geosite-games",
+            *(str(item["index"]) for item in options["matching_rules"]),
+        ]
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {
+                "custom_groups": [{
+                    "tag": "Games",
+                    "rule_sets": ["geosite-games"],
+                }],
+                "custom_rule_sets": [{
+                    "tag": "geosite-games",
+                    "url": "https://example.com/games.srs",
+                    "format": "binary",
+                    "outbound": "默认代理",
+                }],
+                "rule_order": rule_order,
+            },
+        })
+
+        matching_rules = [
+            rule for rule in result["config"]["route"]["rules"]
+            if isinstance(rule, dict)
+            and isinstance(rule.get("outbound"), str)
+            and any(key not in ("outbound", "action") for key in rule)
+        ]
+        self.assertEqual(matching_rules[0]["rule_set"], "geosite-games")
+        self.assertEqual(matching_rules[0]["outbound"], "Games")
+
+    def test_composition_adds_named_matching_rules_and_orders_them(self):
+        template = _load_named_template("config_phone.json")
+        options = _template_options(template)
+        rule_order = [
+            "builder-1",
+            *(str(item["index"]) for item in options["matching_rules"]),
+        ]
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {
+                "custom_matching_rules": [{
+                    "id": "builder-1",
+                    "name": "自定义应用",
+                    "rule_set": "geosite-google",
+                    "outbound": "自定义应用",
+                    "destination": "日本自动",
+                }],
+                "rule_order": rule_order,
+            },
+        })
+
+        matching_rules = [
+            rule for rule in result["config"]["route"]["rules"]
+            if isinstance(rule, dict)
+            and isinstance(rule.get("outbound"), str)
+            and any(key not in ("outbound", "action") for key in rule)
+        ]
+        self.assertEqual(matching_rules[0]["rule_set"], "geosite-google")
+        self.assertEqual(matching_rules[0]["outbound"], "自定义应用")
+        self.assertNotIn("__builder_rule_id", matching_rules[0])
+        application_group = next(
+            item for item in result["config"]["outbounds"]
+            if item["tag"] == "自定义应用"
+        )
+        self.assertEqual(application_group["outbounds"][0], "日本自动")
+
+    def test_custom_rule_set_used_by_builder_adds_only_one_matching_rule(self):
+        options = _template_options(_load_named_template("config_phone.json"))
+        rule_id = "builder-1"
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {
+                "custom_rule_sets": [{
+                    "tag": "geosite-custom",
+                    "url": "https://example.com/geosite-custom.srs",
+                    "format": "binary",
+                    "outbound": "默认代理",
+                }],
+                "custom_matching_rules": [{
+                    "id": rule_id,
+                    "name": "AI",
+                    "rule_set": "geosite-custom",
+                    "outbound": "AI",
+                    "destination": "香港手动",
+                }],
+                "rule_order": [
+                    rule_id,
+                    *(str(item["index"]) for item in options["matching_rules"]),
+                ],
+                "rule_destinations": {rule_id: "香港手动"},
+            },
+        })
+
+        rules = [
+            rule for rule in result["config"]["route"]["rules"]
+            if rule.get("rule_set") == "geosite-custom"
+        ]
+        self.assertEqual(len(rules), 1)
+        self.assertEqual(rules[0]["outbound"], "AI")
+
+    def test_composition_preserves_selected_default_for_manual_application_outbound(self):
+        template = _load_named_template("config_phone.json")
+        options = _template_options(template)
+        ai_rule = next(
+            item for item in options["matching_rules"]
+            if item["outbound"] == "AI"
+        )
+        rule_id = str(ai_rule["index"])
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {
+                "rule_order": [str(item["index"]) for item in options["matching_rules"]],
+                "rule_destinations": {rule_id: "香港手动"},
+            },
+        })
+
+        group = next(
+            item for item in result["config"]["outbounds"]
+            if item["tag"] == "AI"
+        )
+        self.assertEqual(group["outbounds"][0], "香港手动")
+
+    def test_composed_template_rejects_custom_rule_sets_without_http_url(self):
+        with self.assertRaisesRegex(ValueError, "HTTP 或 HTTPS"):
+            convert_request({
+                "content": SAMPLE_SUBSCRIPTION,
+                "template": "config_phone.json",
+                "template_options": {
+                    "custom_rule_sets": [{
+                        "tag": "example",
+                        "url": "file:///tmp/rules.srs",
+                        "format": "binary",
+                        "outbound": "默认代理",
+                    }],
+                },
+            })
 
     def test_paste_api_returns_converted_configuration(self):
         status, result = self.post_json(
@@ -134,6 +535,26 @@ class WebServerTests(unittest.TestCase):
         self.assertEqual(result["node_count"], 1)
         self.assertTrue(
             any(item.get("server") == "example.com" for item in result["config"]["outbounds"])
+        )
+
+    def test_paste_api_applies_configuration_options(self):
+        status, result = self.post_json(
+            "/api",
+            {
+                "content": SAMPLE_SUBSCRIPTION,
+                "template": "config_phone.json",
+                "template_options": {
+                    "dns_final": "alibaba-cloud-dns",
+                    "rule_sets": ["geosite-ai"],
+                },
+            },
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(result["config"]["dns"]["final"], "alibaba-cloud-dns")
+        self.assertEqual(
+            {item["tag"] for item in result["config"]["route"]["rule_set"]},
+            {"geosite-ai"},
         )
 
     def test_custom_template_with_minimum_dependencies_converts(self):
@@ -206,6 +627,23 @@ class WebServerTests(unittest.TestCase):
 
         self.assertEqual(status, 200)
         self.assertEqual(result["node_count"], 1)
+
+    def test_link_endpoint_applies_configuration_options(self):
+        with patch(
+            "web_server.fetch_remote_subscription",
+            return_value=SAMPLE_SUBSCRIPTION,
+        ):
+            status, result = self.post_json(
+                "/fetch",
+                {
+                    "url": "https://subscriptions.example/sub",
+                    "template": "config_phone.json",
+                    "template_options": {"dns_final": "alibaba-cloud-dns"},
+                },
+            )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(result["config"]["dns"]["final"], "alibaba-cloud-dns")
 
     def test_vercel_api_accepts_remote_url_list(self):
         with patch("api.index.fetch_remote_subscription", return_value=SAMPLE_SUBSCRIPTION) as fetch:
