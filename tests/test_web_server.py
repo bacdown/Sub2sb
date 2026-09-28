@@ -33,11 +33,14 @@ class WebServerTests(unittest.TestCase):
         cls.server.server_close()
         cls.thread.join()
 
-    def post_json(self, path, payload):
+    def post_json(self, path, payload, headers=None):
+        request_headers = {"Content-Type": "application/json"}
+        if headers:
+            request_headers.update(headers)
         request = Request(
             self.base_url + path,
             data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers=request_headers,
             method="POST",
         )
         with urlopen(request) as response:
@@ -59,9 +62,60 @@ class WebServerTests(unittest.TestCase):
         self.assertIn('const endpoint = "/api";', page)
         self.assertIn('type="file" multiple', page)
         self.assertIn("let uploadedFiles = [];", page)
+        self.assertIn('id="api-key" type="password"', page)
+        self.assertIn("Authorization: `Bearer ${apiKey.value}`", page)
         self.assertLess(page.index('id="file-name"'), page.index('id="file"'))
         self.assertIn("已添加 ${uploadedFiles.length} 个文件", page)
         self.assertIn("#f7f6f3", page)
+
+    def test_local_api_and_fetch_require_configured_api_key(self):
+        with patch("api.index.API_KEY", "test-secret"):
+            requests = [
+                Request(self.base_url + "/api"),
+                Request(
+                    self.base_url + "/api",
+                    data=b"{}",
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                ),
+                Request(
+                    self.base_url + "/fetch",
+                    data=b"{}",
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                ),
+            ]
+            for request in requests:
+                with self.subTest(path=request.full_url, method=request.get_method()):
+                    with self.assertRaises(HTTPError) as error:
+                        urlopen(request)
+                    self.assertEqual(error.exception.code, 401)
+
+            with urlopen(self.base_url + "/") as response:
+                self.assertEqual(response.status, 200)
+
+    def test_local_api_key_authorizes_api_and_fetch(self):
+        with patch("api.index.API_KEY", "test-secret"):
+            request = Request(
+                self.base_url + "/api",
+                headers={"Authorization": "Bearer test-secret"},
+            )
+            with urlopen(request) as response:
+                self.assertEqual(response.status, 200)
+
+            with patch(
+                "web_server.fetch_remote_subscription",
+                return_value=SAMPLE_SUBSCRIPTION,
+            ) as fetch:
+                status, result = self.post_json(
+                    "/fetch",
+                    {"url": "https://subscriptions.example/sub"},
+                    headers={"X-API-Key": "test-secret"},
+                )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(result["node_count"], 1)
+        fetch.assert_called_once_with("https://subscriptions.example/sub")
 
     def test_existing_api_remains_available(self):
         with urlopen(self.base_url + "/api") as response:
