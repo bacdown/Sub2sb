@@ -65,6 +65,11 @@ def _template_options(template):
     dns = template.get("dns", {})
     dns_servers = dns.get("servers", []) if isinstance(dns, dict) else []
     outbounds = template.get("outbounds", [])
+    outbound_tags = {
+        item["tag"]
+        for item in outbounds
+        if isinstance(item, dict) and isinstance(item.get("tag"), str)
+    }
     route = template.get("route", {})
     protected_groups = {
         route.get("final")
@@ -159,12 +164,14 @@ def _template_options(template):
         "matching_rules": matching_rules,
         "rule_targets": [
             *[item["tag"] for item in groups if item["rule_target"]],
+            *(["直连"] if "直连" in outbound_tags else []),
         ],
         "matching_targets": [
             *[
                 item["tag"] for item in groups
                 if item["tag"] != "延迟辅助" and not item["application"]
             ],
+            *(["直连"] if "直连" in outbound_tags else []),
         ],
         "outbounds": [
             item["tag"]
@@ -438,6 +445,8 @@ def _apply_template_options(template, options):
     available_rule_targets = (
         set(metadata["rule_targets"]) - removed_groups
     ) | {group["tag"] for group in group_definitions}
+    if "直连" in metadata["outbounds"]:
+        available_rule_targets.add("直连")
     for rule_tag, group_tag in grouped_rule_targets.items():
         if rule_tag not in selected_rule_sets:
             continue
@@ -567,14 +576,9 @@ def _apply_template_options(template, options):
     available_matching_targets = (
         set(metadata["matching_targets"]) - removed_groups
     ) | {group["tag"] for group in group_definitions}
-    available_destinations = (
-        available_matching_targets
-        | (
-            {"直连"}
-            if "直连" in metadata["outbounds"] and "直连" not in removed_groups
-            else set()
-        )
-    ) - valid_application_tags
+    if "直连" in metadata["outbounds"]:
+        available_matching_targets.add("直连")
+    available_destinations = available_matching_targets - valid_application_tags
     for rule_id, outbound in rule_outbounds.items():
         if rule_id not in rule_by_id:
             raise ValueError(f"rule_outbounds 包含不存在的匹配规则：{rule_id}")
