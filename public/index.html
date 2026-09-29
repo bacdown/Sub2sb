@@ -85,10 +85,19 @@
     input[type="url"], input[type="password"], select { min-height: 48px; padding: 0 13px; }
     .custom-template-panel { margin-top: 16px; }
     .custom-template-panel input[type="file"] { width: 100%; }
-    .base-template-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: center; gap: 10px; }
+    .base-template-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      align-items: center;
+      gap: 18px;
+    }
     .base-template-controls select { min-width: 0; width: 100%; }
-    .base-template-controls button { width: auto; justify-self: center; white-space: nowrap; }
-    /* Match original outbound (.match-builder select) style — native dropdown, no custom arrow */
+    .base-template-controls button {
+      width: 100%;
+      justify-self: stretch;
+      white-space: nowrap;
+    }
+    /* Previous-version control style (match outbound select) */
     #template,
     #base-template,
     .match-builder select,
@@ -108,16 +117,21 @@
     }
     .base-template-controls .secondary,
     .rule-link-fields .secondary {
+      width: 100%;
+      min-width: 0;
       min-height: 36px;
-      padding: 0 12px;
+      padding: 0 8px;
       border: 1px solid #c9cdd1;
       border-radius: 4px;
       background: #fff;
       color: #37352f;
       font-size: 13px;
       font-weight: 400;
+      line-height: 1.2;
+      text-align: center;
       cursor: pointer;
       white-space: nowrap;
+      box-shadow: none;
     }
     .base-template-controls .secondary:hover,
     .rule-link-fields .secondary:hover {
@@ -184,7 +198,15 @@
     .match-builder { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(190px, 1.2fr) minmax(190px, 1.2fr) minmax(150px, .8fr); align-items: end; gap: 10px; padding: 14px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
     .match-builder label { margin-bottom: 6px; font-size: 13px; font-weight: 600; }
     .match-builder .secondary { font-size: 13px; }
-    .match-name-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+    .match-name-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: center;
+      gap: 6px;
+    }
+    .match-name-fields.is-custom {
+      grid-template-columns: minmax(0, 1fr) 36px;
+    }
     .match-name-fields .secondary {
       width: 36px;
       min-width: 36px;
@@ -201,12 +223,38 @@
       background: #fff;
       color: #37352f;
       cursor: pointer;
+      box-sizing: border-box;
     }
     .match-name-fields .secondary:hover { background: #f1f1ef; }
-    .rule-link-details { margin-top: 12px; } padding: 12px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; font-size: 13px; }
-    .rule-link-details summary { cursor: pointer; font-weight: 600; }
-    .rule-link-fields { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(220px, 1.4fr) minmax(150px, .8fr) auto; align-items: end; gap: 10px; margin-top: 12px; }
-    .rule-link-fields label { margin-bottom: 6px; font-size: 13px; }
+    .rule-link-details {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #d9dcdf;
+      border-radius: 4px;
+      background: #f8f9fa;
+      font-size: 13px;
+    }
+    .rule-link-details summary {
+      cursor: pointer;
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #37352f;
+      line-height: 1.3;
+    }
+    /* 名称 | 链接(宽) | 格式 | 出站 | 添加 — 同一水平行 */
+    .rule-link-fields {
+      display: grid;
+      grid-template-columns: minmax(110px, .9fr) minmax(200px, 2fr) minmax(120px, .85fr) minmax(110px, .9fr) minmax(96px, auto);
+      align-items: end;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .rule-link-fields label { margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+    .rule-link-fields .rule-link-action label {
+      visibility: hidden;
+      user-select: none;
+    }
     .rule-order-list { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
     .rule-order-item { display: grid; grid-template-columns: minmax(140px, .7fr) minmax(150px, 1fr) minmax(190px, 1.2fr) auto; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
     .rule-summary { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
@@ -494,7 +542,10 @@
                     <label for="new-rule-outbound">规则集出站</label>
                     <select id="new-rule-outbound" aria-label="自定义规则集出站"></select>
                   </div>
-                  <button id="add-rule-set" class="secondary" type="button">添加规则集</button>
+                  <div class="rule-link-action">
+                    <label for="add-rule-set">添加规则集</label>
+                    <button id="add-rule-set" class="secondary" type="button">添加规则集</button>
+                  </div>
                 </div>
                 <ul id="custom-rule-list" class="added-list"></ul>
               </details>
@@ -860,9 +911,11 @@
 
     function syncCustomMatchNameFields() {
       const customName = matchName.value === "__custom__";
+      const fields = document.querySelector(".match-name-fields");
       matchName.hidden = customName;
       document.querySelector("#new-match-name").hidden = !customName;
       document.querySelector("#add-match-name").hidden = !customName;
+      if (fields) fields.classList.toggle("is-custom", customName);
     }
 
     function matchRuleLabel(rule) {
