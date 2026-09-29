@@ -123,7 +123,8 @@
     .match-builder label { margin-bottom: 6px; font-size: 13px; }
     .match-builder select, .match-builder input { width: 100%; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
     .match-builder .secondary { font-size: 13px; }
-    .match-name-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+    .match-name-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+    .match-name-fields .secondary { width: 36px; min-height: 36px; padding: 0; font-size: 20px; line-height: 1; }
     .rule-link-details { margin-top: 12px; padding: 12px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; font-size: 13px; }
     .rule-link-details summary { cursor: pointer; font-weight: 600; }
     .rule-link-fields { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(220px, 1.4fr) minmax(150px, .8fr) auto; align-items: end; gap: 10px; margin-top: 12px; }
@@ -177,7 +178,6 @@
     }
     @media (max-width: 520px) {
       .dns-grid, .match-builder, .rule-link-fields { grid-template-columns: 1fr; }
-      .match-name-fields { grid-template-columns: 1fr; }
       .base-template-controls { align-items: stretch; flex-direction: column; }
     }
   </style>
@@ -307,7 +307,7 @@
                   <div class="match-name-fields">
                     <select id="match-name" aria-label="应用分流名称"></select>
                     <input id="new-match-name" type="text" placeholder="新增应用分流名称" aria-label="自定义应用分流名称" hidden>
-                    <button id="add-match-name" class="secondary" type="button" hidden>添加应用</button>
+                    <button id="add-match-name" class="secondary" type="button" aria-label="添加应用" title="添加应用" hidden>＋</button>
                   </div>
                 </div>
                 <div>
@@ -681,7 +681,11 @@
 
       const selectedOutbound = matchOutbound.value;
       matchOutbound.replaceChildren();
-      for (const tag of availableMatchingTargets()) {
+      const matchingTargets = availableMatchingTargets();
+      if (configurationOptions?.outbounds?.includes("直连")) {
+        matchingTargets.push("直连");
+      }
+      for (const tag of matchingTargets) {
         const option = document.createElement("option");
         option.value = tag;
         option.textContent = tag;
@@ -690,6 +694,14 @@
       if ([...matchOutbound.options].some((option) => option.value === selectedOutbound)) {
         matchOutbound.value = selectedOutbound;
       }
+      syncCustomMatchNameFields();
+    }
+
+    function syncCustomMatchNameFields() {
+      const customName = matchName.value === "__custom__";
+      matchName.hidden = customName;
+      document.querySelector("#new-match-name").hidden = !customName;
+      document.querySelector("#add-match-name").hidden = !customName;
     }
 
     function matchRuleLabel(rule) {
@@ -1065,9 +1077,8 @@
       renderMatchingRules();
     });
     matchName.addEventListener("change", () => {
+      syncCustomMatchNameFields();
       const customName = matchName.value === "__custom__";
-      document.querySelector("#new-match-name").hidden = !customName;
-      document.querySelector("#add-match-name").hidden = !customName;
       if (customName) document.querySelector("#new-match-name").focus();
     });
     document.querySelector("#add-match-name").addEventListener("click", () => {
@@ -1089,9 +1100,8 @@
       customMatchNames.push(name);
       renderMatchBuilderOptions();
       matchName.value = name;
+      syncCustomMatchNameFields();
       input.value = "";
-      input.hidden = true;
-      document.querySelector("#add-match-name").hidden = true;
       setComposeStatus(`已添加匹配规则名称：${name}`, "success");
     });
     matchRuleSet.addEventListener("change", () => {
