@@ -567,7 +567,14 @@ def _apply_template_options(template, options):
     available_matching_targets = (
         set(metadata["matching_targets"]) - removed_groups
     ) | {group["tag"] for group in group_definitions}
-    available_destinations = available_matching_targets - valid_application_tags
+    available_destinations = (
+        available_matching_targets
+        | (
+            {"直连"}
+            if "直连" in metadata["outbounds"] and "直连" not in removed_groups
+            else set()
+        )
+    ) - valid_application_tags
     for rule_id, outbound in rule_outbounds.items():
         if rule_id not in rule_by_id:
             raise ValueError(f"rule_outbounds 包含不存在的匹配规则：{rule_id}")
