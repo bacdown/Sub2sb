@@ -510,23 +510,52 @@ def parse_hysteria2(uri):
         "server": parsed.hostname,
         "server_port": parsed.port or 443,
         "password": urllib.parse.unquote(parsed.username or ""),
+        # 与 Clash 路径保持一致，兼容 sing-box 1.14+ Ed25519 证书节点
+        "disable_chrome_parrot": True,
     }
 
-    obfs = get_param("obfs")
+    # 端口跳跃（部分订阅会带 mport / ports）
+    mport = get_param("mport") or get_param("ports")
+    if mport:
+        ranges = []
+        for part in mport.split(","):
+            part = part.strip()
+            if "-" in part:
+                a, b = part.split("-", 1)
+                ranges.append(f"{a}:{b}")
+            elif part:
+                ranges.append(part)
+        if ranges:
+            outbound.pop("server_port", None)
+            outbound["server_ports"] = ranges
 
+    obfs = get_param("obfs")
     if obfs:
         outbound["obfs"] = {
             "type": obfs,
             "password": get_param("obfs-password"),
         }
 
+    # 带宽
+    for param_key, sb_key in (("upmbps", "up_mbps"), ("downmbps", "down_mbps")):
+        val = get_param(param_key)
+        if val:
+            try:
+                outbound[sb_key] = int(float(val))
+            except (TypeError, ValueError):
+                pass
+
     tls = {
         "enabled": True,
         "server_name": get_param("sni") or parsed.hostname,
+        "alpn": ["h3"],
     }
 
     if get_param("insecure").lower() in ("1", "true", "yes"):
         tls["insecure"] = True
+
+    # pinSHA256 / fingerprint 是证书钉扎，1.14 无法直接映射，忽略即可
+    # （有 insecure 时不影响连通）
 
     outbound["tls"] = tls
 
@@ -847,6 +876,9 @@ def clash_proxy_to_outbound(proxy):
             "server": proxy["server"],
             "server_port": int(proxy.get("port", 443)),
             "password": str(password),
+            # sing-box 1.14+ 默认 Chrome QUIC 模仿会与很多使用 Ed25519
+            # 证书的自签/专线节点握手失败，默认关闭以兼容
+            "disable_chrome_parrot": True,
         }
 
         server_ports = proxy.get("ports") or proxy.get("mport")
@@ -879,6 +911,29 @@ def clash_proxy_to_outbound(proxy):
                     hop_interval += "s"
                 outbound["hop_interval"] = hop_interval
 
+        # 带宽（Clash 常用 up/down 或 up-mbps/down-mbps）
+        for clash_key, sb_key in (
+            ("up", "up_mbps"),
+            ("down", "down_mbps"),
+            ("up-mbps", "up_mbps"),
+            ("down-mbps", "down_mbps"),
+            ("up_mbps", "up_mbps"),
+            ("down_mbps", "down_mbps"),
+        ):
+            value = proxy.get(clash_key)
+            if value is None:
+                continue
+            # 支持 "100 Mbps" / "100Mbps" / 100 等写法
+            text = str(value).strip().lower().replace(" ", "")
+            for unit in ("mbps", "mb", "m"):
+                if text.endswith(unit):
+                    text = text[: -len(unit)]
+                    break
+            try:
+                outbound[sb_key] = int(float(text))
+            except (TypeError, ValueError):
+                pass
+
         obfs = proxy.get("obfs")
         if obfs:
             outbound["obfs"] = {
@@ -886,15 +941,33 @@ def clash_proxy_to_outbound(proxy):
                 "password": proxy.get("obfs-password", ""),
             }
 
-        tls = clash_tls_config(proxy)
+        # Hysteria2 强制 TLS。Clash 的 fingerprint 对 hy2 是证书 SHA256 钉扎，
+        # 不是 uTLS 客户端指纹，绝不能塞进 utls。
+        # sing-box 1.14 没有 certificate_sha256（1.15 才有），
+        # 在 skip-cert-verify 时用 insecure 即可。
+        tls = {
+            "enabled": True,
+            "server_name": (
+                proxy.get("sni")
+                or proxy.get("servername")
+                or proxy["server"]
+            ),
+            "alpn": ["h3"],
+        }
 
-        if tls is None:
-            tls = {
+        if proxy.get("skip-cert-verify", False):
+            tls["insecure"] = True
+
+        # 仅当明确是 uTLS 客户端指纹时才启用 utls（极少数 hy2 配置会写）
+        client_fp = proxy.get("client-fingerprint")
+        if client_fp and client_fp.lower() in (
+            "chrome", "firefox", "safari", "ios", "android",
+            "edge", "360", "qq", "random", "randomized",
+        ):
+            tls["utls"] = {
                 "enabled": True,
-                "server_name": proxy.get("sni") or proxy["server"],
+                "fingerprint": client_fp,
             }
-            if proxy.get("skip-cert-verify", False):
-                tls["insecure"] = True
 
         outbound["tls"] = tls
 
