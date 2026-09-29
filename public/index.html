@@ -88,8 +88,69 @@
     .base-template-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: center; gap: 10px; }
     .base-template-controls select { min-width: 0; width: 100%; }
     .base-template-controls button { width: auto; justify-self: center; white-space: nowrap; }
-    #template, #base-template { width: 100%; min-width: 0; min-height: 36px; height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
-    .compose-panel { grid-column: 1 / -1; margin-top: 6px; padding: 18px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
+    /* Match original outbound (.match-builder select) style — native dropdown, no custom arrow */
+    #template,
+    #base-template,
+    .match-builder select,
+    .match-builder input,
+    .rule-link-fields input,
+    .rule-link-fields select,
+    .rule-actions select {
+      width: 100%;
+      min-width: 0;
+      min-height: 36px;
+      padding: 0 8px;
+      border: 1px solid #c9cdd1;
+      border-radius: 4px;
+      background: #fff;
+      color: #37352f;
+      font-size: 13px;
+    }
+    .base-template-controls .secondary,
+    .rule-link-fields .secondary {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid #c9cdd1;
+      border-radius: 4px;
+      background: #fff;
+      color: #37352f;
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .base-template-controls .secondary:hover,
+    .rule-link-fields .secondary:hover {
+      background: #f1f1ef;
+    }
+    /* Same look as outbound select; click-only, not a dropdown */
+    .match-add-btn {
+      width: 100%;
+      min-width: 0;
+      min-height: 36px;
+      height: 36px;
+      padding: 0 8px;
+      border: 1px solid #c9cdd1;
+      border-radius: 4px;
+      background: #fff;
+      color: #37352f;
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.2;
+      text-align: center;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: none;
+    }
+    .match-add-btn:hover { background: #f1f1ef; }
+    .match-add-btn:focus {
+      border-color: #a5a4a0;
+      outline: none;
+      box-shadow: 0 0 0 2px rgb(55 53 47 / 8%);
+    }
+    .compose-panel { grid-column: 1 / -1; margin-top: 14px; padding: 18px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
+    .compose-panel > .hint:first-child { margin: 0 0 16px; }
+    .compose-panel > label[for="base-template"] { margin: 0 0 10px; }
     .compose-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 18px; }
     .compose-section { min-width: 0; padding: 16px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
     .compose-section:first-child, .compose-section:last-child { grid-column: 1 / -1; }
@@ -120,25 +181,38 @@
     .dns-option-add { width: 100%; min-height: 38px; border: 0; background: transparent; text-align: left; font: inherit; cursor: pointer; }
     .dns-option-add:hover { background: #f1f1ef; }
     .dns-select-hint { margin-top: 5px; }
-    .match-builder { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(190px, 1.2fr) minmax(190px, 1.2fr) auto; align-items: end; gap: 10px; padding: 14px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
-    .match-builder label { margin-bottom: 6px; font-size: 13px; }
-    .match-builder select, .match-builder input { width: 100%; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
+    .match-builder { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(190px, 1.2fr) minmax(190px, 1.2fr) minmax(150px, .8fr); align-items: end; gap: 10px; padding: 14px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
+    .match-builder label { margin-bottom: 6px; font-size: 13px; font-weight: 600; }
     .match-builder .secondary { font-size: 13px; }
     .match-name-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; }
-    .match-name-fields .secondary { width: 36px; min-height: 36px; padding: 0; font-size: 20px; line-height: 1; }
-    .rule-link-details { margin-top: 12px; padding: 12px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; font-size: 13px; }
+    .match-name-fields .secondary {
+      width: 36px;
+      min-width: 36px;
+      min-height: 36px;
+      height: 36px;
+      padding: 0;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #c9cdd1;
+      border-radius: 4px;
+      background: #fff;
+      color: #37352f;
+      cursor: pointer;
+    }
+    .match-name-fields .secondary:hover { background: #f1f1ef; }
+    .rule-link-details { margin-top: 12px; } padding: 12px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; font-size: 13px; }
     .rule-link-details summary { cursor: pointer; font-weight: 600; }
     .rule-link-fields { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(220px, 1.4fr) minmax(150px, .8fr) auto; align-items: end; gap: 10px; margin-top: 12px; }
     .rule-link-fields label { margin-bottom: 6px; font-size: 13px; }
-    .rule-link-fields input, .rule-link-fields select { width: 100%; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
-    .rule-link-fields .secondary, .rule-actions select { font-size: 13px; }
     .rule-order-list { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
     .rule-order-item { display: grid; grid-template-columns: minmax(140px, .7fr) minmax(150px, 1fr) minmax(190px, 1.2fr) auto; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
     .rule-summary { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
     .rule-group-name { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
     .rule-set-name { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
     .rule-actions { display: flex; align-items: center; gap: 6px; }
-    .rule-actions select { width: 100%; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; }
     .rule-default-outbound, .rule-order-item .remove-item { font-size: 13px; }
     .rule-column-label { color: #787774; font-size: 11px; }
     .move-rule { min-width: 34px; min-height: 34px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; cursor: pointer; }
@@ -146,25 +220,69 @@
     .file-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #787774; font-size: 13px; }
     input[type="file"] { max-width: 100%; color: #5f5e5a; }
     .hint { margin: 8px 0 0; color: #787774; font-size: 13px; line-height: 1.6; }
-    .input-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: stretch; gap: 14px; padding-top: 24px; }
-    .input-layout > .mode-panel { display: contents; }
-    #paste-panel > label, #content, #paste-panel > p:not(#file-name),
-    #url-panel > label, #url, #url-panel > p { grid-column: 1 / -1; }
-    #file-name, .file-row { grid-column: 1; }
-    .options { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
+    .input-layout { display: grid; grid-template-columns: 1fr; gap: 0; padding-top: 24px; }
+    .input-layout > .mode-panel { display: block; }
+    .controls-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      align-items: center;
+      gap: 18px;
+      margin-top: 12px;
+    }
+    .controls-left {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+      align-content: start;
+    }
+    .controls-left #file-name { margin: 0; }
+    .controls-left .file-row { margin: 0; }
+    .controls-left .options { margin: 0; display: block; }
+    .controls-left .options > div > label { margin-bottom: 8px; }
     .api-key-field { min-width: 0; container-type: inline-size; }
+    .api-key-field > label { text-align: center; margin-bottom: 8px; }
     .api-key-input-wrap { position: relative; }
-    #api-key { height: 36px; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; font-size: 13px; }
+    #api-key {
+      width: 100%;
+      height: 36px;
+      min-height: 36px;
+      padding: 0 8px;
+      border: 1px solid #c9cdd1;
+      border-radius: 4px;
+      outline: none;
+      background: #fff;
+      color: #37352f;
+      font-size: 13px;
+      text-align: center;
+      box-shadow: none;
+    }
+    #api-key:focus {
+      border-color: #a5a4a0;
+      box-shadow: 0 0 0 2px rgb(55 53 47 / 8%);
+    }
     .api-key-hint {
       position: absolute;
       inset: 0;
       margin: 0;
       padding: 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
       font-size: clamp(8px, 2.4cqw, 10px);
       line-height: 1.15;
       pointer-events: none;
     }
-    .shared-controls { display: grid; align-content: center; gap: 10px; min-width: 0; grid-column: 2; grid-row: 4 / span 2; }
+    .shared-controls {
+      display: grid;
+      align-content: center;
+      justify-items: stretch;
+      gap: 12px;
+      min-width: 0;
+    }
+    .shared-controls .primary {
+      min-height: 44px;
+    }
     .primary {
       width: 100%;
       min-height: 50px;
@@ -184,14 +302,10 @@
     footer { margin: 18px 3px 0; color: #787774; font-size: 12px; line-height: 1.7; }
     footer a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
     footer a:hover { color: #000; text-decoration-color: currentColor; }
-    @media (min-width: 600px) { .options { grid-template-columns: 1fr 1fr; align-items: stretch; } }
-    @media (min-width: 801px) { .options { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     @media (max-width: 800px) {
       body { padding: 20px 12px; }
-      .input-layout { grid-template-columns: 1fr; }
-      #paste-panel > label, #content, #paste-panel > p:not(#file-name),
-      #url-panel > label, #url-panel > p { grid-column: 1; }
-      .shared-controls { grid-column: 1; grid-row: auto; }
+      .controls-row { grid-template-columns: 1fr; align-items: stretch; gap: 14px; }
+      .shared-controls { align-content: start; }
       .compose-grid { grid-template-columns: 1fr; }
       .compose-section:first-child, .compose-section:last-child { grid-column: auto; }
       .match-builder { grid-template-columns: 1fr 1fr; }
@@ -203,6 +317,7 @@
     @media (max-width: 520px) {
       .dns-grid, .match-builder, .rule-link-fields { grid-template-columns: 1fr; }
       .base-template-controls { grid-template-columns: 1fr; }
+      .match-add-btn { width: 100%; }
     }
   </style>
 </head>
@@ -233,10 +348,6 @@
             <label for="content">订阅内容</label>
             <textarea id="content" name="content" placeholder="粘贴 Clash YAML、Base64 订阅或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
             <p class="hint">默认配置文件均支持 sing-box 1.14.x。</p>
-            <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择 YAML / TXT 文件，内容会合并提交；总大小上限为 2 MiB。</p>
-            <div class="file-row">
-              <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
-            </div>
           </div>
 
           <div class="mode-panel" id="url-panel" role="tabpanel" aria-labelledby="url-tab" hidden>
@@ -244,7 +355,33 @@
             <textarea id="url" name="url" rows="4" placeholder="每行一个订阅链接&#10;https://example.com/subscribe"></textarea>
             <p class="hint">支持粘贴多条订阅链接，每行一个；服务端会逐条下载订阅内容，只允许访问公网 HTTP / HTTPS 地址，且每条下载上限为 2 MiB。</p>
           </div>
+        </div>
 
+        <div class="controls-row">
+          <div class="controls-left">
+            <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择 YAML / TXT 文件，内容会合并提交；总大小上限为 2 MiB。</p>
+            <div class="file-row">
+              <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
+            </div>
+            <div class="options">
+              <div>
+                <label for="template">sing-box 模板</label>
+                <select id="template" name="template">
+                  <option value="config_phone.json">iPhone 配置</option>
+                  <option value="config_openwrt.json">OpenWrt 配置</option>
+                  <option value="momo.json">Momo 配置</option>
+                  <option value="compose">自定义制作配置</option>
+                  <option value="custom">上传自定义模板</option>
+                </select>
+                <div id="custom-template-panel" class="custom-template-panel" hidden>
+                  <label for="custom-template-file">自定义 JSON 模板文件</label>
+                  <input id="custom-template-file" type="file" accept=".json,application/json">
+                  <p class="hint">最小要求：JSON 根节点为对象，且包含数组类型的 <code>outbounds</code>；数组项须为对象。</p>
+                  <p id="template-status" class="status" role="status" aria-live="polite"></p>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="shared-controls">
             <div class="api-key-field">
               <label for="api-key">API 访问密钥（可选）</label>
@@ -254,25 +391,6 @@
               </div>
             </div>
             <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
-          </div>
-        </div>
-
-        <div class="options">
-          <div>
-            <label for="template">sing-box 模板</label>
-            <select id="template" name="template">
-              <option value="config_phone.json">iPhone 配置</option>
-              <option value="config_openwrt.json">OpenWrt 配置</option>
-              <option value="momo.json">Momo 配置</option>
-              <option value="compose">自定义制作配置</option>
-              <option value="custom">上传自定义模板</option>
-            </select>
-            <div id="custom-template-panel" class="custom-template-panel" hidden>
-              <label for="custom-template-file">自定义 JSON 模板文件</label>
-              <input id="custom-template-file" type="file" accept=".json,application/json">
-              <p class="hint">最小要求：JSON 根节点为对象，且包含数组类型的 <code>outbounds</code>；数组项须为对象。</p>
-              <p id="template-status" class="status" role="status" aria-live="polite"></p>
-            </div>
           </div>
         </div>
         <section id="compose-panel" class="compose-panel" aria-label="自定义配置制作" hidden>
@@ -349,7 +467,10 @@
                   <label for="match-outbound">出站</label>
                   <select id="match-outbound" aria-label="匹配规则出站"></select>
                 </div>
-                <button id="add-match-rule" class="secondary" type="button">添加匹配规则</button>
+                <div>
+                  <label for="add-match-rule">添加匹配规则</label>
+                  <button id="add-match-rule" class="match-add-btn" type="button">添加</button>
+                </div>
               </div>
               <details class="rule-link-details">
                 <summary>添加自定义规则集链接</summary>
@@ -982,6 +1103,87 @@
       renderMatchingRules();
     }
 
+    const DEMO_CONFIGURATION_OPTIONS = {
+      dns_servers: [
+        { tag: "dns-alibaba-cloud-doh", name: "阿里云 DNS（DoH）", type: "https", server: "dns.alidns.com", category: "domestic" },
+        { tag: "dns-tencent-dnspod-doh", name: "腾讯 DNSPod（DoH）", type: "https", server: "doh.pub", category: "domestic" },
+        { tag: "dns-cloudflare-doh", name: "Cloudflare（DoH）", type: "https", server: "cloudflare-dns.com", category: "international" },
+        { tag: "dns-google-doh", name: "Google Public DNS（DoH）", type: "https", server: "dns.google", category: "international" },
+      ],
+      groups: [
+        { tag: "手动选择", type: "selector", application: false, required: true, members: ["自动选择"] },
+        { tag: "自动选择", type: "urltest", application: false, required: true, members: [] },
+        { tag: "默认代理", type: "selector", application: false, required: false, members: ["手动选择"] },
+        { tag: "Telegram", type: "selector", application: true, required: false, members: ["默认代理"] },
+        { tag: "OpenAI", type: "selector", application: true, required: false, members: ["默认代理"] },
+        { tag: "Google", type: "selector", application: true, required: false, members: ["默认代理"] },
+        { tag: "Netflix", type: "selector", application: true, required: false, members: ["默认代理"] },
+        { tag: "YouTube", type: "selector", application: true, required: false, members: ["默认代理"] },
+      ],
+      outbounds: ["手动选择", "自动选择", "默认代理", "Telegram", "OpenAI", "Google", "Netflix", "YouTube", "DIRECT", "REJECT"],
+      matching_targets: ["默认代理", "手动选择", "自动选择", "DIRECT", "REJECT", "Telegram", "OpenAI", "Google", "Netflix", "YouTube"],
+      rule_sets: [
+        { tag: "geosite-telegram" },
+        { tag: "geosite-openai" },
+        { tag: "geosite-google" },
+        { tag: "geosite-netflix" },
+        { tag: "geosite-youtube" },
+        { tag: "geosite-cn" },
+        { tag: "geoip-cn" },
+      ],
+      matching_rules: [
+        { index: 0, match: { rule_set: "geosite-telegram" }, outbound: "Telegram" },
+        { index: 1, match: { rule_set: "geosite-openai" }, outbound: "OpenAI" },
+        { index: 2, match: { rule_set: "geosite-google" }, outbound: "Google" },
+        { index: 3, match: { rule_set: "geosite-netflix" }, outbound: "Netflix" },
+        { index: 4, match: { rule_set: "geosite-youtube" }, outbound: "YouTube" },
+      ],
+    };
+
+    function applyConfigurationOptions(result, resetCustom, statusMessage, statusKind = "success") {
+      configurationOptions = result;
+      if (resetCustom) {
+        customDnsServers = [];
+        customGroups = [];
+        customRuleSets = [];
+        customMatchNames = [];
+        removedMatchingRuleIds = new Set();
+        nextBuilderRuleId = 1;
+        renderCustomItems();
+      }
+      renderDnsSelectors([], true);
+      renderCustomItems();
+      groupChoices.replaceChildren();
+      for (const item of result.groups.filter((group) => group.application)) {
+        addChoice(
+          groupChoices,
+          item.tag,
+          `${item.tag} · ${item.type}${item.required ? "（必需）" : ""}`,
+          true,
+          item.required,
+        );
+      }
+      ruleSetChoices.replaceChildren();
+      for (const item of result.rule_sets) {
+        addChoice(ruleSetChoices, item.tag, item.tag);
+      }
+      matchingRules = result.matching_rules.map((item) => ({
+        ...item,
+        id: String(item.index),
+        name: item.outbound,
+        defaultOutbound: item.outbound,
+      }));
+      syncMatchingRules();
+      renderMatchBuilderOptions();
+      if (matchName.value === "__custom__") {
+        const firstReal = [...matchName.options].find((option) => option.value && !option.value.startsWith("__"));
+        if (firstReal) matchName.value = firstReal.value;
+      }
+      syncCustomMatchNameFields();
+      renderMatchingRules();
+      setComposeStatus(statusMessage, statusKind);
+    }
+
     async function loadConfigurationOptions(resetCustom = false) {
       setComposeStatus("正在读取基础配置选项…");
       try {
@@ -989,48 +1191,35 @@
           `/api/options?template=${encodeURIComponent(baseTemplate.value)}`,
           { headers: apiHeaders() },
         );
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || "读取配置选项失败。");
-        configurationOptions = result;
-        if (resetCustom) {
-          customDnsServers = [];
-          customGroups = [];
-          customRuleSets = [];
-          customMatchNames = [];
-          removedMatchingRuleIds = new Set();
-          nextBuilderRuleId = 1;
-          renderCustomItems();
+        let result = null;
+        try {
+          result = await response.json();
+        } catch (_) {
+          result = null;
         }
-        renderDnsSelectors([], true);
-        renderCustomItems();
-        groupChoices.replaceChildren();
-        for (const item of result.groups.filter((group) => group.application)) {
-          addChoice(
-            groupChoices,
-            item.tag,
-            `${item.tag} · ${item.type}${item.required ? "（必需）" : ""}`,
-            true,
-            item.required,
-          );
+        if (!response.ok) {
+          const serverError = result && result.error ? result.error : "";
+          if (response.status === 401 || response.status === 403) {
+            throw new Error(serverError || "需要 API 访问密钥。请在上方填写密钥后重试。");
+          }
+          if (response.status === 404) {
+            throw new Error(serverError || "当前服务端未提供 /api/options 接口。");
+          }
+          throw new Error(serverError || `读取配置选项失败（HTTP ${response.status}）。`);
         }
-        ruleSetChoices.replaceChildren();
-        for (const item of result.rule_sets) {
-          addChoice(ruleSetChoices, item.tag, item.tag);
-        }
-        matchingRules = result.matching_rules.map((item) => ({
-          ...item,
-          id: String(item.index),
-          name: item.outbound,
-          defaultOutbound: item.outbound,
-        }));
-        syncMatchingRules();
-        renderMatchBuilderOptions();
-        renderMatchingRules();
-        setComposeStatus(`已读取 ${result.dns_servers.length} 个 DNS、${result.groups.filter((group) => group.application).length} 个应用分流组和 ${result.rule_sets.length} 个规则集。`, "success");
+        applyConfigurationOptions(
+          result,
+          resetCustom,
+          `已读取 ${result.dns_servers.length} 个 DNS、${result.groups.filter((group) => group.application).length} 个应用分流组和 ${result.rule_sets.length} 个规则集。`,
+        );
       } catch (error) {
-        configurationOptions = null;
-        setComposeStatus(
-          `${error.message || "读取失败。"}${!apiKey.value ? " 若服务端启用了 API 密钥，请先填写密钥，再点击“读取 / 刷新基础配置选项”。" : ""}`,
+        const isNetwork = error instanceof TypeError || /Failed to fetch|NetworkError|Load failed/i.test(String(error.message || error));
+        applyConfigurationOptions(
+          structuredClone(DEMO_CONFIGURATION_OPTIONS),
+          resetCustom,
+          isNetwork
+            ? "未连接到后端服务，已加载本地预览数据（仅用于查看界面，转换仍需部署后端）。可用 python3 web_server.py 启动本地服务。"
+            : `${error.message || "读取失败。"} 已改用本地预览数据，便于调整界面。${!apiKey.value ? " 若服务端启用了 API 密钥，请填写密钥后点击“读取 / 刷新基础配置选项”。" : ""}`,
           "error",
         );
       }
