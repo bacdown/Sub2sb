@@ -79,6 +79,8 @@ class WebServerTests(unittest.TestCase):
         self.assertIn('id="match-rule-set"', page)
         self.assertIn('id="match-outbound"', page)
         self.assertIn('id="add-match-rule"', page)
+        self.assertIn('id="new-rule-outbound"', page)
+        self.assertIn("renderRuleOutboundOptions(matchOutbound", page)
         self.assertIn('remove.className = "remove-item"', page)
         self.assertIn('remove.textContent = "移除"', page)
         self.assertIn('class="rule-link-details"', page)
@@ -90,6 +92,7 @@ class WebServerTests(unittest.TestCase):
         self.assertIn('id="group-choices"', page)
         self.assertIn('id="rule-set-choices"', page)
         self.assertIn("template_options", page)
+        self.assertIn("rule_set_links_only: false", page)
         self.assertIn('type="file" multiple', page)
         self.assertIn("let uploadedFiles = [];", page)
         self.assertIn('id="api-key" type="password"', page)
@@ -189,6 +192,10 @@ class WebServerTests(unittest.TestCase):
             next(item for item in options["dns_servers"] if item["tag"] == "alibaba-cloud-dns")["server"],
             "223.5.5.5",
         )
+        self.assertEqual(
+            next(item for item in options["dns_servers"] if item["tag"] == "alibaba-cloud-dns")["type"],
+            "udp",
+        )
         self.assertNotIn(
             "ali",
             [item["tag"] for item in options["dns_servers"]],
@@ -209,7 +216,7 @@ class WebServerTests(unittest.TestCase):
         self.assertIn("Google", application_groups)
         self.assertNotIn("日本自动", application_groups)
         self.assertNotIn("自动选择", application_groups)
-        self.assertNotIn("直连", options["matching_targets"])
+        self.assertIn("直连", options["matching_targets"])
         self.assertNotIn("AI", options["matching_targets"])
         self.assertIn("geosite-youtube", [item["tag"] for item in options["rule_sets"]])
         rule_targets = {
@@ -219,10 +226,26 @@ class WebServerTests(unittest.TestCase):
         self.assertNotIn("日本自动", rule_targets)
         self.assertNotIn("延迟辅助", rule_targets)
         self.assertTrue(options["matching_rules"])
-        self.assertNotIn("直连", options["rule_targets"])
-        self.assertNotIn("直连", options["matching_targets"])
+        self.assertIn("直连", options["rule_targets"])
+        self.assertIn("直连", options["matching_targets"])
         self.assertIn("日本自动", options["matching_targets"])
         self.assertNotIn("延迟辅助", options["matching_targets"])
+
+    def test_all_builtin_templates_use_udp_for_alibaba_ip_dns(self):
+        for template_name in ("config_phone.json", "config_openwrt.json", "momo.json"):
+            with self.subTest(template=template_name):
+                alibaba_dns = next(
+                    server for server in _load_named_template(template_name)["dns"]["servers"]
+                    if server["tag"] == "alibaba-cloud-dns"
+                )
+                self.assertEqual(
+                    alibaba_dns,
+                    {
+                        "tag": "alibaba-cloud-dns",
+                        "type": "udp",
+                        "server": "223.5.5.5",
+                    },
+                )
 
     def test_composed_template_options_customize_dns_groups_and_rule_sets(self):
         template = _load_named_template("config_phone.json")
@@ -478,6 +501,58 @@ class WebServerTests(unittest.TestCase):
         )
         self.assertEqual(application_group["outbounds"][0], "直连")
 
+    def test_composition_allows_direct_as_existing_rule_outbound(self):
+        template = _load_named_template("config_phone.json")
+        options = _template_options(template)
+        ai_rule = next(
+            item for item in options["matching_rules"]
+            if item["outbound"] == "AI"
+        )
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {
+                "rule_outbounds": {str(ai_rule["index"]): "直连"},
+            },
+        })
+
+        direct_rules = [
+            rule for rule in result["config"]["route"]["rules"]
+            if rule.get("outbound") == "直连"
+            and rule.get("rule_set") == ai_rule["match"].get("rule_set")
+        ]
+        self.assertEqual(len(direct_rules), 1)
+
+    def test_composition_allows_direct_as_custom_rule_set_outbound(self):
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {
+                "custom_rule_sets": [{
+                    "tag": "geosite-direct",
+                    "url": "https://example.com/geosite-direct.srs",
+                    "format": "binary",
+                    "outbound": "直连",
+                }],
+                "rule_order": [
+                    "custom:geosite-direct",
+                    *(
+                        str(item["index"])
+                        for item in _template_options(
+                            _load_named_template("config_phone.json")
+                        )["matching_rules"]
+                    ),
+                ],
+                "rule_set_links_only": False,
+            },
+        })
+
+        direct_rule = next(
+            rule for rule in result["config"]["route"]["rules"]
+            if rule.get("rule_set") == "geosite-direct"
+        )
+        self.assertEqual(direct_rule["outbound"], "直连")
+
     def test_custom_rule_set_used_by_builder_adds_only_one_matching_rule(self):
         options = _template_options(_load_named_template("config_phone.json"))
         rule_id = "builder-1"
@@ -489,20 +564,20 @@ class WebServerTests(unittest.TestCase):
                     "tag": "geosite-custom",
                     "url": "https://example.com/geosite-custom.srs",
                     "format": "binary",
-                    "outbound": "默认代理",
+                    "outbound": "直连",
                 }],
                 "custom_matching_rules": [{
                     "id": rule_id,
                     "name": "AI",
                     "rule_set": "geosite-custom",
                     "outbound": "AI",
-                    "destination": "香港手动",
+                    "destination": "直连",
                 }],
                 "rule_order": [
                     rule_id,
                     *(str(item["index"]) for item in options["matching_rules"]),
                 ],
-                "rule_destinations": {rule_id: "香港手动"},
+                "rule_destinations": {rule_id: "直连"},
             },
         })
 
@@ -512,6 +587,11 @@ class WebServerTests(unittest.TestCase):
         ]
         self.assertEqual(len(rules), 1)
         self.assertEqual(rules[0]["outbound"], "AI")
+        application_group = next(
+            item for item in result["config"]["outbounds"]
+            if item["tag"] == "AI"
+        )
+        self.assertEqual(application_group["outbounds"][0], "直连")
 
     def test_composition_preserves_selected_default_for_manual_application_outbound(self):
         template = _load_named_template("config_phone.json")
