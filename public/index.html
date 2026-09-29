@@ -338,6 +338,10 @@
                       <option value="source">source（JSON）</option>
                     </select>
                   </div>
+                  <div>
+                    <label for="new-rule-outbound">规则集出站</label>
+                    <select id="new-rule-outbound" aria-label="自定义规则集出站"></select>
+                  </div>
                   <button id="add-rule-set" class="secondary" type="button">添加规则集</button>
                 </div>
                 <ul id="custom-rule-list" class="added-list"></ul>
@@ -396,6 +400,7 @@
     const matchName = document.querySelector("#match-name");
     const matchRuleSet = document.querySelector("#match-rule-set");
     const matchOutbound = document.querySelector("#match-outbound");
+    const newRuleOutbound = document.querySelector("#new-rule-outbound");
     const apiKey = document.querySelector("#api-key");
     const templateStatus = document.querySelector("#template-status");
     const button = document.querySelector("#submit");
@@ -635,7 +640,22 @@
           const group = configurationOptions.groups.find((item) => item.tag === tag);
           return !group || !group.application || enabledGroups.has(tag);
         }),
+        ...customGroups.map((group) => group.tag),
       ];
+    }
+
+    function renderRuleOutboundOptions(select, selectedValue) {
+      const selected = selectedValue || select.value;
+      select.replaceChildren();
+      for (const tag of availableMatchingTargets()) {
+        const option = document.createElement("option");
+        option.value = tag;
+        option.textContent = tag;
+        select.append(option);
+      }
+      if ([...select.options].some((option) => option.value === selected)) {
+        select.value = selected;
+      }
     }
 
     function renderMatchBuilderOptions() {
@@ -680,20 +700,8 @@
       }
 
       const selectedOutbound = matchOutbound.value;
-      matchOutbound.replaceChildren();
-      const matchingTargets = availableMatchingTargets();
-      if (configurationOptions?.outbounds?.includes("直连")) {
-        matchingTargets.push("直连");
-      }
-      for (const tag of matchingTargets) {
-        const option = document.createElement("option");
-        option.value = tag;
-        option.textContent = tag;
-        matchOutbound.append(option);
-      }
-      if ([...matchOutbound.options].some((option) => option.value === selectedOutbound)) {
-        matchOutbound.value = selectedOutbound;
-      }
+      renderRuleOutboundOptions(matchOutbound, selectedOutbound);
+      renderRuleOutboundOptions(newRuleOutbound, newRuleOutbound.value || "默认代理");
       syncCustomMatchNameFields();
     }
 
@@ -742,6 +750,23 @@
             || (applicationNames.has(item.outbound)
               ? configurationOptions.groups.find((group) => group.tag === item.outbound)?.members?.[0]
               : assignedGroup ? "默认代理" : undefined),
+        });
+      }
+      const builderRuleSets = new Set(
+        matchingRules
+          .filter((item) => item.id.startsWith("builder-"))
+          .map((item) => item.match.rule_set),
+      );
+      for (const item of customRuleSets) {
+        if (builderRuleSets.has(item.tag)) continue;
+        const id = `custom:${item.tag}`;
+        const existing = previous.get(id);
+        candidates.set(id, {
+          id,
+          name: item.tag,
+          match: { rule_set: item.tag },
+          outbound: existing?.outbound || item.outbound,
+          defaultOutbound: item.outbound,
         });
       }
       for (const item of matchingRules) {
@@ -988,7 +1013,10 @@
           throw new Error(`分流组 ${group.tag} 引用的规则集 ${removedRuleSet} 不存在。`);
         }
       }
-      const staleRule = customRuleSets.find((item) => !availableOutbounds.has(item.outbound));
+      const staleRule = customRuleSets.find((item) => {
+        const matchingRule = matchingRules.find((rule) => rule.id === `custom:${item.tag}`);
+        return !availableOutbounds.has(matchingRule?.outbound || item.outbound);
+      });
       if (staleRule) {
         throw new Error(`规则集 ${staleRule.tag} 指向的分流组已移除，请删除或重新添加该规则集。`);
       }
@@ -1022,8 +1050,14 @@
         ],
         custom_groups: customGroups,
         rule_sets: checkedValues(ruleSetChoices),
-        custom_rule_sets: customRuleSets,
-        rule_set_links_only: true,
+        custom_rule_sets: customRuleSets.map((item) => {
+          const matchingRule = matchingRules.find((rule) => rule.id === `custom:${item.tag}`);
+          return {
+            ...item,
+            outbound: matchingRule?.outbound || item.outbound,
+          };
+        }),
+        rule_set_links_only: false,
         custom_matching_rules: matchingRules
           .filter((item) => item.id.startsWith("builder-"))
           .map((item) => ({
@@ -1036,7 +1070,7 @@
         rule_order: matchingRules.map((item) => item.id),
         rule_outbounds: Object.fromEntries(
           matchingRules
-            .filter((item) => item.destination === undefined && item.outbound !== "直连")
+            .filter((item) => item.destination === undefined)
             .map((item) => [item.id, item.outbound]),
         ),
         rule_destinations: Object.fromEntries(
@@ -1214,7 +1248,7 @@
         tag: document.querySelector("#new-rule-tag").value.trim(),
         url: document.querySelector("#new-rule-url").value.trim(),
         format: document.querySelector("#new-rule-format").value,
-        outbound: "默认代理",
+        outbound: newRuleOutbound.value,
       };
       if (!item.tag || !item.url) {
         setComposeStatus("请填写规则集名称和链接。", "error");
