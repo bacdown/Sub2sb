@@ -85,9 +85,10 @@
     input[type="url"], input[type="password"], select { min-height: 48px; padding: 0 13px; }
     .custom-template-panel { margin-top: 16px; }
     .custom-template-panel input[type="file"] { width: 100%; }
-    .base-template-controls { display: flex; align-items: center; gap: 10px; }
-    .base-template-controls select { min-width: 0; flex: 1; }
-    .base-template-controls button { flex: none; white-space: nowrap; }
+    .base-template-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 10px; }
+    .base-template-controls select { min-width: 0; width: 100%; }
+    .base-template-controls button { width: min(100%, 300px); justify-self: center; }
+    #template, #api-key, #base-template { font-size: 13px; }
     .compose-panel { grid-column: 1 / -1; margin-top: 6px; padding: 18px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
     .compose-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 18px; }
     .compose-section { min-width: 0; padding: 16px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
@@ -146,10 +147,12 @@
     input[type="file"] { max-width: 100%; color: #5f5e5a; }
     .hint { margin: 8px 0 0; color: #787774; font-size: 13px; line-height: 1.6; }
     .options { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
+    .options-stack { display: grid; gap: 14px; min-width: 0; }
+    .options-action { display: flex; align-items: center; justify-content: center; }
     .primary {
       width: 100%;
       min-height: 50px;
-      margin-top: 22px;
+      margin: 0;
       border: 0;
       border-radius: 6px;
       color: #fff;
@@ -157,6 +160,7 @@
       font-weight: 700;
       cursor: pointer;
     }
+    .options-action .primary { width: min(100%, 320px); }
     .primary:hover { background: #5a5852; }
     .primary:disabled { opacity: .65; cursor: wait; }
     .status { min-height: 24px; margin: 14px 0 0; color: #787774; font-size: 14px; line-height: 1.6; }
@@ -165,7 +169,7 @@
     footer { margin: 18px 3px 0; color: #787774; font-size: 12px; line-height: 1.7; }
     footer a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
     footer a:hover { color: #000; text-decoration-color: currentColor; }
-    @media (min-width: 600px) { .options { grid-template-columns: 1fr 1fr; align-items: start; } }
+    @media (min-width: 600px) { .options { grid-template-columns: 1fr 1fr; align-items: stretch; } }
     @media (max-width: 800px) {
       body { padding: 20px 12px; }
       .compose-grid { grid-template-columns: 1fr; }
@@ -178,7 +182,7 @@
     }
     @media (max-width: 520px) {
       .dns-grid, .match-builder, .rule-link-fields { grid-template-columns: 1fr; }
-      .base-template-controls { align-items: stretch; flex-direction: column; }
+      .base-template-controls { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -221,26 +225,30 @@
         </div>
 
         <div class="options">
-          <div>
-            <label for="template">sing-box 模板</label>
-            <select id="template" name="template">
-              <option value="config_phone.json">iPhone 配置</option>
-              <option value="config_openwrt.json">OpenWrt 配置</option>
-              <option value="momo.json">Momo 配置</option>
-              <option value="compose">自定义制作配置</option>
-              <option value="custom">上传自定义模板</option>
-            </select>
-            <div id="custom-template-panel" class="custom-template-panel" hidden>
-              <label for="custom-template-file">自定义 JSON 模板文件</label>
-              <input id="custom-template-file" type="file" accept=".json,application/json">
-              <p class="hint">最小要求：JSON 根节点为对象，且包含数组类型的 <code>outbounds</code>；数组项须为对象。</p>
-              <p id="template-status" class="status" role="status" aria-live="polite"></p>
+          <div class="options-stack">
+            <div>
+              <label for="template">sing-box 模板</label>
+              <select id="template" name="template">
+                <option value="config_phone.json">iPhone 配置</option>
+                <option value="config_openwrt.json">OpenWrt 配置</option>
+                <option value="momo.json">Momo 配置</option>
+                <option value="compose">自定义制作配置</option>
+                <option value="custom">上传自定义模板</option>
+              </select>
+              <div id="custom-template-panel" class="custom-template-panel" hidden>
+                <label for="custom-template-file">自定义 JSON 模板文件</label>
+                <input id="custom-template-file" type="file" accept=".json,application/json">
+                <p class="hint">最小要求：JSON 根节点为对象，且包含数组类型的 <code>outbounds</code>；数组项须为对象。</p>
+                <p id="template-status" class="status" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+            <div>
+              <label for="api-key">API 访问密钥（可选）</label>
+              <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
+              <p id="api-key-hint" class="hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
             </div>
           </div>
-          <div>
-            <label for="api-key">API 访问密钥（可选）</label>
-            <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
-            <p id="api-key-hint" class="hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
+          <div class="options-action">
             <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
           </div>
         </div>
