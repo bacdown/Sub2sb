@@ -147,7 +147,18 @@
     input[type="file"] { max-width: 100%; color: #5f5e5a; }
     .hint { margin: 8px 0 0; color: #787774; font-size: 13px; line-height: 1.6; }
     .options { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
-    .options-stack { display: grid; gap: 14px; min-width: 0; }
+    .api-key-field { min-width: 0; container-type: inline-size; }
+    .api-key-input-wrap { position: relative; }
+    #api-key { height: 50px; padding: 6px 10px; }
+    .api-key-hint {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: 6px 10px;
+      font-size: clamp(9px, 2.8cqw, 11px);
+      line-height: 1.2;
+      pointer-events: none;
+    }
     .options-action { display: flex; align-items: center; justify-content: center; }
     .primary {
       width: 100%;
@@ -160,7 +171,7 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .options-action .primary { width: min(100%, 320px); }
+    .options-action .primary { width: 100%; }
     .primary:hover { background: #5a5852; }
     .primary:disabled { opacity: .65; cursor: wait; }
     .status { min-height: 24px; margin: 14px 0 0; color: #787774; font-size: 14px; line-height: 1.6; }
@@ -170,8 +181,10 @@
     footer a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
     footer a:hover { color: #000; text-decoration-color: currentColor; }
     @media (min-width: 600px) { .options { grid-template-columns: 1fr 1fr; align-items: stretch; } }
+    @media (min-width: 801px) { .options { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     @media (max-width: 800px) {
       body { padding: 20px 12px; }
+      .options-action { grid-column: 1 / -1; }
       .compose-grid { grid-template-columns: 1fr; }
       .compose-section:first-child, .compose-section:last-child { grid-column: auto; }
       .match-builder { grid-template-columns: 1fr 1fr; }
@@ -225,27 +238,27 @@
         </div>
 
         <div class="options">
-          <div class="options-stack">
-            <div>
-              <label for="template">sing-box 模板</label>
-              <select id="template" name="template">
-                <option value="config_phone.json">iPhone 配置</option>
-                <option value="config_openwrt.json">OpenWrt 配置</option>
-                <option value="momo.json">Momo 配置</option>
-                <option value="compose">自定义制作配置</option>
-                <option value="custom">上传自定义模板</option>
-              </select>
-              <div id="custom-template-panel" class="custom-template-panel" hidden>
-                <label for="custom-template-file">自定义 JSON 模板文件</label>
-                <input id="custom-template-file" type="file" accept=".json,application/json">
-                <p class="hint">最小要求：JSON 根节点为对象，且包含数组类型的 <code>outbounds</code>；数组项须为对象。</p>
-                <p id="template-status" class="status" role="status" aria-live="polite"></p>
-              </div>
+          <div>
+            <label for="template">sing-box 模板</label>
+            <select id="template" name="template">
+              <option value="config_phone.json">iPhone 配置</option>
+              <option value="config_openwrt.json">OpenWrt 配置</option>
+              <option value="momo.json">Momo 配置</option>
+              <option value="compose">自定义制作配置</option>
+              <option value="custom">上传自定义模板</option>
+            </select>
+            <div id="custom-template-panel" class="custom-template-panel" hidden>
+              <label for="custom-template-file">自定义 JSON 模板文件</label>
+              <input id="custom-template-file" type="file" accept=".json,application/json">
+              <p class="hint">最小要求：JSON 根节点为对象，且包含数组类型的 <code>outbounds</code>；数组项须为对象。</p>
+              <p id="template-status" class="status" role="status" aria-live="polite"></p>
             </div>
-            <div>
-              <label for="api-key">API 访问密钥（可选）</label>
+          </div>
+          <div class="api-key-field">
+            <label for="api-key">API 访问密钥（可选）</label>
+            <div class="api-key-input-wrap">
               <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
-              <p id="api-key-hint" class="hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
+              <p id="api-key-hint" class="hint api-key-hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
             </div>
           </div>
           <div class="options-action">
@@ -410,6 +423,7 @@
     const matchOutbound = document.querySelector("#match-outbound");
     const newRuleOutbound = document.querySelector("#new-rule-outbound");
     const apiKey = document.querySelector("#api-key");
+    const apiKeyHint = document.querySelector("#api-key-hint");
     const templateStatus = document.querySelector("#template-status");
     const button = document.querySelector("#submit");
     const status = document.querySelector("#status");
@@ -1091,6 +1105,10 @@
         ),
       };
     }
+
+    apiKey.addEventListener("input", () => {
+      apiKeyHint.hidden = Boolean(apiKey.value);
+    });
 
     template.addEventListener("change", () => {
       const customSelected = template.value === "custom";
