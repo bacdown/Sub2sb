@@ -452,6 +452,32 @@ class WebServerTests(unittest.TestCase):
         )
         self.assertEqual(application_group["outbounds"][0], "日本自动")
 
+    def test_composition_allows_direct_as_custom_application_default(self):
+        options = _template_options(_load_named_template("config_phone.json"))
+        result = convert_request({
+            "content": SAMPLE_SUBSCRIPTION,
+            "template": "config_phone.json",
+            "template_options": {
+                "custom_matching_rules": [{
+                    "id": "builder-1",
+                    "name": "直连应用",
+                    "rule_set": "geosite-google",
+                    "outbound": "直连应用",
+                    "destination": "直连",
+                }],
+                "rule_order": [
+                    "builder-1",
+                    *(str(item["index"]) for item in options["matching_rules"]),
+                ],
+            },
+        })
+
+        application_group = next(
+            item for item in result["config"]["outbounds"]
+            if item["tag"] == "直连应用"
+        )
+        self.assertEqual(application_group["outbounds"][0], "直连")
+
     def test_custom_rule_set_used_by_builder_adds_only_one_matching_rule(self):
         options = _template_options(_load_named_template("config_phone.json"))
         rule_id = "builder-1"
