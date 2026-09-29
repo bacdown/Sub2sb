@@ -88,7 +88,7 @@
     .base-template-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: center; gap: 10px; }
     .base-template-controls select { min-width: 0; width: 100%; }
     .base-template-controls button { width: auto; justify-self: center; white-space: nowrap; }
-    #template, #api-key, #base-template { height: 50px; font-size: 13px; }
+    #template, #base-template { width: 100%; min-width: 0; min-height: 36px; height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
     .compose-panel { grid-column: 1 / -1; margin-top: 6px; padding: 18px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
     .compose-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 18px; }
     .compose-section { min-width: 0; padding: 16px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
@@ -146,20 +146,25 @@
     .file-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #787774; font-size: 13px; }
     input[type="file"] { max-width: 100%; color: #5f5e5a; }
     .hint { margin: 8px 0 0; color: #787774; font-size: 13px; line-height: 1.6; }
+    .input-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: stretch; gap: 14px; padding-top: 24px; }
+    .input-layout > .mode-panel { display: contents; }
+    #paste-panel > label, #content, #paste-panel > p:not(#file-name),
+    #url-panel > label, #url, #url-panel > p { grid-column: 1 / -1; }
+    #file-name, .file-row { grid-column: 1; }
     .options { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
     .api-key-field { min-width: 0; container-type: inline-size; }
     .api-key-input-wrap { position: relative; }
-    #api-key { height: 50px; padding: 6px 10px; }
+    #api-key { height: 36px; min-height: 36px; padding: 0 8px; border: 1px solid #c9cdd1; border-radius: 4px; font-size: 13px; }
     .api-key-hint {
       position: absolute;
       inset: 0;
       margin: 0;
-      padding: 6px 10px;
-      font-size: clamp(9px, 2.8cqw, 11px);
-      line-height: 1.2;
+      padding: 0 8px;
+      font-size: clamp(8px, 2.4cqw, 10px);
+      line-height: 1.15;
       pointer-events: none;
     }
-    .options-action { display: flex; align-items: flex-start; justify-content: center; padding-top: 29px; }
+    .shared-controls { display: grid; align-content: center; gap: 10px; min-width: 0; grid-column: 2; grid-row: 4 / span 2; }
     .primary {
       width: 100%;
       min-height: 50px;
@@ -171,7 +176,6 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .options-action .primary { width: 100%; }
     .primary:hover { background: #5a5852; }
     .primary:disabled { opacity: .65; cursor: wait; }
     .status { min-height: 24px; margin: 14px 0 0; color: #787774; font-size: 14px; line-height: 1.6; }
@@ -184,7 +188,10 @@
     @media (min-width: 801px) { .options { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     @media (max-width: 800px) {
       body { padding: 20px 12px; }
-      .options-action { grid-column: 1 / -1; }
+      .input-layout { grid-template-columns: 1fr; }
+      #paste-panel > label, #content, #paste-panel > p:not(#file-name),
+      #url-panel > label, #url-panel > p { grid-column: 1; }
+      .shared-controls { grid-column: 1; grid-row: auto; }
       .compose-grid { grid-template-columns: 1fr; }
       .compose-section:first-child, .compose-section:last-child { grid-column: auto; }
       .match-builder { grid-template-columns: 1fr 1fr; }
@@ -221,20 +228,33 @@
       </div>
 
       <form id="convert-form">
-        <div class="mode-panel" id="paste-panel" role="tabpanel" aria-labelledby="paste-tab">
-          <label for="content">订阅内容</label>
-          <textarea id="content" name="content" placeholder="粘贴 Clash YAML、Base64 订阅或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
-          <p class="hint">默认配置文件均支持 sing-box 1.14.x。</p>
-          <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择 YAML / TXT 文件，内容会合并提交；总大小上限为 2 MiB。</p>
-          <div class="file-row">
-            <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
+        <div class="input-layout">
+          <div class="mode-panel" id="paste-panel" role="tabpanel" aria-labelledby="paste-tab">
+            <label for="content">订阅内容</label>
+            <textarea id="content" name="content" placeholder="粘贴 Clash YAML、Base64 订阅或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
+            <p class="hint">默认配置文件均支持 sing-box 1.14.x。</p>
+            <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择 YAML / TXT 文件，内容会合并提交；总大小上限为 2 MiB。</p>
+            <div class="file-row">
+              <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
+            </div>
           </div>
-        </div>
 
-        <div class="mode-panel" id="url-panel" role="tabpanel" aria-labelledby="url-tab" hidden>
-          <label for="url">订阅链接</label>
-          <textarea id="url" name="url" rows="4" placeholder="每行一个订阅链接&#10;https://example.com/subscribe"></textarea>
-          <p class="hint">支持粘贴多条订阅链接，每行一个；服务端会逐条下载订阅内容，只允许访问公网 HTTP / HTTPS 地址，且每条下载上限为 2 MiB。</p>
+          <div class="mode-panel" id="url-panel" role="tabpanel" aria-labelledby="url-tab" hidden>
+            <label for="url">订阅链接</label>
+            <textarea id="url" name="url" rows="4" placeholder="每行一个订阅链接&#10;https://example.com/subscribe"></textarea>
+            <p class="hint">支持粘贴多条订阅链接，每行一个；服务端会逐条下载订阅内容，只允许访问公网 HTTP / HTTPS 地址，且每条下载上限为 2 MiB。</p>
+          </div>
+
+          <div class="shared-controls">
+            <div class="api-key-field">
+              <label for="api-key">API 访问密钥（可选）</label>
+              <div class="api-key-input-wrap">
+                <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
+                <p id="api-key-hint" class="hint api-key-hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
+              </div>
+            </div>
+            <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
+          </div>
         </div>
 
         <div class="options">
@@ -253,16 +273,6 @@
               <p class="hint">最小要求：JSON 根节点为对象，且包含数组类型的 <code>outbounds</code>；数组项须为对象。</p>
               <p id="template-status" class="status" role="status" aria-live="polite"></p>
             </div>
-          </div>
-          <div class="api-key-field">
-            <label for="api-key">API 访问密钥（可选）</label>
-            <div class="api-key-input-wrap">
-              <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
-              <p id="api-key-hint" class="hint api-key-hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
-            </div>
-          </div>
-          <div class="options-action">
-            <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
           </div>
         </div>
         <section id="compose-panel" class="compose-panel" aria-label="自定义配置制作" hidden>
