@@ -1103,87 +1103,6 @@
       renderMatchingRules();
     }
 
-    const DEMO_CONFIGURATION_OPTIONS = {
-      dns_servers: [
-        { tag: "dns-alibaba-cloud-doh", name: "阿里云 DNS（DoH）", type: "https", server: "dns.alidns.com", category: "domestic" },
-        { tag: "dns-tencent-dnspod-doh", name: "腾讯 DNSPod（DoH）", type: "https", server: "doh.pub", category: "domestic" },
-        { tag: "dns-cloudflare-doh", name: "Cloudflare（DoH）", type: "https", server: "cloudflare-dns.com", category: "international" },
-        { tag: "dns-google-doh", name: "Google Public DNS（DoH）", type: "https", server: "dns.google", category: "international" },
-      ],
-      groups: [
-        { tag: "手动选择", type: "selector", application: false, required: true, members: ["自动选择"] },
-        { tag: "自动选择", type: "urltest", application: false, required: true, members: [] },
-        { tag: "默认代理", type: "selector", application: false, required: false, members: ["手动选择"] },
-        { tag: "Telegram", type: "selector", application: true, required: false, members: ["默认代理"] },
-        { tag: "OpenAI", type: "selector", application: true, required: false, members: ["默认代理"] },
-        { tag: "Google", type: "selector", application: true, required: false, members: ["默认代理"] },
-        { tag: "Netflix", type: "selector", application: true, required: false, members: ["默认代理"] },
-        { tag: "YouTube", type: "selector", application: true, required: false, members: ["默认代理"] },
-      ],
-      outbounds: ["手动选择", "自动选择", "默认代理", "Telegram", "OpenAI", "Google", "Netflix", "YouTube", "DIRECT", "REJECT"],
-      matching_targets: ["默认代理", "手动选择", "自动选择", "DIRECT", "REJECT", "Telegram", "OpenAI", "Google", "Netflix", "YouTube"],
-      rule_sets: [
-        { tag: "geosite-telegram" },
-        { tag: "geosite-openai" },
-        { tag: "geosite-google" },
-        { tag: "geosite-netflix" },
-        { tag: "geosite-youtube" },
-        { tag: "geosite-cn" },
-        { tag: "geoip-cn" },
-      ],
-      matching_rules: [
-        { index: 0, match: { rule_set: "geosite-telegram" }, outbound: "Telegram" },
-        { index: 1, match: { rule_set: "geosite-openai" }, outbound: "OpenAI" },
-        { index: 2, match: { rule_set: "geosite-google" }, outbound: "Google" },
-        { index: 3, match: { rule_set: "geosite-netflix" }, outbound: "Netflix" },
-        { index: 4, match: { rule_set: "geosite-youtube" }, outbound: "YouTube" },
-      ],
-    };
-
-    function applyConfigurationOptions(result, resetCustom, statusMessage, statusKind = "success") {
-      configurationOptions = result;
-      if (resetCustom) {
-        customDnsServers = [];
-        customGroups = [];
-        customRuleSets = [];
-        customMatchNames = [];
-        removedMatchingRuleIds = new Set();
-        nextBuilderRuleId = 1;
-        renderCustomItems();
-      }
-      renderDnsSelectors([], true);
-      renderCustomItems();
-      groupChoices.replaceChildren();
-      for (const item of result.groups.filter((group) => group.application)) {
-        addChoice(
-          groupChoices,
-          item.tag,
-          `${item.tag} · ${item.type}${item.required ? "（必需）" : ""}`,
-          true,
-          item.required,
-        );
-      }
-      ruleSetChoices.replaceChildren();
-      for (const item of result.rule_sets) {
-        addChoice(ruleSetChoices, item.tag, item.tag);
-      }
-      matchingRules = result.matching_rules.map((item) => ({
-        ...item,
-        id: String(item.index),
-        name: item.outbound,
-        defaultOutbound: item.outbound,
-      }));
-      syncMatchingRules();
-      renderMatchBuilderOptions();
-      if (matchName.value === "__custom__") {
-        const firstReal = [...matchName.options].find((option) => option.value && !option.value.startsWith("__"));
-        if (firstReal) matchName.value = firstReal.value;
-      }
-      syncCustomMatchNameFields();
-      renderMatchingRules();
-      setComposeStatus(statusMessage, statusKind);
-    }
-
     async function loadConfigurationOptions(resetCustom = false) {
       setComposeStatus("正在读取基础配置选项…");
       try {
@@ -1191,35 +1110,48 @@
           `/api/options?template=${encodeURIComponent(baseTemplate.value)}`,
           { headers: apiHeaders() },
         );
-        let result = null;
-        try {
-          result = await response.json();
-        } catch (_) {
-          result = null;
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取配置选项失败。");
+        configurationOptions = result;
+        if (resetCustom) {
+          customDnsServers = [];
+          customGroups = [];
+          customRuleSets = [];
+          customMatchNames = [];
+          removedMatchingRuleIds = new Set();
+          nextBuilderRuleId = 1;
+          renderCustomItems();
         }
-        if (!response.ok) {
-          const serverError = result && result.error ? result.error : "";
-          if (response.status === 401 || response.status === 403) {
-            throw new Error(serverError || "需要 API 访问密钥。请在上方填写密钥后重试。");
-          }
-          if (response.status === 404) {
-            throw new Error(serverError || "当前服务端未提供 /api/options 接口。");
-          }
-          throw new Error(serverError || `读取配置选项失败（HTTP ${response.status}）。`);
+        renderDnsSelectors([], true);
+        renderCustomItems();
+        groupChoices.replaceChildren();
+        for (const item of result.groups.filter((group) => group.application)) {
+          addChoice(
+            groupChoices,
+            item.tag,
+            `${item.tag} · ${item.type}${item.required ? "（必需）" : ""}`,
+            true,
+            item.required,
+          );
         }
-        applyConfigurationOptions(
-          result,
-          resetCustom,
-          `已读取 ${result.dns_servers.length} 个 DNS、${result.groups.filter((group) => group.application).length} 个应用分流组和 ${result.rule_sets.length} 个规则集。`,
-        );
+        ruleSetChoices.replaceChildren();
+        for (const item of result.rule_sets) {
+          addChoice(ruleSetChoices, item.tag, item.tag);
+        }
+        matchingRules = result.matching_rules.map((item) => ({
+          ...item,
+          id: String(item.index),
+          name: item.outbound,
+          defaultOutbound: item.outbound,
+        }));
+        syncMatchingRules();
+        renderMatchBuilderOptions();
+        renderMatchingRules();
+        setComposeStatus(`已读取 ${result.dns_servers.length} 个 DNS、${result.groups.filter((group) => group.application).length} 个应用分流组和 ${result.rule_sets.length} 个规则集。`, "success");
       } catch (error) {
-        const isNetwork = error instanceof TypeError || /Failed to fetch|NetworkError|Load failed/i.test(String(error.message || error));
-        applyConfigurationOptions(
-          structuredClone(DEMO_CONFIGURATION_OPTIONS),
-          resetCustom,
-          isNetwork
-            ? "未连接到后端服务，已加载本地预览数据（仅用于查看界面，转换仍需部署后端）。可用 python3 web_server.py 启动本地服务。"
-            : `${error.message || "读取失败。"} 已改用本地预览数据，便于调整界面。${!apiKey.value ? " 若服务端启用了 API 密钥，请填写密钥后点击“读取 / 刷新基础配置选项”。" : ""}`,
+        configurationOptions = null;
+        setComposeStatus(
+          `${error.message || "读取失败。"}${!apiKey.value ? " 若服务端启用了 API 密钥，请先填写密钥，再点击“读取 / 刷新基础配置选项”。" : ""}`,
           "error",
         );
       }
