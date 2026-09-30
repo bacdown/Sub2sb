@@ -23,19 +23,50 @@ TEMPLATE_FILES = {
     "momo.json",
 }
 
+# 短名别名，方便订阅链接里写 template=phone
+TEMPLATE_ALIASES = {
+    "phone": "config_phone.json",
+    "config_phone": "config_phone.json",
+    "config_phone.json": "config_phone.json",
+    "openwrt": "config_openwrt.json",
+    "config_openwrt": "config_openwrt.json",
+    "config_openwrt.json": "config_openwrt.json",
+    "momo": "momo.json",
+    "momo.json": "momo.json",
+}
+
 # When set, the Vercel serverless function requires requests to present this
 # key. Leave unset to keep the API public (backwards compatible behaviour).
 API_KEY = os.environ.get("YAML2SB_API_KEY")
 
 
-def _load_named_template(name):
-    if name not in TEMPLATE_FILES:
+def _resolve_template_name(name):
+    """将短名或文件名解析为标准模板文件名。"""
+    if not isinstance(name, str) or not name.strip():
+        return DEFAULT_TEMPLATE
+    key = name.strip().lower()
+    resolved = TEMPLATE_ALIASES.get(key) or TEMPLATE_ALIASES.get(name.strip())
+    if resolved is None:
         raise ValueError(
-            "不支持的模板名称；可选模板："
-            + ", ".join(sorted(TEMPLATE_FILES))
+            "不支持的模板名称；可选："
+            "phone / config_phone.json（手机）、"
+            "openwrt / config_openwrt.json（OpenWrt）、"
+            "momo / momo.json（Momo）"
         )
+    return resolved
 
-    template_path = PROJECT_ROOT / "templates" / name
+
+def _load_named_template(name):
+    resolved = _resolve_template_name(name)
+    # 兼容 templates/ 子目录与项目根目录两种布局
+    candidates = (
+        PROJECT_ROOT / "templates" / resolved,
+        PROJECT_ROOT / resolved,
+    )
+    template_path = next((path for path in candidates if path.is_file()), None)
+    if template_path is None:
+        raise ValueError(f"找不到模板文件：{resolved}")
+
     with template_path.open("r", encoding="utf-8") as template_file:
         template = json.load(template_file)
     if not isinstance(template, dict):
@@ -161,9 +192,93 @@ class handler(BaseHTTPRequestHandler):
     def _send_unauthorized(self):
         self._send_json(401, {"error": "Unauthorized"})
 
+    def _request_path(self):
+        """去掉查询串后的路径，兼容 /api 前缀。"""
+        path = urllib.parse.urlparse(self.path).path.rstrip("/") or "/"
+        return path
+
+    def _query_params(self):
+        return urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+
+    def _collect_subscription_urls(self, params):
+        """从 query 收集 url / urls 参数。"""
+        urls = []
+        for key in ("url", "urls"):
+            for raw in params.get(key, []):
+                if not isinstance(raw, str):
+                    continue
+                # 支持逗号分隔或单条
+                for part in raw.split(","):
+                    part = part.strip()
+                    if part:
+                        urls.append(part)
+        # 去重且保持顺序
+        return list(dict.fromkeys(urls))
+
+    def _handle_sub_get(self):
+        """
+        GET /sub 或 /api/sub
+        拉取远程订阅并返回可直接导入客户端的 sing-box JSON（纯配置，非包装对象）。
+
+        查询参数：
+          url / urls   原订阅链接（至少一个，可重复或逗号分隔）
+          template     模板：phone | openwrt | momo
+                       或 config_phone.json | config_openwrt.json | momo.json
+          api_key      若服务端配置了 YAML2SB_API_KEY 则必填（也可用 Header）
+        """
+        if not self._is_authorized():
+            self._send_unauthorized()
+            return
+
+        try:
+            params = self._query_params()
+            urls = self._collect_subscription_urls(params)
+            if not urls:
+                raise ValueError(
+                    "请提供订阅链接参数 url（或 urls），"
+                    "例如 /sub?url=https%3A%2F%2Fexample.com%2Fsub&template=phone"
+                )
+
+            template_name = (params.get("template") or [DEFAULT_TEMPLATE])[0]
+            payload = _request_with_remote_urls(
+                {"urls": urls, "template": template_name}
+            )
+            result = convert_request(payload)
+            # 客户端远程配置需要纯 sing-box JSON，不要外层包装
+            config = result["config"]
+            body = json.dumps(config, ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header(
+                "Access-Control-Allow-Headers",
+                "Content-Type, Authorization, X-API-Key",
+            )
+            # 订阅宜短缓存，避免节点长期过期
+            self.send_header("Cache-Control", "public, max-age=60")
+            self.send_header(
+                "Content-Disposition",
+                'inline; filename="sing-box.json"',
+            )
+            self.end_headers()
+            self.wfile.write(body)
+        except ValueError as exc:
+            self._send_json(400, {"error": str(exc)})
+        except Exception:
+            logging.exception("GET /sub conversion failed")
+            self._send_json(500, {"error": "转换失败，请检查订阅链接和模板"})
+
     def do_GET(self):
-        # Allow preflight and other OPTIONS without auth
-        if self.path.rstrip("/") not in ("/", "/api"):
+        path = self._request_path()
+
+        # 远程订阅转换：客户端可直接填此 URL 作为远程配置
+        if path in ("/sub", "/api/sub"):
+            self._handle_sub_get()
+            return
+
+        if path not in ("/", "/api"):
             self._send_json(404, {"error": "Not found"})
             return
 
@@ -175,12 +290,31 @@ class handler(BaseHTTPRequestHandler):
             200,
             {
                 "name": "yaml2sb",
-                "method": "POST",
+                "methods": ["GET /sub", "POST /api"],
                 "templates": sorted(TEMPLATE_FILES),
+                "template_aliases": {
+                    "phone": "config_phone.json",
+                    "openwrt": "config_openwrt.json",
+                    "momo": "momo.json",
+                },
                 "default_template": DEFAULT_TEMPLATE,
+                "subscription": {
+                    "path": "/sub",
+                    "query": {
+                        "url": "原订阅链接（必填，可重复或与 urls 同用）",
+                        "urls": "多个订阅链接，逗号分隔（可选）",
+                        "template": "phone | openwrt | momo（默认 phone）",
+                        "api_key": "若启用了 YAML2SB_API_KEY 则必填",
+                    },
+                    "example": (
+                        "/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe"
+                        "&template=phone"
+                    ),
+                },
                 "request": {
                     "content": "YAML 或订阅文本",
-                    "template": "已有模板文件名（可选）",
+                    "url": "远程订阅链接（POST 时由服务端拉取）",
+                    "template": "已有模板文件名或短名（可选）",
                     "template_json": "自定义 sing-box JSON 模板对象（可选）",
                 },
             },
