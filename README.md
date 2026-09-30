@@ -14,10 +14,19 @@
 
 - Clash YAML 中的 `proxies` 节点
 - 明文或 Base64 编码的订阅
-- VMess、VLESS、Trojan、Shadowsocks、Hysteria2、TUIC URI
+- URI：`vmess://`、`vless://`、`trojan://`、`ss://`、`hysteria2://` / `hy2://`、`hysteria://`、`tuic://`、`anytls://`
+- Clash 节点类型：Shadowsocks（含 obfs / v2ray-plugin / shadow-tls 插件）、VMess、VLESS（含 Reality）、Trojan、Hysteria2、Hysteria v1、TUIC、AnyTLS、HTTP、SOCKS5
+- Hysteria2：端口跳跃（`ports` / `mport`）、带宽、`alpn: h3`、`disable_chrome_parrot`（兼容 sing-box 1.14+ Ed25519 证书节点）
 - 将解析出的节点并入 sing-box JSON 模板中的策略组
 
 不支持的节点会被跳过；如果没有解析到任何可用节点，转换会报错。
+
+### 近期优化要点
+
+- 修复 Clash `fingerprint` 误当作 uTLS 客户端指纹的问题（证书 SHA256 钉扎不再写入 `tls.utls`）
+- Hysteria2 / TUIC 默认补充 `alpn: ["h3"]`，Hysteria2 默认 `disable_chrome_parrot: true`
+- Shadowsocks 插件与 HTTP / SOCKS5 / AnyTLS / Hysteria v1 支持
+- 协议转换改为注册表结构，便于扩展；增加 `test_convert.py` 单元测试
 
 ## 部署到 Vercel
 
@@ -31,7 +40,7 @@
 4. 保持 Python 项目自动检测设置；如 Vercel 要求选择框架，选择 **Other**。本项目不需要 Build Command 或 Output Directory。
 5. 点击 **Deploy**。部署完成后，API 地址为 `https://<项目名>.vercel.app/api`。
 
-部署配置位于 `vercel.json`。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
+部署配置位于 `vercel.json`。三个内置模板为项目根目录下的 `config_phone.json`、`config_openwrt.json` 和 `momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
 
 ### 通过 Vercel CLI 部署
 
