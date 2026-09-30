@@ -68,7 +68,7 @@ uv run pywrangler deploy
 3. 部署成功后打开：
    - 网页：`https://yaml2sb.<你的子域>.workers.dev/`
    - 远程订阅：`https://yaml2sb.<你的子域>.workers.dev/sub?url=...&template=phone`
-4. （可选）`uv run wrangler secret put YAML2SB_API_KEY` 设置访问密钥。
+4. （可选）`npx --yes wrangler secret put YAML2SB_API_KEY` 设置访问密钥。
 
 > Cloudflare 的开发依赖只在本机用 `uv add --dev` 安装，**不要**写进会触发 Vercel `uv lock` 的主依赖，以免 Vercel 构建失败。
 
