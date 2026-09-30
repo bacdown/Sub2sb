@@ -65,11 +65,64 @@ vercel --prod
 curl https://<项目名>.vercel.app/api
 ```
 
-返回 API 信息、默认模板及可选的内置模板列表。
+返回 API 信息、内置模板列表、短名别名，以及 `GET /sub` 订阅转换说明。
 
-### 使用内置模板转换
+### 模板与平台对应关系
 
-向 `POST /api` 发送 JSON。`content` 必须是实际的 YAML 或订阅文本，`template` 可省略（默认 `config_phone.json`），也可选择 `config_openwrt.json` 或 `momo.json`。
+| 用途 | 短名（推荐写在 URL 里） | 模板文件 |
+|------|-------------------------|----------|
+| 手机 / 官方客户端（SFA、SFI 等） | `phone` | `config_phone.json` |
+| OpenWrt / 旁路由 | `openwrt` | `config_openwrt.json` |
+| Momo | `momo` | `momo.json` |
+
+`template` 参数可写短名或完整文件名；省略时默认 `phone`。
+
+### 远程订阅转换（GET /sub）——客户端直接使用
+
+把**原订阅链接**交给已部署的本项目，在线转换成 sing-box JSON。返回体是**纯配置 JSON**（不是 `{config, node_count}` 包装），可直接作为客户端的远程配置 / 订阅地址。
+
+**链接格式：**
+
+```text
+https://<项目名>.vercel.app/sub?url=<URL编码后的原订阅>&template=<phone|openwrt|momo>
+```
+
+也支持 `/api/sub`（与 `/sub` 等价；Vercel 上 `/sub` 会重写到 `/api/sub`）。
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `url` | 是 | 原订阅 HTTP(S) 链接；可出现多次 |
+| `urls` | 否 | 多个链接，逗号分隔 |
+| `template` | 否 | `phone` / `openwrt` / `momo`（默认 `phone`） |
+| `api_key` | 视配置 | 若设置了环境变量 `YAML2SB_API_KEY` 则必填 |
+
+**示例：**
+
+```sh
+# 手机模板（默认）
+curl -o sing-box.json \
+  'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=phone'
+
+# OpenWrt 模板
+curl -o sing-box-openwrt.json \
+  'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=openwrt'
+
+# Momo 模板 + API Key
+curl -o sing-box-momo.json \
+  'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=momo&api_key=你的密钥'
+```
+
+**在 sing-box 客户端里使用：**
+
+1. 将上面的完整 URL（含 `url` 与 `template`）复制。
+2. 在 SFA / SFI / Hiddify / NekoBox 等中添加**远程配置**或**订阅**，粘贴该链接。
+3. 客户端定时请求该地址，即可自动拿到转换后的 sing-box JSON。
+
+注意：原订阅地址必须做 **URL 编码**（例如 `https://` → `https%3A%2F%2F`）。启用了 `YAML2SB_API_KEY` 时，把密钥放在查询参数 `api_key` 或请求头 `Authorization: Bearer …` / `X-API-Key` 中。
+
+### 使用内置模板转换（POST）
+
+向 `POST /api` 发送 JSON。`content` 必须是实际的 YAML 或订阅文本；也可传 `url` / `urls` 由服务端代拉订阅。`template` 可省略（默认手机模板），短名与上表相同。
 
 ```sh
 curl -X POST 'https://<项目名>.vercel.app/api' \
@@ -126,7 +179,7 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
 - `400`：JSON 格式错误、缺少 `content`、模板名称不支持或模板格式无效。
 - `413`：请求体超过大小限制。
 - `500`：转换期间发生未预期错误。
-- API 接收的是订阅内容本身，不会根据 `content` 中的 URL 去下载订阅。将链接内容先取回，再把 YAML/URI 文本作为 `content` 发送。
+- `POST /api` 可直接传订阅正文（`content`），也可传 `url` / `urls` 由服务端代为下载后转换。`GET /sub` 专供客户端远程配置，返回纯 sing-box JSON。
 
 ## 本地命令行
 
