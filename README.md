@@ -73,8 +73,10 @@ vercel --prod
 在项目根目录执行：
 
 ```sh
-# 安装依赖（含 workers-py）
-uv sync --group dev
+# 安装运行时依赖
+uv sync
+# Cloudflare Workers 开发工具（仅本机部署 CF 时需要，不要写进会影响 Vercel 的依赖组）
+uv add --dev workers-py workers-runtime-sdk
 
 # 登录 Cloudflare（首次）
 uv run pywrangler login
