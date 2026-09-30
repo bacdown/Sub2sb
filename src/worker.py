@@ -20,10 +20,17 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from workers import Response, WorkerEntrypoint, fetch
 
-# 项目根目录（src/ 的上一级），便于 import 转换核心与读取模板
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+# Cloudflare Worker 文件所在目录：项目的 src/
+WORKER_DIR = Path(__file__).resolve().parent
+
+# 项目根目录，主要用于本地开发或 Vercel 结构
+ROOT = WORKER_DIR.parent
+
+# 允许导入 src/converter.py 以及根目录中的兼容模块
+for path in (WORKER_DIR, ROOT):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
 
 from converter import convert_contents  # noqa: E402
 
@@ -216,7 +223,8 @@ def _load_index_html() -> str:
     candidates = (
         ROOT / "index.html",
         ROOT / "public" / "index.html",
-        Path(__file__).resolve().parent / "index.html",
+        WORKER_DIR / "index.html",
+        WORKER_DIR / "public" / "index.html",
     )
     for path in candidates:
         if path.is_file():

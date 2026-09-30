@@ -1,0 +1,14 @@
+LICENSE
+README.md
+converter.py
+pyproject.toml
+remote_subscription.py
+sub2singbox.py
+tests/test_cli.py
+tests/test_convert.py
+tests/test_web_server.py
+yaml2sb.egg-info/PKG-INFO
+yaml2sb.egg-info/SOURCES.txt
+yaml2sb.egg-info/dependency_links.txt
+yaml2sb.egg-info/requires.txt
+yaml2sb.egg-info/top_level.txt

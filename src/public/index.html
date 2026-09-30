@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>yaml2sb · sing-box 配置转换</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+      background: #f7f6f3;
+      color: #37352f;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 54px 20px;
+      background: #f7f6f3;
+    }
+    main { width: min(760px, 100%); margin: auto; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+    .header-copy { min-width: 0; }
+    .github-link {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid #e3e2de;
+      border-radius: 20px;
+      color: #37352f;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .github-link:hover { color: #000; background: #f1f1ef; }
+    .github-link:focus-visible { outline: 2px solid #37352f; outline-offset: 3px; }
+    .github-link svg { display: block; width: 22px; height: 22px; fill: currentColor; }
+    @media (max-width: 480px) {
+      header { flex-wrap: wrap; }
+      .header-copy { flex-basis: 100%; }
+      .github-link { margin-left: auto; }
+    }
+    .eyebrow { color: #787774; font-size: 13px; letter-spacing: .08em; }
+    h1 { margin: 9px 0 8px; font-size: clamp(28px, 6vw, 40px); letter-spacing: -.04em; }
+    .intro { margin: 0; color: #787774; line-height: 1.7; }
+    .card {
+      padding: clamp(20px, 5vw, 34px);
+      border: 1px solid #e9e8e4;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgb(15 15 15 / 4%);
+    }
+    .tabs { display: flex; gap: 4px; padding: 4px; border-radius: 8px; background: #f1f1ef; }
+    button, input, select, textarea { font: inherit; }
+    .tab {
+      flex: 1;
+      min-height: 44px;
+      border: 0;
+      border-radius: 6px;
+      color: #787774;
+      background: transparent;
+      cursor: pointer;
+    }
+    .tab[aria-selected="true"] { color: #37352f; background: #fff; box-shadow: 0 1px 2px rgb(15 15 15 / 10%); }
+    .mode-panel { padding-top: 24px; }
+    [hidden] { display: none !important; }
+    label { display: block; margin: 0 0 9px; font-size: 14px; font-weight: 600; }
+    textarea, input[type="url"], input[type="password"], select {
+      width: 100%;
+      border: 1px solid #e3e2de;
+      border-radius: 6px;
+      outline: none;
+      background: #fff;
+      color: #37352f;
+    }
+    textarea:focus, input[type="url"]:focus, input[type="password"]:focus, select:focus { border-color: #a5a4a0; box-shadow: 0 0 0 2px rgb(55 53 47 / 8%); }
+    textarea { min-height: 230px; padding: 14px; resize: vertical; line-height: 1.55; }
+    input[type="url"], input[type="password"], select { min-height: 48px; padding: 0 13px; }
+    .custom-template-panel { margin-top: 16px; }
+    .custom-template-panel input[type="file"] { width: 100%; }
+    code { color: #5f5e5a; }
+    .file-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #787774; font-size: 13px; }
+    input[type="file"] { max-width: 100%; color: #5f5e5a; }
+    .hint { margin: 8px 0 0; color: #787774; font-size: 13px; line-height: 1.6; }
+    .options { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
+    .primary {
+      width: 100%;
+      min-height: 50px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: #37352f;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .primary:hover { background: #5a5852; }
+    .primary:disabled { opacity: .65; cursor: wait; }
+    .status { min-height: 24px; margin: 14px 0 0; color: #787774; font-size: 14px; line-height: 1.6; }
+    .status.error { color: #c4554d; }
+    .status.success { color: #448361; }
+    footer { margin: 18px 3px 0; color: #787774; font-size: 12px; line-height: 1.7; }
+    footer a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
+    footer a:hover { color: #000; text-decoration-color: currentColor; }
+    @media (min-width: 600px) { .options { grid-template-columns: 1fr 1fr; align-items: start; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="header-copy">
+        <h1>yaml2sb · sing-box</h1>
+        <p class="intro">修改 YAML 配置文件或订阅链接转换为 sing-box JSON。可本地、Docker 及 Vercel 部署。</p>
+      </div>
+      <a class="github-link" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener noreferrer" aria-label="访问 yaml2sb 项目主页（原作者：bacdown）" title="yaml2sb 项目主页 · 原作者 bacdown">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2.1c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.8 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.9 4.2 19 4.5 19 4.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.5-2.8 5.5-5.4 5.8.4.3.8 1 .8 2v3c0 .3.2.7.8.6A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
+        </svg>
+        <span>bacdown</span>
+      </a>
+    </header>
+
+    <section class="card" aria-label="配置转换">
+      <div class="tabs" role="tablist" aria-label="输入方式">
+        <button class="tab" id="paste-tab" type="button" role="tab" aria-selected="true" aria-controls="paste-panel">粘贴 / 上传文件</button>
+        <button class="tab" id="url-tab" type="button" role="tab" aria-selected="false" aria-controls="url-panel">远程订阅链接</button>
+      </div>
+
+      <form id="convert-form">
+        <div class="mode-panel" id="paste-panel" role="tabpanel" aria-labelledby="paste-tab">
+          <label for="content">订阅内容</label>
+          <textarea id="content" name="content" placeholder="粘贴 Clash YAML、Base64 订阅或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
+          <p class="hint">默认配置文件均支持 sing-box 1.14.x。</p>
+          <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择 YAML / TXT 文件，内容会合并提交；总大小上限为 2 MiB。</p>
+          <div class="file-row">
+            <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
+          </div>
+        </div>
+
+        <div class="mode-panel" id="url-panel" role="tabpanel" aria-labelledby="url-tab" hidden>
+          <label for="url">订阅链接</label>
+          <textarea id="url" name="url" rows="4" placeholder="每行一个订阅链接&#10;https://example.com/subscribe"></textarea>
+          <p class="hint">支持粘贴多条订阅链接，每行一个；服务端会逐条下载订阅内容，只允许访问公网 HTTP / HTTPS 地址，且每条下载上限为 2 MiB。</p>
+        </div>
+
+        <div class="options">
+          <div>
+            <label for="template">sing-box 模板</label>
+            <select id="template" name="template">
+              <option value="config_phone.json">iPhone 配置</option>
+              <option value="config_openwrt.json">OpenWrt 配置</option>
+              <option value="momo.json">Momo 配置</option>
+              <option value="custom">上传自定义模板</option>
+            </select>
+            <div id="custom-template-panel" class="custom-template-panel" hidden>
+              <label for="custom-template-file">自定义 JSON 模板文件</label>
+              <input id="custom-template-file" type="file" accept=".json,application/json">
+              <p class="hint">最小要求：JSON 根节点为对象，且包含数组类型的 <code>outbounds</code>；数组项须为对象。</p>
+              <p id="template-status" class="status" role="status" aria-live="polite"></p>
+            </div>
+          </div>
+          <div>
+            <label for="api-key">API 访问密钥（可选）</label>
+            <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
+            <p id="api-key-hint" class="hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
+            <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
+          </div>
+        </div>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <footer>
+      项目作者：<a href="https://github.com/bacdown" target="_blank" rel="noopener noreferrer">bacdown</a> ·
+      订阅链接可能包含私密凭据。请仅在可信环境中部署；公网开放服务前应配置身份验证与访问控制。
+    </footer>
+  </main>
+
+  <script>
+    const form = document.querySelector("#convert-form");
+    const content = document.querySelector("#content");
+    const file = document.querySelector("#file");
+    const fileName = document.querySelector("#file-name");
+    const url = document.querySelector("#url");
+    const template = document.querySelector("#template");
+    const customTemplatePanel = document.querySelector("#custom-template-panel");
+    const customTemplateFile = document.querySelector("#custom-template-file");
+    const apiKey = document.querySelector("#api-key");
+    const templateStatus = document.querySelector("#template-status");
+    const button = document.querySelector("#submit");
+    const status = document.querySelector("#status");
+    const tabs = [...document.querySelectorAll(".tab")];
+    let activeMode = "paste";
+    let customTemplate = null;
+    let uploadedFiles = [];
+
+    template.addEventListener("change", () => {
+      const customSelected = template.value === "custom";
+      customTemplatePanel.hidden = !customSelected;
+      templateStatus.textContent = "";
+      templateStatus.className = "status";
+    });
+
+    customTemplateFile.addEventListener("change", async () => {
+      customTemplate = null;
+      templateStatus.textContent = "";
+      templateStatus.className = "status";
+      const selected = customTemplateFile.files[0];
+      if (!selected) return;
+      if (selected.size > 2 * 1024 * 1024) {
+        customTemplateFile.value = "";
+        templateStatus.textContent = "模板文件不能超过 2 MiB。";
+        templateStatus.className = "status error";
+        return;
+      }
+      try {
+        const parsed = JSON.parse(await selected.text());
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          throw new Error("JSON 根节点必须是对象。");
+        }
+        if (!Array.isArray(parsed.outbounds)) {
+          throw new Error("缺少必要项 outbounds：必须是数组。");
+        }
+        if (parsed.outbounds.some((outbound) => !outbound || typeof outbound !== "object" || Array.isArray(outbound))) {
+          throw new Error("outbounds 数组中的每一项都必须是对象。");
+        }
+        customTemplate = parsed;
+        templateStatus.textContent = `${selected.name} · 校验通过`;
+        templateStatus.className = "status success";
+      } catch (error) {
+        templateStatus.textContent = error instanceof SyntaxError
+          ? `JSON 格式错误：${error.message}`
+          : error.message;
+        templateStatus.className = "status error";
+      }
+    });
+
+    function selectMode(mode) {
+      activeMode = mode;
+      for (const tab of tabs) {
+        const selected = tab.id === `${mode}-tab`;
+        tab.setAttribute("aria-selected", String(selected));
+        document.querySelector(`#${mode}-panel`).hidden = false;
+        document.querySelector(`#${mode === "paste" ? "url" : "paste"}-panel`).hidden = true;
+      }
+      status.textContent = "";
+      status.className = "status";
+    }
+
+    tabs.forEach((tab) => tab.addEventListener("click", () => selectMode(tab.id === "paste-tab" ? "paste" : "url")));
+
+    file.addEventListener("change", async () => {
+      const newlySelected = [...file.files];
+      file.value = "";
+      if (!newlySelected.length) return;
+
+      const combinedFiles = [...uploadedFiles, ...newlySelected];
+      if (combinedFiles.reduce((total, selected) => total + selected.size, 0) > 2 * 1024 * 1024) {
+        status.textContent = "已选择文件的总大小不能超过 2 MiB。";
+        status.className = "status error";
+        return;
+      }
+
+      try {
+        const texts = await Promise.all(combinedFiles.map((selected) => selected.text()));
+        uploadedFiles = combinedFiles;
+        content.value = texts.join("\n");
+        fileName.textContent = `已添加 ${uploadedFiles.length} 个文件：${uploadedFiles.map((selected) => selected.name).join("、")}`;
+        status.textContent = "";
+        status.className = "status";
+        selectMode("paste");
+      } catch (error) {
+        status.textContent = `读取文件失败：${error.message || "请重试。"}`;
+        status.className = "status error";
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.textContent = "正在转换…";
+      status.className = "status";
+      button.disabled = true;
+      try {
+        const endpoint = "/api";
+        const payload = activeMode === "url"
+          ? { urls: url.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean) }
+          : { content: content.value };
+        if (template.value === "custom") {
+          if (!customTemplate) throw new Error("请上传并通过校验一个自定义 JSON 模板。");
+          payload.template_json = customTemplate;
+        } else {
+          payload.template = template.value;
+        }
+        if (activeMode === "paste" && !payload.content.trim()) {
+          throw new Error("请先粘贴订阅内容或选择本地文件。");
+        }
+        if (activeMode === "url" && !payload.urls.length) {
+          throw new Error("请先输入订阅链接。");
+        }
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(apiKey.value ? { Authorization: `Bearer ${apiKey.value}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "转换失败，请检查输入内容。");
+
+        const blob = new Blob([JSON.stringify(result.config, null, 2)], { type: "application/json" });
+        const download = document.createElement("a");
+        download.href = URL.createObjectURL(blob);
+        const templateName = template.value === "custom"
+          ? "custom"
+          : template.value === "config_phone.json"
+            ? "iphone"
+            : template.value.replace(".json", "");
+        download.download = `sing-box-${templateName}.json`;
+        document.body.append(download);
+        download.click();
+        download.remove();
+        setTimeout(() => URL.revokeObjectURL(download.href), 1000);
+        status.textContent = `转换成功：${result.node_count} 个节点，配置已下载。`;
+        status.className = "status success";
+      } catch (error) {
+        status.textContent = error.message || "转换失败，请检查输入内容。";
+        status.className = "status error";
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
