@@ -29,6 +29,84 @@
 - 协议转换改为注册表结构，便于扩展；增加 `test_convert.py` 单元测试
 - 支持 `GET /sub` 远程订阅转换；可部署到 Vercel 与 Cloudflare Workers
 
+## 网页版部署向导
+
+按目标选择一种方式即可；都提供浏览器转换界面（粘贴订阅 / 远程链接、选平台模板、下载 JSON）。
+
+| 方式 | 适合谁 | 是否免费额度 | 部署难度 |
+|------|--------|--------------|----------|
+| **Vercel** | 想尽快上线公网网页 + API | 有免费额度 | 低（推荐） |
+| **Cloudflare Workers** | 已有 CF 账号，要边缘节点 + `/sub` 订阅 | 有免费额度 | 中 |
+| **Docker / 本机** | 私有化、旁路由、内网 | 自备机器 | 低 |
+
+### 向导 A：Vercel（推荐，约 5 分钟）
+
+1. 将本项目推送到 GitHub（公开或私有仓库均可）。
+2. 打开 [Vercel](https://vercel.com/) → **Add New → Project** → 导入该仓库。
+3. **Root Directory** 选项目根目录；框架选 **Other**（或保持自动检测）。
+4. **不要**填写特殊 Build / Output；依赖由 `requirements.txt` / `pyproject.toml` 中的 PyYAML 自动安装。
+5. 点击 **Deploy**。完成后打开：
+   - 网页：`https://<项目名>.vercel.app/`
+   - API：`https://<项目名>.vercel.app/api`
+   - 远程订阅：`https://<项目名>.vercel.app/sub?url=<编码后的原订阅>&template=phone`
+6. （可选）在 Vercel 项目 **Settings → Environment Variables** 增加 `YAML2SB_API_KEY`，值为一串随机密钥；保存后重新 Deploy。启用后网页里需填写该密钥，API / `/sub` 也需带密钥。
+
+详细步骤与 CLI 部署见下方 [部署到 Vercel](#部署到-vercel)。
+
+### 向导 B：Cloudflare Workers
+
+1. 本机安装 [Node.js](https://nodejs.org/)、[uv](https://github.com/astral-sh/uv)，并注册 Cloudflare 账号。
+2. 在项目根目录执行：
+
+```sh
+uv sync
+uv add --dev workers-py workers-runtime-sdk
+uv run pywrangler login
+uv run pywrangler deploy
+```
+
+3. 部署成功后打开：
+   - 网页：`https://yaml2sb.<你的子域>.workers.dev/`
+   - 远程订阅：`https://yaml2sb.<你的子域>.workers.dev/sub?url=...&template=phone`
+4. （可选）`uv run wrangler secret put YAML2SB_API_KEY` 设置访问密钥。
+
+> Cloudflare 的开发依赖只在本机用 `uv add --dev` 安装，**不要**写进会触发 Vercel `uv lock` 的主依赖，以免 Vercel 构建失败。
+
+详细说明见下方 [部署到 Cloudflare Workers](#部署到-cloudflare-workers)。
+
+### 向导 C：Docker / 本机网页
+
+**Docker Compose（推荐私有化）：**
+
+```sh
+docker compose up -d --build
+# 浏览器打开 http://localhost:8080
+```
+
+**本机直接跑：**
+
+```sh
+python3 -m pip install -r requirements.txt
+python3 web_server.py --host 0.0.0.0 --port 8080
+```
+
+可选环境变量 `YAML2SB_API_KEY`。更多见下方 [网页版](#网页版)。
+
+### 部署后怎么用网页
+
+1. 打开首页，选择 **粘贴内容** 或 **远程订阅链接**。
+2. 在「sing-box 模板」中选择：
+   - **iPhone 配置**（`config_phone.json`）— 手机客户端
+   - **OpenWrt 配置** — 软路由
+   - **Momo 配置** — Momo
+   - 或 **上传自定义模板**
+3. 若启用了 API Key，在页面填写密钥。
+4. 点击 **转换并下载 JSON**，把文件导入 sing-box 客户端。
+
+需要客户端**自动更新**时，用 `GET /sub` 链接当远程配置（见 [远程订阅转换](#远程订阅转换get-sub客户端直接使用)），不必每次打开网页。
+
+---
+
 ## 部署到 Vercel
 
 ### 通过 Vercel 网站部署
