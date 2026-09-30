@@ -1,6 +1,6 @@
 # yaml2sb
 
-将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。提供本地网页版、Docker 部署、Vercel HTTP API 和命令行用法。
+将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。提供本地网页版、Docker、Vercel、Cloudflare Workers 与命令行用法。
 
 ## 许可证
 
@@ -27,6 +27,7 @@
 - Hysteria2 / TUIC 默认补充 `alpn: ["h3"]`，Hysteria2 默认 `disable_chrome_parrot: true`
 - Shadowsocks 插件与 HTTP / SOCKS5 / AnyTLS / Hysteria v1 支持
 - 协议转换改为注册表结构，便于扩展；增加 `test_convert.py` 单元测试
+- 支持 `GET /sub` 远程订阅转换；可部署到 Vercel 与 Cloudflare Workers
 
 ## 部署到 Vercel
 
@@ -56,6 +57,74 @@ vercel
 ```sh
 vercel --prod
 ```
+
+## 部署到 Cloudflare Workers
+
+本项目提供 Python Workers 入口（`src/worker.py`），在 Cloudflare 边缘提供与 Vercel 相同的能力：完整网页 UI、`GET /sub` 远程订阅、`POST /api`（内置模板与自定义 `template_json`）。
+
+### 环境要求
+
+- 已安装 [Node.js](https://nodejs.org/)（供 wrangler 使用）
+- 已安装 [uv](https://github.com/astral-sh/uv)
+- Cloudflare 账号
+
+### 部署步骤
+
+在项目根目录执行：
+
+```sh
+# 安装依赖（含 workers-py）
+uv sync --group dev
+
+# 登录 Cloudflare（首次）
+uv run pywrangler login
+
+# 本地预览
+uv run pywrangler dev
+
+# 部署到 Workers
+uv run pywrangler deploy
+```
+
+部署成功后地址形如：
+
+```text
+https://yaml2sb.<你的子域>.workers.dev
+```
+
+### 可选：启用 API Key
+
+```sh
+uv run wrangler secret put YAML2SB_API_KEY
+# 按提示输入密钥
+```
+
+启用后，请求需携带：
+
+- 查询参数 `api_key=...`，或
+- 请求头 `Authorization: Bearer ...` / `X-API-Key: ...`
+
+### 客户端远程配置示例
+
+```text
+https://yaml2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&template=phone
+```
+
+| template | 适用场景 |
+|----------|----------|
+| `phone`（默认） | 手机 / SFA / SFI 等 |
+| `openwrt` | OpenWrt / 旁路由 |
+| `momo` | Momo |
+
+配置文件：`wrangler.toml`（入口 `src/worker.py`）。转换逻辑复用根目录的 `sub2singbox.py` / `converter.py`，模板读取 `templates/` 或根目录下的 JSON；网页 UI 使用根目录 `index.html`（与 Vercel 相同）。
+
+部署后：
+
+| 地址 | 说明 |
+|------|------|
+| `https://<worker>/` | 网页转换界面（选平台模板 / 上传自定义模板） |
+| `https://<worker>/sub?url=...&template=phone` | 客户端远程配置 |
+| `https://<worker>/api` | API 说明（JSON） |
 
 ## HTTP API 使用方法
 
