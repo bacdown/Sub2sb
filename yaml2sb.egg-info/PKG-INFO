@@ -1,9 +1,0 @@
-Metadata-Version: 2.4
-Name: yaml2sb
-Version: 1.0.0
-Summary: Convert proxy subscriptions into sing-box JSON configurations
-License: MIT
-Requires-Python: >=3.9
-License-File: LICENSE
-Requires-Dist: PyYAML<7,>=6.0.2
-Dynamic: license-file
