@@ -7,6 +7,8 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from web_server import WebHandler, validate_public_url
+from subscription_utils import collect_subscription_urls
+from subscription_utils import SubscriptionFetchError
 
 
 SAMPLE_SUBSCRIPTION = """proxies:
@@ -223,6 +225,20 @@ class WebServerTests(unittest.TestCase):
         self.assertEqual(result["node_count"], 2)
         self.assertEqual(fetch.call_count, 2)
 
+    def test_sub_endpoint_maps_upstream_errors_to_502(self):
+        request = Request(
+            self.base_url + "/sub?url=https%3A%2F%2Fsubscriptions.example%2Fsub"
+        )
+        with patch(
+            "api.index.fetch_remote_subscription",
+            side_effect=SubscriptionFetchError("远程服务器无法访问"),
+        ):
+            with self.assertRaises(HTTPError) as error:
+                urlopen(request)
+
+        self.assertEqual(error.exception.code, 502)
+        self.assertIn("远程服务器无法访问", error.exception.read().decode("utf-8"))
+
     def test_link_endpoint_rejects_private_destinations(self):
         request = Request(
             self.base_url + "/fetch",
@@ -239,6 +255,26 @@ class WebServerTests(unittest.TestCase):
     def test_url_validator_requires_http_or_https(self):
         with self.assertRaisesRegex(ValueError, "HTTP 或 HTTPS"):
             validate_public_url("file:///etc/passwd")
+
+    def test_subscription_query_preserves_commas_in_single_url(self):
+        self.assertEqual(
+            collect_subscription_urls(
+                {"url": ["https://subscriptions.example/sub?regions=jp,us"]}
+            ),
+            ["https://subscriptions.example/sub?regions=jp,us"],
+        )
+
+    def test_subscription_query_splits_multiple_urls_and_caps_count(self):
+        self.assertEqual(
+            collect_subscription_urls(
+                {"urls": ["https://one.example/sub,https://two.example/sub"]}
+            ),
+            ["https://one.example/sub", "https://two.example/sub"],
+        )
+        with self.assertRaisesRegex(ValueError, "最多支持"):
+            collect_subscription_urls(
+                {"url": [f"https://{index}.example/sub" for index in range(11)]}
+            )
 
 
 if __name__ == "__main__":
