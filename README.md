@@ -28,6 +28,8 @@
 - Shadowsocks 插件与 HTTP / SOCKS5 / AnyTLS / Hysteria v1 支持
 - 协议转换改为注册表结构，便于扩展；增加 `test_convert.py` 单元测试
 - 支持 `GET /sub` 远程订阅转换；可部署到 Vercel 与 Cloudflare Workers
+- Workers 远程请求使用平台支持的 Fetch 参数格式，并校验每次重定向及订阅大小
+- Vercel 与 Workers 共用订阅 URL 校验和参数处理；远程下载失败返回 `502`，内容超限返回 `413`
 
 ## 网页版部署向导
 
@@ -44,7 +46,7 @@
 1. 将本项目推送到 GitHub（公开或私有仓库均可）。
 2. 打开 [Vercel](https://vercel.com/) → **Add New → Project** → 导入该仓库。
 3. **Root Directory** 选项目根目录；框架选 **Other**（或保持自动检测）。
-4. **不要**填写特殊 Build / Output；依赖由 `requirements.txt` / `pyproject.toml` 中的 PyYAML 自动安装。
+4. **不要**填写特殊 Build / Output；依赖由 `pyproject.toml` 中的 PyYAML 自动安装。
 5. 点击 **Deploy**。完成后打开：
    - 网页：`https://<项目名>.vercel.app/`
    - API：`https://<项目名>.vercel.app/api`
@@ -88,7 +90,7 @@ docker compose up -d --build
 **本机直接跑：**
 
 ```sh
-python3 -m pip install -r requirements.txt
+python3 -m pip install .
 python3 web_server.py --host 0.0.0.0 --port 8080
 ```
 
@@ -174,6 +176,36 @@ uv run pywrangler deploy
 https://yaml2sb.<你的子域>.workers.dev
 ```
 
+### 部署后验证
+
+先查看 Workers API 是否可访问：
+
+```sh
+WORKER_URL='https://yaml2sb.<你的子域>.workers.dev'
+curl -fsS "$WORKER_URL/api" | python3 -m json.tool
+```
+
+再用一条有效的订阅链接验证远程转换。`curl --get --data-urlencode` 会自动编码原订阅 URL：
+
+```sh
+WORKER_URL='https://yaml2sb.<你的子域>.workers.dev'
+SUBSCRIPTION_URL='https://example.com/subscribe' # 替换为服务商提供的真实订阅地址
+curl --get --fail-with-body \
+  --data-urlencode "url=$SUBSCRIPTION_URL" \
+  --data-urlencode 'template=phone' \
+  "$WORKER_URL/sub" \
+  -o sing-box.json
+python3 -m json.tool sing-box.json > /dev/null
+```
+
+若已配置 `YAML2SB_API_KEY`，在两个 `curl` 请求中都添加：
+
+```sh
+-H "Authorization: Bearer $YAML2SB_API_KEY"
+```
+
+成功时 `/sub` 返回可直接导入客户端的纯 sing-box JSON。测试时请使用有效订阅地址；不要把包含凭据的真实订阅链接提交到仓库或 issue。
+
 ### 可选：启用 API Key
 
 ```sh
@@ -198,7 +230,7 @@ https://yaml2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&te
 | `openwrt` | OpenWrt / 旁路由 |
 | `momo` | Momo |
 
-配置文件：`wrangler.toml`（入口 `src/worker.py`）。转换逻辑复用根目录的 `sub2singbox.py` / `converter.py`，模板读取 `templates/` 或根目录下的 JSON；网页 UI 使用根目录 `index.html`（与 Vercel 相同）。
+配置文件：`wrangler.toml`（入口 `src/worker.py`）。转换逻辑由根目录的 `sub2singbox.py` / `converter.py` 提供；模板统一读取 `templates/`，网页统一读取 `public/index.html`。Vercel、本地 Web 和 Workers 共用这些资源。
 
 部署后：
 
@@ -327,9 +359,11 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
 ### 请求与错误
 
 - 请求体最大为 **2 MiB**。
-- `400`：JSON 格式错误、缺少 `content`、模板名称不支持或模板格式无效。
-- `413`：请求体超过大小限制。
+- `400`：JSON 格式错误、缺少 `content`、订阅 URL 无效、模板名称不支持或模板格式无效。
+- `413`：请求体或单条远程订阅内容超过 **2 MiB**。
+- `502`：远程订阅服务器不可访问、返回非成功状态或响应无效。
 - `500`：转换期间发生未预期错误。
+- 远程订阅只允许公网 HTTP(S) 地址；`GET /sub` 每次最多 **10 条**，且每个重定向目标都会重新校验。
 - `POST /api` 可直接传订阅正文（`content`），也可传 `url` / `urls` 由服务端代为下载后转换。`GET /sub` 专供客户端远程配置，返回纯 sing-box JSON。
 
 ## 本地命令行
@@ -337,7 +371,7 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
 需要 Python 3.9 或更高版本。安装依赖：
 
 ```sh
-python3 -m pip install -r requirements.txt
+python3 -m pip install .
 ```
 
 直接运行脚本会启动交互式菜单，可逐行输入订阅链接或文件路径、选择模板并指定输出位置：
