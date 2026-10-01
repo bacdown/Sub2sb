@@ -13,4 +13,9 @@ dependencies = [
 ]
 
 [tool.setuptools]
-py-modules = ["converter", "sub2singbox"]
+py-modules = [
+    "converter",
+    "sub2singbox",
+    "remote_subscription",
+    "subscription_utils",
+]

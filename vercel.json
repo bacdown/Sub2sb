@@ -1,7 +1,11 @@
 {
   "functions": {
     "api/index.py": {
-      "includeFiles": "templates/*.json"
+      "includeFiles": "{templates/**,config_phone.json,config_openwrt.json,momo.json}"
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/sub", "destination": "/api/sub" },
+    { "source": "/sub/", "destination": "/api/sub" }
+  ]
 }

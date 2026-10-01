@@ -6,6 +6,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from subscription_utils import (
+    SubscriptionFetchError,
+    SubscriptionTooLargeError,
+    validate_public_url_syntax,
+)
+
 MAX_SUBSCRIPTION_BYTES = 2 * 1024 * 1024
 FETCH_TIMEOUT_SECONDS = 30
 MAX_REDIRECTS = 5
@@ -13,19 +19,8 @@ MAX_REDIRECTS = 5
 
 def validate_public_url(url):
     """Allow public HTTP(S) subscription URLs and reject private destinations."""
-    try:
-        parsed = urllib.parse.urlsplit(url)
-        port = parsed.port
-    except ValueError as exc:
-        raise ValueError("订阅链接格式无效") from exc
-
-    if (
-        parsed.scheme not in ("http", "https")
-        or not parsed.hostname
-        or parsed.username
-        or parsed.password
-    ):
-        raise ValueError("订阅链接必须是有效的 HTTP 或 HTTPS 公网地址")
+    parsed = validate_public_url_syntax(url)
+    port = parsed.port
 
     try:
         addresses = {
@@ -70,10 +65,12 @@ def fetch_remote_subscription(url):
     try:
         with opener.open(request, timeout=FETCH_TIMEOUT_SECONDS) as response:
             data = response.read(MAX_SUBSCRIPTION_BYTES + 1)
-    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
-        raise ValueError(f"下载订阅失败：{exc}") from exc
+    except urllib.error.HTTPError as exc:
+        raise SubscriptionFetchError(f"下载订阅失败：HTTP {exc.code}") from exc
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise SubscriptionFetchError("下载订阅失败：远程服务器无法访问") from exc
 
     if len(data) > MAX_SUBSCRIPTION_BYTES:
-        raise ValueError("订阅内容不能超过 2 MiB")
+        raise SubscriptionTooLargeError("订阅内容不能超过 2 MiB")
 
     return data.decode("utf-8", errors="replace")

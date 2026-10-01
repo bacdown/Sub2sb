@@ -9,13 +9,12 @@
 - Base64 编码的 Clash YAML
 - Base64 URI 订阅
 - 明文 URI 订阅
-- vmess://
-- vless://
-- trojan://
-- ss://
-- hysteria2://
-- hy2://
-- tuic
+- vmess:// / vless:// / trojan:// / ss://
+- hysteria2:// / hy2:// / hysteria://
+- tuic:// / anytls://
+- Clash 节点：ss、vmess、vless、trojan、hysteria2、hysteria、tuic、anytls、http、socks5
+- Shadowsocks 插件：obfs、v2ray-plugin、shadow-tls
+- Hysteria2：端口跳跃、带宽、disable_chrome_parrot、alpn h3
 
 用法：
 
@@ -54,8 +53,24 @@ SUPPORTED_URI_PREFIXES = (
     "ss://",
     "hysteria2://",
     "hy2://",
+    "hysteria://",
     "tuic://",
+    "anytls://",
 )
+
+# sing-box utls 合法指纹（仅这些才写入 tls.utls）
+VALID_UTLS_FINGERPRINTS = frozenset({
+    "chrome",
+    "firefox",
+    "safari",
+    "ios",
+    "android",
+    "edge",
+    "360",
+    "qq",
+    "random",
+    "randomized",
+})
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 BUILTIN_TEMPLATES = (
@@ -510,23 +525,52 @@ def parse_hysteria2(uri):
         "server": parsed.hostname,
         "server_port": parsed.port or 443,
         "password": urllib.parse.unquote(parsed.username or ""),
+        # 与 Clash 路径保持一致，兼容 sing-box 1.14+ Ed25519 证书节点
+        "disable_chrome_parrot": True,
     }
 
-    obfs = get_param("obfs")
+    # 端口跳跃（部分订阅会带 mport / ports）
+    mport = get_param("mport") or get_param("ports")
+    if mport:
+        ranges = []
+        for part in mport.split(","):
+            part = part.strip()
+            if "-" in part:
+                a, b = part.split("-", 1)
+                ranges.append(f"{a}:{b}")
+            elif part:
+                ranges.append(part)
+        if ranges:
+            outbound.pop("server_port", None)
+            outbound["server_ports"] = ranges
 
+    obfs = get_param("obfs")
     if obfs:
         outbound["obfs"] = {
             "type": obfs,
             "password": get_param("obfs-password"),
         }
 
+    # 带宽
+    for param_key, sb_key in (("upmbps", "up_mbps"), ("downmbps", "down_mbps")):
+        val = get_param(param_key)
+        if val:
+            try:
+                outbound[sb_key] = int(float(val))
+            except (TypeError, ValueError):
+                pass
+
     tls = {
         "enabled": True,
         "server_name": get_param("sni") or parsed.hostname,
+        "alpn": ["h3"],
     }
 
     if get_param("insecure").lower() in ("1", "true", "yes"):
         tls["insecure"] = True
+
+    # pinSHA256 / fingerprint 是证书钉扎，1.14 无法直接映射，忽略即可
+    # （有 insecure 时不影响连通）
 
     outbound["tls"] = tls
 
@@ -566,11 +610,113 @@ def parse_tuic(uri):
     if udp_relay_mode:
         outbound["udp_relay_mode"] = udp_relay_mode
 
-    outbound["tls"] = {
+    if get_param("congestion_control"):
+        outbound["congestion_control"] = get_param("congestion_control")
+
+    zero_rtt = get_param("zero_rtt_handshake") or get_param("zerortt")
+    if zero_rtt.lower() in ("1", "true", "yes"):
+        outbound["zero_rtt_handshake"] = True
+
+    tls = {
+        "enabled": True,
+        "server_name": get_param("sni") or parsed.hostname,
+        "alpn": ["h3"],
+    }
+    if get_param("insecure").lower() in ("1", "true", "yes"):
+        tls["insecure"] = True
+    alpn = get_param("alpn")
+    if alpn:
+        tls["alpn"] = [a.strip() for a in alpn.split(",") if a.strip()]
+    outbound["tls"] = tls
+
+    return outbound
+
+
+def parse_hysteria(uri):
+    """
+    解析 hysteria:// (v1) URI。
+    """
+    parsed = urllib.parse.urlsplit(uri)
+    params = urllib.parse.parse_qs(parsed.query)
+
+    def get_param(key, default=""):
+        return params.get(key, [default])[0]
+
+    if not parsed.hostname:
+        raise ValueError("Hysteria 缺少服务器地址")
+
+    outbound = {
+        "type": "hysteria",
+        "tag": node_name(parsed, "Hysteria"),
+        "server": parsed.hostname,
+        "server_port": parsed.port or 443,
+        "up_mbps": 100,
+        "down_mbps": 100,
+    }
+
+    auth = get_param("auth") or get_param("auth_str") or urllib.parse.unquote(parsed.username or "")
+    if auth:
+        outbound["auth_str"] = auth
+
+    up = get_param("upmbps") or get_param("up")
+    down = get_param("downmbps") or get_param("down")
+    if up:
+        try:
+            outbound["up_mbps"] = int(float(up))
+        except (TypeError, ValueError):
+            pass
+    if down:
+        try:
+            outbound["down_mbps"] = int(float(down))
+        except (TypeError, ValueError):
+            pass
+
+    obfs = get_param("obfs")
+    if obfs:
+        outbound["obfs"] = obfs
+
+    tls = {
+        "enabled": True,
+        "server_name": get_param("peer") or get_param("sni") or parsed.hostname,
+        "alpn": ["h3"],
+    }
+    if get_param("insecure").lower() in ("1", "true", "yes"):
+        tls["insecure"] = True
+    outbound["tls"] = tls
+    return outbound
+
+
+def parse_anytls(uri):
+    """
+    解析 anytls://password@host:port?...#name
+    """
+    parsed = urllib.parse.urlsplit(uri)
+    params = urllib.parse.parse_qs(parsed.query)
+
+    def get_param(key, default=""):
+        return params.get(key, [default])[0]
+
+    if not parsed.hostname:
+        raise ValueError("AnyTLS 缺少服务器地址")
+
+    outbound = {
+        "type": "anytls",
+        "tag": node_name(parsed, "AnyTLS"),
+        "server": parsed.hostname,
+        "server_port": parsed.port or 443,
+        "password": urllib.parse.unquote(parsed.username or ""),
+    }
+
+    tls = {
         "enabled": True,
         "server_name": get_param("sni") or parsed.hostname,
     }
-
+    if get_param("insecure").lower() in ("1", "true", "yes"):
+        tls["insecure"] = True
+    fp = _normalize_utls_fingerprint(get_param("fp") or get_param("fingerprint"))
+    if fp:
+        tls["utls"] = {"enabled": True, "fingerprint": fp}
+    outbound["tls"] = tls
     return outbound
 
 
@@ -603,8 +749,14 @@ def parse_uri(uri):
             converted = "hysteria2://" + uri[len("hy2://"):]
             return parse_hysteria2(converted)
 
+        if uri.startswith("hysteria://"):
+            return parse_hysteria(uri)
+
         if uri.startswith("tuic://"):
             return parse_tuic(uri)
+
+        if uri.startswith("anytls://"):
+            return parse_anytls(uri)
 
     except Exception as exc:
         print(
@@ -616,13 +768,27 @@ def parse_uri(uri):
     return None
 
 
-def clash_tls_config(proxy):
+def _normalize_utls_fingerprint(value):
+    """仅当值是合法 uTLS 指纹时返回小写字符串，否则返回 None。"""
+    if not value:
+        return None
+    text = str(value).strip().lower()
+    if text in VALID_UTLS_FINGERPRINTS:
+        return text
+    return None
+
+
+def clash_tls_config(proxy, *, force=False, default_alpn=None):
     """
     转换 Clash 的 TLS、Reality、指纹和跳过证书验证设置。
+
+    force=True 时即使没有 tls/reality 字段也生成 TLS 块（Trojan/hy2/tuic 等）。
+    fingerprint / client-fingerprint 只有合法 uTLS 值才会写入 utls，
+    避免把 Hysteria2 的证书 SHA256 钉扎误当作客户端指纹。
     """
     reality_opts = proxy.get("reality-opts") or {}
 
-    if not proxy.get("tls", False) and not reality_opts:
+    if not force and not proxy.get("tls", False) and not reality_opts:
         return None
 
     tls = {
@@ -634,23 +800,31 @@ def clash_tls_config(proxy):
         or proxy.get("sni")
         or proxy.get("server")
     )
-
     if server_name:
         tls["server_name"] = server_name
 
-    fingerprint = (
-        proxy.get("client-fingerprint")
-        or proxy.get("fingerprint")
-    )
-
-    if fingerprint:
+    # 优先 client-fingerprint；fingerprint 仅在是合法 uTLS 名时才用
+    client_fp = _normalize_utls_fingerprint(proxy.get("client-fingerprint"))
+    if not client_fp:
+        client_fp = _normalize_utls_fingerprint(proxy.get("fingerprint"))
+    if client_fp:
         tls["utls"] = {
             "enabled": True,
-            "fingerprint": fingerprint,
+            "fingerprint": client_fp,
         }
 
     if proxy.get("skip-cert-verify", False):
         tls["insecure"] = True
+
+    if default_alpn:
+        tls["alpn"] = list(default_alpn)
+
+    alpn = proxy.get("alpn")
+    if alpn:
+        if isinstance(alpn, str):
+            alpn = [a.strip() for a in alpn.split(",") if a.strip()]
+        if alpn:
+            tls["alpn"] = alpn
 
     if reality_opts:
         tls["reality"] = {
@@ -664,27 +838,36 @@ def clash_tls_config(proxy):
 
 def clash_transport_config(proxy):
     """
-    转换 Clash 的 network、ws-opts、grpc-opts、http-opts。
+    转换 Clash 的 network、ws-opts、grpc-opts、http-opts、h2-opts。
     """
     network = str(proxy.get("network", "")).lower()
 
     if network == "ws":
         ws_opts = proxy.get("ws-opts") or {}
-
         transport = {
             "type": "ws",
             "path": ws_opts.get("path") or "/",
         }
-
         headers = ws_opts.get("headers") or {}
         if headers:
             transport["headers"] = headers
-
+        # 0-RTT early data
+        max_early_data = ws_opts.get("max-early-data") or ws_opts.get("max_early_data")
+        if max_early_data is not None:
+            try:
+                transport["max_early_data"] = int(max_early_data)
+            except (TypeError, ValueError):
+                pass
+        early_header = (
+            ws_opts.get("early-data-header-name")
+            or ws_opts.get("early_data_header_name")
+        )
+        if early_header:
+            transport["early_data_header_name"] = early_header
         return transport
 
     if network == "grpc":
         grpc_opts = proxy.get("grpc-opts") or {}
-
         return {
             "type": "grpc",
             "service_name": (
@@ -694,21 +877,443 @@ def clash_transport_config(proxy):
             ),
         }
 
-    if network == "http":
-        http_opts = proxy.get("http-opts") or {}
-
+    if network in ("http", "h2"):
+        opts_key = "h2-opts" if network == "h2" else "http-opts"
+        http_opts = proxy.get(opts_key) or proxy.get("http-opts") or {}
         transport = {
             "type": "http",
             "path": http_opts.get("path") or "/",
         }
-
         headers = http_opts.get("headers") or {}
         if headers:
             transport["headers"] = headers
-
+        host = http_opts.get("host")
+        if host:
+            if isinstance(host, list):
+                transport["host"] = host
+            else:
+                transport["host"] = [host]
         return transport
 
     return None
+
+
+def _parse_bandwidth_mbps(value):
+    """将 Clash 带宽写法转为整数 Mbps，失败返回 None。"""
+    if value is None:
+        return None
+    text = str(value).strip().lower().replace(" ", "")
+    for unit in ("mbps", "mb", "m"):
+        if text.endswith(unit):
+            text = text[: -len(unit)]
+            break
+    try:
+        return int(float(text))
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_port_ranges(ports_value):
+    """将 ports/mport 统一为 sing-box server_ports 列表。"""
+    if not ports_value:
+        return []
+    if not isinstance(ports_value, list):
+        ports_value = str(ports_value).split(",")
+    normalized = []
+    for port_range in ports_value:
+        port_range = str(port_range).strip()
+        if "-" in port_range:
+            first_port, last_port = port_range.split("-", 1)
+            port_range = f"{first_port}:{last_port}"
+        if port_range:
+            normalized.append(port_range)
+    return normalized
+
+
+def convert_ss(proxy, name):
+    if not proxy.get("cipher"):
+        raise ValueError("Shadowsocks 缺少 cipher")
+    if proxy.get("password") is None:
+        raise ValueError("Shadowsocks 缺少 password")
+
+    outbound = {
+        "type": "shadowsocks",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 443)),
+        "method": proxy["cipher"],
+        "password": str(proxy["password"]),
+    }
+
+    # 常见插件：obfs / v2ray-plugin / shadow-tls
+    plugin = (proxy.get("plugin") or "").strip().lower()
+    plugin_opts = proxy.get("plugin-opts") or {}
+    if plugin in ("obfs", "simple-obfs", "obfs-local"):
+        mode = plugin_opts.get("mode") or "http"
+        outbound["plugin"] = "obfs-local"
+        outbound["plugin_opts"] = f"obfs={mode}"
+        if plugin_opts.get("host"):
+            outbound["plugin_opts"] += f";obfs-host={plugin_opts['host']}"
+    elif plugin in ("v2ray-plugin", "v2ray"):
+        parts = []
+        mode = plugin_opts.get("mode") or "websocket"
+        parts.append(f"mode={mode}")
+        if plugin_opts.get("tls"):
+            parts.append("tls")
+        if plugin_opts.get("host"):
+            parts.append(f"host={plugin_opts['host']}")
+        if plugin_opts.get("path"):
+            parts.append(f"path={plugin_opts['path']}")
+        if plugin_opts.get("mux") is False:
+            parts.append("mux=0")
+        outbound["plugin"] = "v2ray-plugin"
+        outbound["plugin_opts"] = ";".join(parts)
+    elif plugin in ("shadow-tls", "shadowtls"):
+        # sing-box 用独立 shadowtls 出站，这里尽量保留信息到 plugin 字段
+        outbound["plugin"] = "shadow-tls"
+        opts = []
+        if plugin_opts.get("host") or plugin_opts.get("servername"):
+            opts.append(
+                f"host={plugin_opts.get('host') or plugin_opts.get('servername')}"
+            )
+        if plugin_opts.get("password"):
+            opts.append(f"password={plugin_opts['password']}")
+        if plugin_opts.get("version"):
+            opts.append(f"version={plugin_opts['version']}")
+        if opts:
+            outbound["plugin_opts"] = ";".join(opts)
+
+    return outbound
+
+
+def convert_vmess(proxy, name):
+    if not proxy.get("uuid"):
+        raise ValueError("VMess 缺少 uuid")
+
+    outbound = {
+        "type": "vmess",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 443)),
+        "uuid": proxy["uuid"],
+        "security": proxy.get("cipher") or "auto",
+    }
+
+    alter_id = proxy.get("alterId")
+    if alter_id not in (None, "", 0, "0"):
+        outbound["alter_id"] = int(alter_id)
+
+    transport = clash_transport_config(proxy)
+    if transport:
+        outbound["transport"] = transport
+
+    tls = clash_tls_config(proxy)
+    if tls:
+        outbound["tls"] = tls
+
+    return outbound
+
+
+def convert_vless(proxy, name):
+    if not proxy.get("uuid"):
+        raise ValueError("VLESS 缺少 uuid")
+
+    outbound = {
+        "type": "vless",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 443)),
+        "uuid": proxy["uuid"],
+    }
+
+    flow = proxy.get("flow")
+    if flow:
+        outbound["flow"] = flow
+
+    packet_encoding = (
+        proxy.get("packet-encoding")
+        or proxy.get("packetEncoding")
+    )
+    if packet_encoding:
+        outbound["packet_encoding"] = packet_encoding
+
+    transport = clash_transport_config(proxy)
+    if transport:
+        outbound["transport"] = transport
+
+    tls = clash_tls_config(proxy)
+    if tls:
+        outbound["tls"] = tls
+
+    return outbound
+
+
+def convert_trojan(proxy, name):
+    if proxy.get("password") is None:
+        raise ValueError("Trojan 缺少 password")
+
+    outbound = {
+        "type": "trojan",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 443)),
+        "password": str(proxy["password"]),
+    }
+
+    transport = clash_transport_config(proxy)
+    if transport:
+        outbound["transport"] = transport
+
+    tls = clash_tls_config(proxy, force=True)
+    outbound["tls"] = tls
+    return outbound
+
+
+def convert_hysteria2(proxy, name):
+    password = (
+        proxy.get("password")
+        or proxy.get("auth")
+        or ""
+    )
+
+    outbound = {
+        "type": "hysteria2",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 443)),
+        "password": str(password),
+        # sing-box 1.14+ 默认 Chrome QUIC 模仿会与很多使用 Ed25519
+        # 证书的自签/专线节点握手失败，默认关闭以兼容
+        "disable_chrome_parrot": True,
+    }
+
+    normalized_ports = _normalize_port_ranges(
+        proxy.get("ports") or proxy.get("mport")
+    )
+    if normalized_ports:
+        outbound.pop("server_port", None)
+        outbound["server_ports"] = normalized_ports
+
+    hop_interval = proxy.get("hop-interval") or proxy.get("hop_interval")
+    if hop_interval:
+        hop_interval = str(hop_interval).strip()
+        if "-" in hop_interval:
+            minimum, maximum = hop_interval.split("-", 1)
+            outbound["hop_interval"] = f"{minimum}s"
+            outbound["hop_interval_max"] = f"{maximum}s"
+        else:
+            if hop_interval.isdigit():
+                hop_interval += "s"
+            outbound["hop_interval"] = hop_interval
+
+    for clash_key, sb_key in (
+        ("up", "up_mbps"),
+        ("down", "down_mbps"),
+        ("up-mbps", "up_mbps"),
+        ("down-mbps", "down_mbps"),
+        ("up_mbps", "up_mbps"),
+        ("down_mbps", "down_mbps"),
+    ):
+        mbps = _parse_bandwidth_mbps(proxy.get(clash_key))
+        if mbps is not None:
+            outbound[sb_key] = mbps
+
+    obfs = proxy.get("obfs")
+    if obfs:
+        outbound["obfs"] = {
+            "type": obfs,
+            "password": proxy.get("obfs-password", ""),
+        }
+
+    # fingerprint 是证书钉扎，不是 uTLS；不写入 utls
+    tls = clash_tls_config(proxy, force=True, default_alpn=["h3"])
+    outbound["tls"] = tls
+    return outbound
+
+
+def convert_hysteria(proxy, name):
+    """Hysteria v1。"""
+    outbound = {
+        "type": "hysteria",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 443)),
+    }
+
+    auth = proxy.get("auth_str") or proxy.get("auth-str") or proxy.get("password")
+    if auth is not None:
+        outbound["auth_str"] = str(auth)
+    elif proxy.get("auth"):
+        outbound["auth"] = str(proxy["auth"])
+
+    for clash_key, sb_key in (
+        ("up", "up_mbps"),
+        ("down", "down_mbps"),
+        ("up-mbps", "up_mbps"),
+        ("down-mbps", "down_mbps"),
+    ):
+        mbps = _parse_bandwidth_mbps(proxy.get(clash_key))
+        if mbps is not None:
+            outbound[sb_key] = mbps
+
+    # 兼容字符串带宽 up/down
+    if "up_mbps" not in outbound and proxy.get("up"):
+        mbps = _parse_bandwidth_mbps(proxy.get("up"))
+        if mbps is not None:
+            outbound["up_mbps"] = mbps
+    if "down_mbps" not in outbound and proxy.get("down"):
+        mbps = _parse_bandwidth_mbps(proxy.get("down"))
+        if mbps is not None:
+            outbound["down_mbps"] = mbps
+
+    if "up_mbps" not in outbound:
+        outbound["up_mbps"] = 100
+    if "down_mbps" not in outbound:
+        outbound["down_mbps"] = 100
+
+    obfs = proxy.get("obfs")
+    if obfs:
+        outbound["obfs"] = str(obfs)
+
+    tls = clash_tls_config(proxy, force=True, default_alpn=["h3"])
+    outbound["tls"] = tls
+    return outbound
+
+
+def convert_tuic(proxy, name):
+    if not proxy.get("uuid"):
+        raise ValueError("TUIC 缺少 uuid")
+    if proxy.get("password") is None:
+        raise ValueError("TUIC 缺少 password")
+
+    outbound = {
+        "type": "tuic",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 443)),
+        "uuid": proxy["uuid"],
+        "password": str(proxy["password"]),
+        "congestion_control": (
+            proxy.get("congestion-controller")
+            or proxy.get("congestion_control")
+            or "cubic"
+        ),
+    }
+
+    udp_relay_mode = (
+        proxy.get("udp-relay-mode")
+        or proxy.get("udp_relay_mode")
+    )
+    if udp_relay_mode:
+        outbound["udp_relay_mode"] = udp_relay_mode
+
+    zero_rtt = proxy.get("zero-rtt-handshake") or proxy.get("zero_rtt_handshake")
+    if zero_rtt is not None:
+        outbound["zero_rtt_handshake"] = bool(zero_rtt)
+
+    heartbeat = proxy.get("heartbeat-interval") or proxy.get("heartbeat")
+    if heartbeat is not None:
+        text = str(heartbeat).strip()
+        if text.isdigit():
+            text += "s"
+        outbound["heartbeat"] = text
+
+    tls = clash_tls_config(proxy, force=True, default_alpn=["h3"])
+    outbound["tls"] = tls
+    return outbound
+
+
+def convert_anytls(proxy, name):
+    """AnyTLS（sing-box 1.12+）。"""
+    password = proxy.get("password")
+    if password is None:
+        raise ValueError("AnyTLS 缺少 password")
+
+    outbound = {
+        "type": "anytls",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 443)),
+        "password": str(password),
+    }
+
+    idle_session_check = (
+        proxy.get("idle-session-check-interval")
+        or proxy.get("idle_session_check_interval")
+    )
+    if idle_session_check is not None:
+        text = str(idle_session_check).strip()
+        if text.isdigit():
+            text += "s"
+        outbound["idle_session_check_interval"] = text
+
+    idle_session_timeout = (
+        proxy.get("idle-session-timeout")
+        or proxy.get("idle_session_timeout")
+    )
+    if idle_session_timeout is not None:
+        text = str(idle_session_timeout).strip()
+        if text.isdigit():
+            text += "s"
+        outbound["idle_session_timeout"] = text
+
+    tls = clash_tls_config(proxy, force=True)
+    outbound["tls"] = tls
+    return outbound
+
+
+def convert_http(proxy, name):
+    outbound = {
+        "type": "http",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 80)),
+    }
+    if proxy.get("username"):
+        outbound["username"] = str(proxy["username"])
+    if proxy.get("password") is not None:
+        outbound["password"] = str(proxy["password"])
+    tls = clash_tls_config(proxy)
+    if tls:
+        outbound["tls"] = tls
+    return outbound
+
+
+def convert_socks(proxy, name):
+    outbound = {
+        "type": "socks",
+        "tag": name,
+        "server": proxy["server"],
+        "server_port": int(proxy.get("port", 1080)),
+    }
+    version = str(proxy.get("version") or "5")
+    if version in ("4", "4a", "5"):
+        outbound["version"] = version
+    if proxy.get("username"):
+        outbound["username"] = str(proxy["username"])
+    if proxy.get("password") is not None:
+        outbound["password"] = str(proxy["password"])
+    if proxy.get("udp") is False:
+        outbound["network"] = "tcp"
+    return outbound
+
+
+# 协议转换注册表：新增协议只需加函数并注册
+CLASH_CONVERTERS = {
+    "ss": convert_ss,
+    "shadowsocks": convert_ss,
+    "vmess": convert_vmess,
+    "vless": convert_vless,
+    "trojan": convert_trojan,
+    "hysteria2": convert_hysteria2,
+    "hy2": convert_hysteria2,
+    "hysteria": convert_hysteria,
+    "tuic": convert_tuic,
+    "anytls": convert_anytls,
+    "http": convert_http,
+    "socks": convert_socks,
+    "socks5": convert_socks,
+}
 
 
 def clash_proxy_to_outbound(proxy):
@@ -721,223 +1326,11 @@ def clash_proxy_to_outbound(proxy):
     if not proxy.get("server"):
         raise ValueError("缺少 server")
 
-    # Shadowsocks
-    if proxy_type in ("ss", "shadowsocks"):
-        if not proxy.get("cipher"):
-            raise ValueError("Shadowsocks 缺少 cipher")
+    converter = CLASH_CONVERTERS.get(proxy_type)
+    if converter is None:
+        raise ValueError(f"暂不支持 Clash 节点类型：{proxy_type}")
 
-        if proxy.get("password") is None:
-            raise ValueError("Shadowsocks 缺少 password")
-
-        return {
-            "type": "shadowsocks",
-            "tag": name,
-            "server": proxy["server"],
-            "server_port": int(proxy.get("port", 443)),
-            "method": proxy["cipher"],
-            "password": str(proxy["password"]),
-        }
-
-    # VMess
-    if proxy_type == "vmess":
-        if not proxy.get("uuid"):
-            raise ValueError("VMess 缺少 uuid")
-
-        outbound = {
-            "type": "vmess",
-            "tag": name,
-            "server": proxy["server"],
-            "server_port": int(proxy.get("port", 443)),
-            "uuid": proxy["uuid"],
-            "security": proxy.get("cipher") or "auto",
-        }
-
-        alter_id = proxy.get("alterId")
-
-        if alter_id not in (None, "", 0, "0"):
-            outbound["alter_id"] = int(alter_id)
-
-        transport = clash_transport_config(proxy)
-        if transport:
-            outbound["transport"] = transport
-
-        tls = clash_tls_config(proxy)
-        if tls:
-            outbound["tls"] = tls
-
-        return outbound
-
-    # VLESS
-    if proxy_type == "vless":
-        if not proxy.get("uuid"):
-            raise ValueError("VLESS 缺少 uuid")
-
-        outbound = {
-            "type": "vless",
-            "tag": name,
-            "server": proxy["server"],
-            "server_port": int(proxy.get("port", 443)),
-            "uuid": proxy["uuid"],
-        }
-
-        flow = proxy.get("flow")
-        if flow:
-            outbound["flow"] = flow
-
-        packet_encoding = (
-            proxy.get("packet-encoding")
-            or proxy.get("packetEncoding")
-        )
-
-        if packet_encoding:
-            outbound["packet_encoding"] = packet_encoding
-
-        transport = clash_transport_config(proxy)
-        if transport:
-            outbound["transport"] = transport
-
-        tls = clash_tls_config(proxy)
-        if tls:
-            outbound["tls"] = tls
-
-        return outbound
-
-    # Trojan
-    if proxy_type == "trojan":
-        if proxy.get("password") is None:
-            raise ValueError("Trojan 缺少 password")
-
-        outbound = {
-            "type": "trojan",
-            "tag": name,
-            "server": proxy["server"],
-            "server_port": int(proxy.get("port", 443)),
-            "password": str(proxy["password"]),
-        }
-
-        transport = clash_transport_config(proxy)
-        if transport:
-            outbound["transport"] = transport
-
-        tls = clash_tls_config(proxy)
-
-        if tls is None:
-            tls = {
-                "enabled": True,
-                "server_name": proxy.get("sni") or proxy["server"],
-            }
-            if proxy.get("skip-cert-verify", False):
-                tls["insecure"] = True
-
-        outbound["tls"] = tls
-
-        return outbound
-
-    # Hysteria2
-    if proxy_type in ("hysteria2", "hy2"):
-        password = (
-            proxy.get("password")
-            or proxy.get("auth")
-            or ""
-        )
-
-        outbound = {
-            "type": "hysteria2",
-            "tag": name,
-            "server": proxy["server"],
-            "server_port": int(proxy.get("port", 443)),
-            "password": str(password),
-        }
-
-        server_ports = proxy.get("ports") or proxy.get("mport")
-        if server_ports:
-            if not isinstance(server_ports, list):
-                server_ports = str(server_ports).split(",")
-
-            normalized_ports = []
-            for port_range in server_ports:
-                port_range = str(port_range).strip()
-                if "-" in port_range:
-                    first_port, last_port = port_range.split("-", 1)
-                    port_range = f"{first_port}:{last_port}"
-                if port_range:
-                    normalized_ports.append(port_range)
-
-            if normalized_ports:
-                outbound.pop("server_port")
-                outbound["server_ports"] = normalized_ports
-
-        hop_interval = proxy.get("hop-interval") or proxy.get("hop_interval")
-        if hop_interval:
-            hop_interval = str(hop_interval).strip()
-            if "-" in hop_interval:
-                minimum, maximum = hop_interval.split("-", 1)
-                outbound["hop_interval"] = f"{minimum}s"
-                outbound["hop_interval_max"] = f"{maximum}s"
-            else:
-                if hop_interval.isdigit():
-                    hop_interval += "s"
-                outbound["hop_interval"] = hop_interval
-
-        obfs = proxy.get("obfs")
-        if obfs:
-            outbound["obfs"] = {
-                "type": obfs,
-                "password": proxy.get("obfs-password", ""),
-            }
-
-        tls = clash_tls_config(proxy)
-
-        if tls is None:
-            tls = {
-                "enabled": True,
-                "server_name": proxy.get("sni") or proxy["server"],
-            }
-            if proxy.get("skip-cert-verify", False):
-                tls["insecure"] = True
-
-        outbound["tls"] = tls
-
-        return outbound
-
-    # TUIC
-    if proxy_type == "tuic":
-        if not proxy.get("uuid"):
-            raise ValueError("TUIC 缺少 uuid")
-
-        if proxy.get("password") is None:
-            raise ValueError("TUIC 缺少 password")
-
-        outbound = {
-            "type": "tuic",
-            "tag": name,
-            "server": proxy["server"],
-            "server_port": int(proxy.get("port", 443)),
-            "uuid": proxy["uuid"],
-            "password": str(proxy["password"]),
-            "congestion_control": (
-                proxy.get("congestion-controller")
-                or proxy.get("congestion_control")
-                or "cubic"
-            ),
-        }
-
-        udp_relay_mode = (
-            proxy.get("udp-relay-mode")
-            or proxy.get("udp_relay_mode")
-        )
-
-        if udp_relay_mode:
-            outbound["udp_relay_mode"] = udp_relay_mode
-
-        outbound["tls"] = {
-            "enabled": True,
-            "server_name": proxy.get("sni") or proxy["server"],
-        }
-
-        return outbound
-
-    raise ValueError(f"暂不支持 Clash 节点类型：{proxy_type}")
+    return converter(proxy, name)
 
 
 def parse_clash_yaml(content):
@@ -1412,7 +1805,8 @@ def main():
             )
             print(
                 "支持 Clash YAML、Base64 订阅、VMess、VLESS、Trojan、"
-                "Shadowsocks、Hysteria2 和部分 TUIC。",
+                "Shadowsocks（含插件）、Hysteria2、Hysteria、TUIC、AnyTLS、"
+                "HTTP、SOCKS5。",
                 file=sys.stderr
             )
             sys.exit(1)

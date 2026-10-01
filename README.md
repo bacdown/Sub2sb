@@ -1,6 +1,6 @@
 # yaml2sb
 
-将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。提供本地网页版、Docker 部署、Vercel HTTP API 和命令行用法。
+将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。提供本地网页版、Docker、Vercel、Cloudflare Workers 与命令行用法。
 
 ## 许可证
 
@@ -14,10 +14,102 @@
 
 - Clash YAML 中的 `proxies` 节点
 - 明文或 Base64 编码的订阅
-- VMess、VLESS、Trojan、Shadowsocks、Hysteria2、TUIC URI
+- URI：`vmess://`、`vless://`、`trojan://`、`ss://`、`hysteria2://` / `hy2://`、`hysteria://`、`tuic://`、`anytls://`
+- Clash 节点类型：Shadowsocks（含 obfs / v2ray-plugin / shadow-tls 插件）、VMess、VLESS（含 Reality）、Trojan、Hysteria2、Hysteria v1、TUIC、AnyTLS、HTTP、SOCKS5
+- Hysteria2：端口跳跃（`ports` / `mport`）、带宽、`alpn: h3`、`disable_chrome_parrot`（兼容 sing-box 1.14+ Ed25519 证书节点）
 - 将解析出的节点并入 sing-box JSON 模板中的策略组
 
 不支持的节点会被跳过；如果没有解析到任何可用节点，转换会报错。
+
+### 近期优化要点
+
+- 修复 Clash `fingerprint` 误当作 uTLS 客户端指纹的问题（证书 SHA256 钉扎不再写入 `tls.utls`）
+- Hysteria2 / TUIC 默认补充 `alpn: ["h3"]`，Hysteria2 默认 `disable_chrome_parrot: true`
+- Shadowsocks 插件与 HTTP / SOCKS5 / AnyTLS / Hysteria v1 支持
+- 协议转换改为注册表结构，便于扩展；增加 `test_convert.py` 单元测试
+- 支持 `GET /sub` 远程订阅转换；可部署到 Vercel 与 Cloudflare Workers
+- Workers 远程请求使用平台支持的 Fetch 参数格式，并校验每次重定向及订阅大小
+- Vercel 与 Workers 共用订阅 URL 校验和参数处理；远程下载失败返回 `502`，内容超限返回 `413`
+
+## 网页版部署向导
+
+按目标选择一种方式即可；都提供浏览器转换界面（粘贴订阅 / 远程链接、选平台模板、下载 JSON）。
+
+| 方式 | 适合谁 | 是否免费额度 | 部署难度 |
+|------|--------|--------------|----------|
+| **Vercel** | 想尽快上线公网网页 + API | 有免费额度 | 低（推荐） |
+| **Cloudflare Workers** | 已有 CF 账号，要边缘节点 + `/sub` 订阅 | 有免费额度 | 中 |
+| **Docker / 本机** | 私有化、旁路由、内网 | 自备机器 | 低 |
+
+### 向导 A：Vercel（推荐，约 5 分钟）
+
+1. 将本项目推送到 GitHub（公开或私有仓库均可）。
+2. 打开 [Vercel](https://vercel.com/) → **Add New → Project** → 导入该仓库。
+3. **Root Directory** 选项目根目录；框架选 **Other**（或保持自动检测）。
+4. **不要**填写特殊 Build / Output；依赖由 `pyproject.toml` 中的 PyYAML 自动安装。
+5. 点击 **Deploy**。完成后打开：
+   - 网页：`https://<项目名>.vercel.app/`
+   - API：`https://<项目名>.vercel.app/api`
+   - 远程订阅：`https://<项目名>.vercel.app/sub?url=<编码后的原订阅>&template=phone`
+6. （可选）在 Vercel 项目 **Settings → Environment Variables** 增加 `YAML2SB_API_KEY`，值为一串随机密钥；保存后重新 Deploy。启用后网页里需填写该密钥，API / `/sub` 也需带密钥。
+
+详细步骤与 CLI 部署见下方 [部署到 Vercel](#部署到-vercel)。
+
+### 向导 B：Cloudflare Workers
+
+1. 本机安装 [Node.js](https://nodejs.org/)、[uv](https://github.com/astral-sh/uv)，并注册 Cloudflare 账号。
+2. 在项目根目录执行：
+
+```sh
+uv sync
+uv add --dev workers-py workers-runtime-sdk
+uv run pywrangler login
+uv run pywrangler deploy
+```
+
+3. 部署成功后打开：
+   - 网页：`https://yaml2sb.<你的子域>.workers.dev/`
+   - 远程订阅：`https://yaml2sb.<你的子域>.workers.dev/sub?url=...&template=phone`
+4. （可选）`npx --yes wrangler secret put YAML2SB_API_KEY` 设置访问密钥。
+    设置完成后可以查看密钥名称是否存在，但不会显示密钥值：
+          `npx --yes wrangler secret list`
+
+> Cloudflare 的开发依赖只在本机用 `uv add --dev` 安装，**不要**写进会触发 Vercel `uv lock` 的主依赖，以免 Vercel 构建失败。
+
+详细说明见下方 [部署到 Cloudflare Workers](#部署到-cloudflare-workers)。
+
+### 向导 C：Docker / 本机网页
+
+**Docker Compose（推荐私有化）：**
+
+```sh
+docker compose up -d --build
+# 浏览器打开 http://localhost:8080
+```
+
+**本机直接跑：**
+
+```sh
+python3 -m pip install .
+python3 web_server.py --host 0.0.0.0 --port 8080
+```
+
+可选环境变量 `YAML2SB_API_KEY`。更多见下方 [网页版](#网页版)。
+
+### 部署后怎么用网页
+
+1. 打开首页，选择 **粘贴内容** 或 **远程订阅链接**。
+2. 在「sing-box 模板」中选择：
+   - **iPhone 配置**（`config_phone.json`）— 手机客户端
+   - **OpenWrt 配置** — 软路由
+   - **Momo 配置** — Momo
+   - 或 **上传自定义模板**
+3. 若启用了 API Key，在页面填写密钥。
+4. 点击 **转换并下载 JSON**，把文件导入 sing-box 客户端。
+
+需要客户端**自动更新**时，用 `GET /sub` 链接当远程配置（见 [远程订阅转换](#远程订阅转换get-sub客户端直接使用)），不必每次打开网页。
+
+---
 
 ## 部署到 Vercel
 
@@ -31,7 +123,7 @@
 4. 保持 Python 项目自动检测设置；如 Vercel 要求选择框架，选择 **Other**。本项目不需要 Build Command 或 Output Directory。
 5. 点击 **Deploy**。部署完成后，API 地址为 `https://<项目名>.vercel.app/api`。
 
-部署配置位于 `vercel.json`。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
+部署配置位于 `vercel.json`。三个内置模板为项目根目录下的 `config_phone.json`、`config_openwrt.json` 和 `momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
 
 ### 通过 Vercel CLI 部署
 
@@ -48,6 +140,106 @@ vercel
 vercel --prod
 ```
 
+## 部署到 Cloudflare Workers
+
+本项目提供 Python Workers 入口（`worker.py`），在 Cloudflare 边缘提供与 Vercel 相同的能力：完整网页 UI、`GET /sub` 远程订阅、`POST /api`（内置模板与自定义 `template_json`）。
+
+### 环境要求
+
+- 已安装 [Node.js](https://nodejs.org/)（供 wrangler 使用）
+- 已安装 [uv](https://github.com/astral-sh/uv)
+- Cloudflare 账号
+
+### 部署步骤
+
+在项目根目录执行：
+
+```sh
+# 安装运行时依赖
+uv sync
+# Cloudflare Workers 开发工具（仅本机部署 CF 时需要，不要写进会影响 Vercel 的依赖组）
+uv add --dev workers-py workers-runtime-sdk
+
+# 登录 Cloudflare（首次）
+uv run pywrangler login
+
+# 本地预览
+uv run pywrangler dev
+
+# 部署到 Workers
+uv run pywrangler deploy
+```
+
+部署成功后地址形如：
+
+```text
+https://yaml2sb.<你的子域>.workers.dev
+```
+
+### 部署后验证
+
+先查看 Workers API 是否可访问：
+
+```sh
+WORKER_URL='https://yaml2sb.<你的子域>.workers.dev'
+curl -fsS "$WORKER_URL/api" | python3 -m json.tool
+```
+
+再用一条有效的订阅链接验证远程转换。`curl --get --data-urlencode` 会自动编码原订阅 URL：
+
+```sh
+WORKER_URL='https://yaml2sb.<你的子域>.workers.dev'
+SUBSCRIPTION_URL='https://example.com/subscribe' # 替换为服务商提供的真实订阅地址
+curl --get --fail-with-body \
+  --data-urlencode "url=$SUBSCRIPTION_URL" \
+  --data-urlencode 'template=phone' \
+  "$WORKER_URL/sub" \
+  -o sing-box.json
+python3 -m json.tool sing-box.json > /dev/null
+```
+
+若已配置 `YAML2SB_API_KEY`，在两个 `curl` 请求中都添加：
+
+```sh
+-H "Authorization: Bearer $YAML2SB_API_KEY"
+```
+
+成功时 `/sub` 返回可直接导入客户端的纯 sing-box JSON。测试时请使用有效订阅地址；不要把包含凭据的真实订阅链接提交到仓库或 issue。
+
+### 可选：启用 API Key
+
+```sh
+uv run wrangler secret put YAML2SB_API_KEY
+# 按提示输入密钥
+```
+
+启用后，请求需携带：
+
+- 查询参数 `api_key=...`，或
+- 请求头 `Authorization: Bearer ...` / `X-API-Key: ...`
+
+### 客户端远程配置示例
+
+```text
+https://yaml2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&template=phone
+```
+
+| template | 适用场景 |
+|----------|----------|
+| `phone`（默认） | 手机 / SFA / SFI 等 |
+| `openwrt` | OpenWrt / 旁路由 |
+| `momo` | Momo |
+
+配置文件：`wrangler.toml`（入口 `worker.py`）。Worker 入口与转换逻辑位于项目根目录；模板统一读取 `templates/`，网页统一读取 `public/index.html`。Vercel、本地 Web 和 Workers 共用这些资源。
+
+部署后：
+
+| 地址 | 说明 |
+|------|------|
+| `https://<worker>/` | 网页转换界面（选平台模板 / 上传自定义模板） |
+| `https://<worker>/sub?url=...&template=phone` | 客户端远程配置 |
+| `https://<worker>/api` | API 说明（JSON） |
+
 ## HTTP API 使用方法
 
 ### 查看 API 和模板
@@ -56,11 +248,64 @@ vercel --prod
 curl https://<项目名>.vercel.app/api
 ```
 
-返回 API 信息、默认模板及可选的内置模板列表。
+返回 API 信息、内置模板列表、短名别名，以及 `GET /sub` 订阅转换说明。
 
-### 使用内置模板转换
+### 模板与平台对应关系
 
-向 `POST /api` 发送 JSON。`content` 必须是实际的 YAML 或订阅文本，`template` 可省略（默认 `config_phone.json`），也可选择 `config_openwrt.json` 或 `momo.json`。
+| 用途 | 短名（推荐写在 URL 里） | 模板文件 |
+|------|-------------------------|----------|
+| 手机 / 官方客户端（SFA、SFI 等） | `phone` | `config_phone.json` |
+| OpenWrt / 旁路由 | `openwrt` | `config_openwrt.json` |
+| Momo | `momo` | `momo.json` |
+
+`template` 参数可写短名或完整文件名；省略时默认 `phone`。
+
+### 远程订阅转换（GET /sub）——客户端直接使用
+
+把**原订阅链接**交给已部署的本项目，在线转换成 sing-box JSON。返回体是**纯配置 JSON**（不是 `{config, node_count}` 包装），可直接作为客户端的远程配置 / 订阅地址。
+
+**链接格式：**
+
+```text
+https://<项目名>.vercel.app/sub?url=<URL编码后的原订阅>&template=<phone|openwrt|momo>
+```
+
+也支持 `/api/sub`（与 `/sub` 等价；Vercel 上 `/sub` 会重写到 `/api/sub`）。
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `url` | 是 | 原订阅 HTTP(S) 链接；可出现多次 |
+| `urls` | 否 | 多个链接，逗号分隔 |
+| `template` | 否 | `phone` / `openwrt` / `momo`（默认 `phone`） |
+| `api_key` | 视配置 | 若设置了环境变量 `YAML2SB_API_KEY` 则必填 |
+
+**示例：**
+
+```sh
+# 手机模板（默认）
+curl -o sing-box.json \
+  'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=phone'
+
+# OpenWrt 模板
+curl -o sing-box-openwrt.json \
+  'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=openwrt'
+
+# Momo 模板 + API Key
+curl -o sing-box-momo.json \
+  'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=momo&api_key=你的密钥'
+```
+
+**在 sing-box 客户端里使用：**
+
+1. 将上面的完整 URL（含 `url` 与 `template`）复制。
+2. 在 SFA / SFI / Hiddify / NekoBox 等中添加**远程配置**或**订阅**，粘贴该链接。
+3. 客户端定时请求该地址，即可自动拿到转换后的 sing-box JSON。
+
+注意：原订阅地址必须做 **URL 编码**（例如 `https://` → `https%3A%2F%2F`）。启用了 `YAML2SB_API_KEY` 时，把密钥放在查询参数 `api_key` 或请求头 `Authorization: Bearer …` / `X-API-Key` 中。
+
+### 使用内置模板转换（POST）
+
+向 `POST /api` 发送 JSON。`content` 必须是实际的 YAML 或订阅文本；也可传 `url` / `urls` 由服务端代拉订阅。`template` 可省略（默认手机模板），短名与上表相同。
 
 ```sh
 curl -X POST 'https://<项目名>.vercel.app/api' \
@@ -85,10 +330,10 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
     "outbounds": []
   },
   "node_count": 1
-}
+  部署配置位于 `vercel.json`。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
 ```
 
-上面的 `outbounds` 仅用于展示响应结构；实际内容是完整转换后的 sing-box 配置。
+  配置文件：`wrangler.toml`（入口 `worker.py`）。Worker 入口与转换逻辑位于项目根目录；模板统一读取 `templates/`，网页统一读取 `public/index.html`。Vercel、本地 Web 和 Workers 共用这些资源。
 
 ### 使用自定义模板
 
@@ -163,17 +408,19 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
 ### 请求与错误
 
 - 请求体最大为 **2 MiB**。
-- `400`：JSON 格式错误、缺少 `content`、模板名称不支持或模板格式无效。
-- `413`：请求体超过大小限制。
+- `400`：JSON 格式错误、缺少 `content`、订阅 URL 无效、模板名称不支持或模板格式无效。
+- `413`：请求体或单条远程订阅内容超过 **2 MiB**。
+- `502`：远程订阅服务器不可访问、返回非成功状态或响应无效。
 - `500`：转换期间发生未预期错误。
-- API 接收的是订阅内容本身，不会根据 `content` 中的 URL 去下载订阅。将链接内容先取回，再把 YAML/URI 文本作为 `content` 发送。
+- 远程订阅只允许公网 HTTP(S) 地址；`GET /sub` 每次最多 **10 条**，且每个重定向目标都会重新校验。
+- `POST /api` 可直接传订阅正文（`content`），也可传 `url` / `urls` 由服务端代为下载后转换。`GET /sub` 专供客户端远程配置，返回纯 sing-box JSON。
 
 ## 本地命令行
 
 需要 Python 3.9 或更高版本。安装依赖：
 
 ```sh
-python3 -m pip install -r requirements.txt
+python3 -m pip install .
 ```
 
 直接运行脚本会启动交互式菜单，可逐行输入订阅链接或文件路径、选择模板并指定输出位置：
