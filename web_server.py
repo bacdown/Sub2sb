@@ -9,6 +9,7 @@ from pathlib import Path
 
 from api.index import MAX_REQUEST_BYTES, convert_request, handler as ApiHandler
 from remote_subscription import fetch_remote_subscription, validate_public_url
+from subscription_utils import SubscriptionFetchError
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEB_PAGE = PROJECT_ROOT / "public" / "index.html"
@@ -78,6 +79,9 @@ class WebHandler(ApiHandler):
             return
         except ValueError as exc:
             self._send_json(400, {"error": str(exc)})
+            return
+        except SubscriptionFetchError as exc:
+            self._send_json(exc.status_code, {"error": str(exc)})
             return
         except Exception:
             logging.exception("Subscription link conversion failed")
