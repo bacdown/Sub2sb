@@ -14,9 +14,10 @@ Cloudflare Workers 入口：在线将订阅转换为 sing-box JSON。
 from __future__ import annotations
 
 import json
+import logging
 import sys
 from pathlib import Path
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 from workers import Response, WorkerEntrypoint, fetch
 
@@ -26,13 +27,18 @@ WORKER_DIR = Path(__file__).resolve().parent
 # 项目根目录，主要用于本地开发或 Vercel 结构
 ROOT = WORKER_DIR.parent
 
-# 允许导入 src/converter.py 以及根目录中的兼容模块
-for path in (WORKER_DIR, ROOT):
-    if str(path) not in sys.path:
-        sys.path.insert(0, str(path))
+# 转换核心与订阅工具以项目根目录为唯一来源
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 from converter import convert_contents  # noqa: E402
+from subscription_utils import (  # noqa: E402
+    SubscriptionFetchError,
+    SubscriptionTooLargeError,
+    collect_subscription_urls,
+    validate_public_url_syntax,
+)
 
 DEFAULT_TEMPLATE = "config_phone.json"
 TEMPLATE_ALIASES = {
@@ -47,6 +53,8 @@ TEMPLATE_ALIASES = {
 }
 MAX_BODY_BYTES = 2 * 1024 * 1024
 MAX_SUBSCRIPTION_BYTES = 2 * 1024 * 1024
+MAX_REDIRECTS = 5
+REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -84,7 +92,6 @@ def _load_template(name: str | None) -> dict:
     candidates = (
         ROOT / "templates" / resolved,
         ROOT / resolved,
-        Path(__file__).resolve().parent / "templates" / resolved,
     )
     path = next((p for p in candidates if p.is_file()), None)
     if path is None:
@@ -128,63 +135,61 @@ def _is_authorized(request, env, query: dict) -> bool:
 
 
 def _collect_urls(query: dict) -> list[str]:
-    urls: list[str] = []
-    for key in ("url", "urls"):
-        for raw in query.get(key, []):
-            if not isinstance(raw, str):
-                continue
-            for part in raw.split(","):
-                part = part.strip()
-                if part:
-                    urls.append(part)
-    return list(dict.fromkeys(urls))
+    return collect_subscription_urls(query)
 
 
 def _validate_public_http_url(url: str) -> str:
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https") or not parsed.hostname:
-        raise ValueError("订阅链接必须是有效的 HTTP 或 HTTPS 地址")
-    if parsed.username or parsed.password:
-        raise ValueError("订阅链接不能包含用户名或密码")
-    host = parsed.hostname.lower()
-    if host in ("localhost", "127.0.0.1", "::1") or host.endswith(".local"):
-        raise ValueError("订阅链接不能指向本机或内网地址")
-    if host.startswith("10.") or host.startswith("192.168.") or host.startswith("169.254."):
-        raise ValueError("订阅链接不能指向内网地址")
-    # 粗略拦截 172.16.0.0/12
-    if host.startswith("172."):
-        try:
-            second = int(host.split(".")[1])
-            if 16 <= second <= 31:
-                raise ValueError("订阅链接不能指向内网地址")
-        except (IndexError, ValueError):
-            pass
+    validate_public_url_syntax(url)
     return url
 
 
 async def _fetch_subscription(url: str) -> str:
-    _validate_public_http_url(url)
-    response = await fetch(
-        url,
-        {
-            "headers": {"User-Agent": "yaml2sb/1.0"},
-            "redirect": "follow",
-        },
-    )
-    status = int(response.status)
+    current_url = url
+    for redirect_count in range(MAX_REDIRECTS + 1):
+        _validate_public_http_url(current_url)
+        try:
+            response = await fetch(
+                current_url,
+                headers={"User-Agent": "yaml2sb/1.0"},
+                redirect="manual",
+            )
+        except OSError as exc:
+            logging.exception("Remote subscription fetch failed")
+            raise ValueError("下载订阅失败：远程服务器无法访问") from exc
+
+        status = int(response.status)
+        if status in REDIRECT_STATUSES:
+            if redirect_count >= MAX_REDIRECTS:
+                raise ValueError("订阅链接重定向次数过多")
+            location = response.headers.get("location")
+            if not location:
+                raise ValueError("订阅服务器返回了无效的重定向")
+            current_url = urljoin(current_url, location)
+            continue
+        break
+
     if status < 200 or status >= 300:
         raise ValueError(f"下载订阅失败：HTTP {status}")
 
-    # workers Response：优先 text()
-    if hasattr(response, "text"):
+    content_length = response.headers.get("content-length")
+    if content_length:
+        try:
+            declared_length = int(content_length)
+        except ValueError as exc:
+            raise ValueError("订阅服务器返回了无效的内容长度") from exc
+        if declared_length > MAX_SUBSCRIPTION_BYTES:
+            raise SubscriptionTooLargeError("订阅内容不能超过 2 MiB")
+
+    try:
         text = await response.text()
-    else:
-        text = str(await response.body)
+    except OSError as exc:
+        logging.exception("Remote subscription response read failed")
+        raise SubscriptionFetchError("读取订阅内容失败") from exc
 
     if not isinstance(text, str):
         text = str(text)
     if len(text.encode("utf-8", errors="replace")) > MAX_SUBSCRIPTION_BYTES:
-        raise ValueError("订阅内容不能超过 2 MiB")
+        raise SubscriptionTooLargeError("订阅内容不能超过 2 MiB")
     if not text.strip():
         raise ValueError("订阅内容为空")
     return text
@@ -221,10 +226,7 @@ def _convert(
 
 def _load_index_html() -> str:
     candidates = (
-        ROOT / "index.html",
         ROOT / "public" / "index.html",
-        WORKER_DIR / "index.html",
-        WORKER_DIR / "public" / "index.html",
     )
     for path in candidates:
         if path.is_file():
@@ -272,6 +274,8 @@ class Default(WorkerEntrypoint):
                 return await self._handle_post(request)
 
             return _json_response(404, {"error": "Not found"})
+        except SubscriptionFetchError as exc:
+            return _json_response(exc.status_code, {"error": str(exc)})
         except ValueError as exc:
             return _json_response(400, {"error": str(exc)})
         except Exception:
