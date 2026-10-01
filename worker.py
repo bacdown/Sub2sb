@@ -88,16 +88,23 @@ def _resolve_template_name(name: str | None) -> str:
     return resolved
 
 
-def _load_template(name: str | None) -> dict:
+async def _load_asset_text(env, name: str) -> str:
+    assets = getattr(env, "ASSETS", None)
+    if assets is None:
+        raise FileNotFoundError(name)
+    response = await assets.fetch(f"https://assets.local/{name}")
+    if int(response.status) != 200:
+        raise FileNotFoundError(name)
+    return await response.text()
+
+
+async def _load_template(env, name: str | None) -> dict:
     resolved = _resolve_template_name(name)
-    candidates = (
-        ROOT / "templates" / resolved,
-        ROOT / resolved,
-    )
-    path = next((p for p in candidates if p.is_file()), None)
-    if path is None:
-        raise ValueError(f"找不到模板文件：{resolved}")
-    data = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        text = await _load_asset_text(env, resolved)
+    except FileNotFoundError as exc:
+        raise ValueError(f"找不到模板文件：{resolved}") from exc
+    data = json.loads(text)
     if not isinstance(data, dict):
         raise ValueError("配置模板 JSON 根节点必须是对象")
     return data
@@ -212,15 +219,7 @@ def _load_custom_template(value) -> dict:
     return value
 
 
-def _convert(
-    contents: list[str],
-    template_name: str | None = None,
-    template_obj: dict | None = None,
-) -> tuple[dict, int]:
-    if template_obj is not None:
-        template = template_obj
-    else:
-        template = _load_template(template_name)
+def _convert(contents: list[str], template: dict) -> tuple[dict, int]:
     config, node_count = convert_contents(contents, template)
     return config, node_count
 
@@ -267,9 +266,10 @@ class Default(WorkerEntrypoint):
         try:
             if method == "GET" and path == "/api/options":
                 template_name = (query.get("template") or [DEFAULT_TEMPLATE])[0]
+                template = await _load_template(self.env, template_name)
                 return _json_response(
                     200,
-                    get_template_options(_load_template(template_name)),
+                    get_template_options(template),
                 )
 
             if method == "GET" and path in ("/sub", "/api/sub"):
@@ -338,7 +338,8 @@ class Default(WorkerEntrypoint):
             )
         template_name = (query.get("template") or [DEFAULT_TEMPLATE])[0]
         contents = [await _fetch_subscription(u) for u in urls]
-        config, _node_count = _convert(contents, template_name)
+        template = await _load_template(self.env, template_name)
+        config, _node_count = _convert(contents, template)
         body = json.dumps(config, ensure_ascii=False)
         headers = {
             "Content-Type": "application/json; charset=utf-8",
@@ -369,6 +370,8 @@ class Default(WorkerEntrypoint):
             if "template" in payload:
                 raise ValueError("template 与 template_json 不能同时使用")
             template_obj = _load_custom_template(payload["template_json"])
+        else:
+            template_obj = await _load_template(self.env, template_name)
 
         contents: list[str] = []
         if "url" in payload or "urls" in payload:
@@ -396,9 +399,5 @@ class Default(WorkerEntrypoint):
                 raise ValueError("请在 content 字段中提供 YAML 或订阅文本")
             contents = raw_contents
 
-        config, node_count = _convert(
-            contents,
-            template_name=template_name,
-            template_obj=template_obj,
-        )
+        config, node_count = _convert(contents, template_obj)
         return _json_response(200, {"config": config, "node_count": node_count})
