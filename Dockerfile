@@ -5,12 +5,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml .
+COPY converter.py remote_subscription.py sub2singbox.py subscription_utils.py ./
+RUN pip install --no-cache-dir .
 
 COPY api ./api
 COPY public ./public
-COPY converter.py sub2singbox.py web_server.py ./
+COPY web_server.py ./
 COPY templates ./templates
 
 EXPOSE 8080
