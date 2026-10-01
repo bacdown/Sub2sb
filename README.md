@@ -158,9 +158,11 @@ python3 -m json.tool sing-box.json > /dev/null
 ### 可选：启用 API Key
 
 ```sh
-uv run wrangler secret put YAML2SB_API_KEY
+uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
 # 按提示输入密钥
 ```
+
+`wrangler` 是 Node.js 工具，本项目通过 `pywrangler` 调用它；不要直接运行 `uv run wrangler`。也可以在 Cloudflare Dashboard 打开 **Workers & Pages → yaml2sb → Settings → Variables and Secrets**，添加名为 `YAML2SB_API_KEY` 的 Secret。
 
 启用后，请求需携带：
 
