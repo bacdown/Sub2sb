@@ -142,7 +142,7 @@ vercel --prod
 
 ## 部署到 Cloudflare Workers
 
-本项目提供 Python Workers 入口（`src/worker.py`），在 Cloudflare 边缘提供与 Vercel 相同的能力：完整网页 UI、`GET /sub` 远程订阅、`POST /api`（内置模板与自定义 `template_json`）。
+本项目提供 Python Workers 入口（`worker.py`），在 Cloudflare 边缘提供与 Vercel 相同的能力：完整网页 UI、`GET /sub` 远程订阅、`POST /api`（内置模板与自定义 `template_json`）。
 
 ### 环境要求
 
@@ -230,7 +230,7 @@ https://yaml2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&te
 | `openwrt` | OpenWrt / 旁路由 |
 | `momo` | Momo |
 
-配置文件：`wrangler.toml`（入口 `src/worker.py`）。转换逻辑由根目录的 `sub2singbox.py` / `converter.py` 提供；模板统一读取 `templates/`，网页统一读取 `public/index.html`。Vercel、本地 Web 和 Workers 共用这些资源。
+配置文件：`wrangler.toml`（入口 `worker.py`）。Worker 入口与转换逻辑位于项目根目录；模板统一读取 `templates/`，网页统一读取 `public/index.html`。Vercel、本地 Web 和 Workers 共用这些资源。
 
 部署后：
 
