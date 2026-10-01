@@ -33,6 +33,7 @@ if str(ROOT) not in sys.path:
 
 
 from converter import convert_contents  # noqa: E402
+from template_options import get_template_options  # noqa: E402
 from subscription_utils import (  # noqa: E402
     SubscriptionFetchError,
     SubscriptionTooLargeError,
@@ -264,6 +265,13 @@ class Default(WorkerEntrypoint):
             return _json_response(401, {"error": "Unauthorized"})
 
         try:
+            if method == "GET" and path == "/api/options":
+                template_name = (query.get("template") or [DEFAULT_TEMPLATE])[0]
+                return _json_response(
+                    200,
+                    get_template_options(_load_template(template_name)),
+                )
+
             if method == "GET" and path in ("/sub", "/api/sub"):
                 return await self._handle_sub(query)
 
@@ -287,7 +295,14 @@ class Default(WorkerEntrypoint):
             {
                 "name": "yaml2sb",
                 "platform": "cloudflare-workers",
-                "methods": ["GET /", "GET /sub", "GET /api", "POST /api"],
+                "methods": [
+                    "GET /",
+                    "GET /sub",
+                    "GET /api/sub",
+                    "GET /api/options",
+                    "GET /api",
+                    "POST /api",
+                ],
                 "templates": sorted(set(TEMPLATE_ALIASES.values())),
                 "template_aliases": {
                     "phone": "config_phone.json",

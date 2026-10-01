@@ -1164,7 +1164,13 @@
           { headers: apiHeaders() },
         );
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || "读取配置选项失败。");
+        if (!response.ok) {
+          const message = result.error || "读取配置选项失败。";
+          const authHint = response.status === 401 && !apiKey.value
+            ? " 若服务端启用了 API 密钥，请先填写密钥，再点击“读取 / 刷新基础配置选项”。"
+            : "";
+          throw new Error(`${message}${authHint}`);
+        }
         configurationOptions = result;
         if (resetCustom) {
           customDnsServers = [];
@@ -1203,10 +1209,7 @@
         setComposeStatus(`已读取 ${result.dns_servers.length} 个 DNS、${result.groups.filter((group) => group.application).length} 个应用分流组和 ${result.rule_sets.length} 个规则集。`, "success");
       } catch (error) {
         configurationOptions = null;
-        setComposeStatus(
-          `${error.message || "读取失败。"}${!apiKey.value ? " 若服务端启用了 API 密钥，请先填写密钥，再点击“读取 / 刷新基础配置选项”。" : ""}`,
-          "error",
-        );
+        setComposeStatus(error.message || "读取失败。", "error");
       }
     }
 

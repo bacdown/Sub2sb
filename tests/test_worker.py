@@ -30,6 +30,20 @@ with patch.dict(sys.modules, {"workers": workers_stub}):
 
 
 class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_template_options_endpoint_is_available_without_api_key(self):
+        request = types.SimpleNamespace(
+            method="GET",
+            url="https://worker.example/api/options?template=config_phone.json",
+            headers={},
+        )
+        response = await worker.Default().fetch(request)
+
+        self.assertEqual(response.status, 200)
+        options = json.loads(response.body)
+        self.assertIn("dns_servers", options)
+        self.assertIn("groups", options)
+        self.assertIn("rule_sets", options)
+
     async def test_fetch_subscription_passes_fetch_options_as_keywords(self):
         call = {}
 
