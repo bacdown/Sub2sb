@@ -26,7 +26,7 @@ workers_stub.Response = _WorkerResponse
 workers_stub.WorkerEntrypoint = _WorkerEntrypoint
 workers_stub.fetch = None
 with patch.dict(sys.modules, {"workers": workers_stub}):
-    worker = importlib.import_module("src.worker")
+    worker = importlib.import_module("worker")
 
 
 class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
