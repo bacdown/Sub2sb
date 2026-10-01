@@ -99,22 +99,25 @@ vercel --prod
 在项目根目录执行：
 
 ```sh
-# 安装运行时依赖
-uv sync
-# Cloudflare Workers 工具放在开发依赖组，不加入项目运行依赖
-uv add --dev workers-py workers-runtime-sdk
+# Worker SDK 要求 Python 3.11+；添加环境标记，保留项目本身对 Python 3.9+ 的支持
+uv add --dev \
+  "workers-py; python_version >= '3.11'" \
+  "workers-runtime-sdk; python_version >= '3.11'"
+
+# 使用 Python 3.11+ 安装开发依赖并运行 Worker 工具
+uv sync --group dev --python 3.11
 
 # 登录 Cloudflare（首次）
-uv run pywrangler login
+uv run --python 3.11 pywrangler login
 
 # 本地预览
-uv run pywrangler dev
+uv run --python 3.11 pywrangler dev
 
 # 部署到 Workers
-uv run pywrangler deploy
+uv run --python 3.11 pywrangler deploy
 ```
 
-注意：`uv add --dev` 会修改 Git 跟踪的 `pyproject.toml` 和 `uv.lock`，并非只安装到本机环境。执行后检查这两个文件的差异，再决定是否保留；Workers 工具应留在开发依赖组，不要移入项目运行依赖。
+注意：`uv add --dev` 会修改 Git 跟踪的 `pyproject.toml` 和 `uv.lock`，并非只安装到本机环境。执行后检查这两个文件的差异，再决定是否保留。Worker 工具应留在开发依赖组，不要移入项目运行依赖；Python 版本标记可避免它们阻止 Python 3.9/3.10 环境解析项目的其他依赖。运行 Cloudflare Worker 命令时使用 Python 3.11 或更高版本。
 
 部署成功后地址形如：
 
