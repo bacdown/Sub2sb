@@ -6,6 +6,6 @@
 # 密钥：uv run wrangler secret put YAML2SB_API_KEY
 
 name = "yaml2sb"
-main = "src/worker.py"
+main = "worker.py"
 compatibility_date = "2026-09-30"
 compatibility_flags = ["python_workers"]
