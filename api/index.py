@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from converter import convert_contents
 from remote_subscription import fetch_remote_subscription
+from subscription_utils import SubscriptionFetchError, collect_subscription_urls
 
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
 DEFAULT_TEMPLATE = "config_phone.json"
@@ -202,18 +203,7 @@ class handler(BaseHTTPRequestHandler):
 
     def _collect_subscription_urls(self, params):
         """从 query 收集 url / urls 参数。"""
-        urls = []
-        for key in ("url", "urls"):
-            for raw in params.get(key, []):
-                if not isinstance(raw, str):
-                    continue
-                # 支持逗号分隔或单条
-                for part in raw.split(","):
-                    part = part.strip()
-                    if part:
-                        urls.append(part)
-        # 去重且保持顺序
-        return list(dict.fromkeys(urls))
+        return collect_subscription_urls(params)
 
     def _handle_sub_get(self):
         """
@@ -266,6 +256,8 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(body)
         except ValueError as exc:
             self._send_json(400, {"error": str(exc)})
+        except SubscriptionFetchError as exc:
+            self._send_json(exc.status_code, {"error": str(exc)})
         except Exception:
             logging.exception("GET /sub conversion failed")
             self._send_json(500, {"error": "转换失败，请检查订阅链接和模板"})
@@ -345,6 +337,9 @@ class handler(BaseHTTPRequestHandler):
             return
         except ValueError as exc:
             self._send_json(400, {"error": str(exc)})
+            return
+        except SubscriptionFetchError as exc:
+            self._send_json(exc.status_code, {"error": str(exc)})
             return
         except Exception:
             logging.exception("Conversion API request failed")
