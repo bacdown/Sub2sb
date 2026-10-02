@@ -87,7 +87,7 @@
     .custom-template-panel input[type="file"] { width: 100%; }
     .base-template-controls {
       display: grid;
-      grid-template-columns: minmax(0, 180px) auto;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       align-items: center;
       gap: 18px;
     }
@@ -97,8 +97,6 @@
       justify-self: start;
       white-space: nowrap;
     }
-    #template,
-    #base-template { width: min(100%, 180px); }
     /* Previous-version control style (match outbound select) */
     #template,
     #base-template,
@@ -117,6 +115,8 @@
       color: #37352f;
       font-size: 13px;
     }
+    #template { width: 25%; }
+    #base-template { width: min(100%, 180px); }
     .base-template-controls .secondary,
     .rule-link-fields .secondary {
       width: 100%;
@@ -138,6 +138,11 @@
     .base-template-controls .secondary:hover,
     .rule-link-fields .secondary:hover {
       background: #f1f1ef;
+    }
+    #reload-options {
+      width: 50%;
+      justify-self: center;
+      white-space: normal;
     }
     /* Same look as outbound select; click-only, not a dropdown */
     .match-add-btn {
@@ -270,7 +275,8 @@
     .file-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #787774; font-size: 13px; }
     input[type="file"] { max-width: 100%; color: #5f5e5a; font-size: 13px; }
     input[type="file"]::file-selector-button {
-      min-height: 34px;
+      height: 36px;
+      min-height: 36px;
       margin-right: 8px;
       padding: 0 10px;
       border: 1px solid #c9cdd1;
@@ -278,6 +284,7 @@
       background: #fff;
       color: #37352f;
       font: inherit;
+      line-height: 1.2;
       cursor: pointer;
     }
     input[type="file"]::file-selector-button:hover { background: #f1f1ef; }
@@ -378,7 +385,7 @@
     }
     @media (max-width: 520px) {
       .dns-grid, .match-builder, .rule-link-fields { grid-template-columns: 1fr; }
-      .base-template-controls { grid-template-columns: 1fr; }
+      .base-template-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
       .match-add-btn { width: 100%; }
     }
   </style>
