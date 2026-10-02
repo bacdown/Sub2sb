@@ -3,9 +3,9 @@
   "dns": {
     "servers": [
       {"tag": "local", "type": "local", "prefer_go": true},
-      {"tag": "ali", "type": "https", "server": "223.5.5.5"},
-      {"tag": "tx", "type": "https", "server": "doh.pub", "domain_resolver": "hosts"},
-      {"tag": "google", "type": "https", "server": "8.8.8.8", "detour": "默认代理"},
+      {"tag": "alibaba-cloud-dns", "type": "udp", "server": "223.5.5.5"},
+      {"tag": "tencent-dnspod-dns", "type": "https", "server": "doh.pub", "domain_resolver": "hosts"},
+      {"tag": "google-public-dns", "type": "udp", "server": "8.8.8.8", "detour": "默认代理"},
       {"tag": "fakeip", "type": "fakeip", "inet4_range": "198.19.0.0/16"},
       {"type": "hosts", "tag": "hosts", "predefined": {"doh.pub": ["1.12.12.21", "120.53.53.53"]}}
     ],
@@ -14,12 +14,12 @@
       {"clash_mode": "Direct", "server": "local"},
       {"clash_mode": "Global", "server": "fakeip"},
       {"rule_set": ["fakeipfilter-cn", "geosite-cn", "geosite-microsoft@cn", "geosite-apple@cn", "geosite-private"], "server": "local"},
-      {"rule_set": "fakeipfilter-!cn", "server": "google"},
-      {"type": "logical", "mode": "and", "rules": [{"query_type": ["A", "AAAA"]}, {"rule_set": "geosite-geolocation-!cn", "invert": true}], "action": "evaluate", "server": "google", "client_subnet": "223.5.5.0/24","timeout": "2s"},
+      {"rule_set": "fakeipfilter-!cn", "server": "google-public-dns"},
+      {"type": "logical", "mode": "and", "rules": [{"query_type": ["A", "AAAA"]}, {"rule_set": "geosite-geolocation-!cn", "invert": true}], "action": "evaluate", "server": "google-public-dns", "client_subnet": "223.5.5.0/24","timeout": "2s"},
       {"match_response": true, "rule_set": "geoip-cn", "server": "local"},
       {"query_type": ["A", "AAAA"], "server": "fakeip", "rewrite_ttl": 1}
     ],
-    "final": "google",
+    "final": "google-public-dns",
     "strategy": "ipv4_only", 
     "cache_capacity": 8192,
     "optimistic": {"enabled": true},
@@ -56,7 +56,7 @@
     {"tag": "自动选择", "type": "urltest", "outbounds": [], "url": "https://clients1.google.com/generate_204", "interval": "10m", "tolerance": 100},
     {"tag": "延迟辅助", "type": "urltest", "outbounds": ["直连"], "url": "http://connect.rom.miui.com/generate_204", "interval": "10m"},
     {"tag": "GLOBAL", "type": "selector", "outbounds": ["默认代理", "AI", "YouTube", "Google", "Github", "X", "Meta", "Telegram", "TikTok", "Netflix", "Wallet", "Steam", "Microsoft", "OneDrive", "Apple", "漏网之鱼", "日本自动", "狮城自动", "香港自动", "台湾自动", "美国自动", "日本手动", "狮城手动", "香港手动", "台湾手动", "美国手动", "手动选择", "自动选择", "延迟辅助", "直连"]},
-    {"tag": "直连", "type": "direct", "domain_resolver": "ali"}
+    {"tag": "直连", "type": "direct", "domain_resolver": "alibaba-cloud-dns"}
   ],
   "http_clients": [
     {"tag": "直连下载", "detour": "直连"}
@@ -119,7 +119,7 @@
     "final": "漏网之鱼",
     "default_http_client": "直连下载",
     "auto_detect_interface": true,
-    "default_domain_resolver": {"server": "ali"}
+    "default_domain_resolver": {"server": "alibaba-cloud-dns"}
   },
   "inbounds": [
     {

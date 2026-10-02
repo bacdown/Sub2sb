@@ -4,7 +4,7 @@ import sys
 import types
 import unittest
 from unittest.mock import patch
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 
 class _WorkerResponse:
@@ -21,6 +21,20 @@ class _WorkerEntrypoint:
     env = None
 
 
+class _WorkerAssets:
+    async def fetch(self, resource):
+        path = worker.ROOT / "templates" / urlparse(resource).path.lstrip("/")
+        if not path.is_file():
+            return _WorkerResponse(status=404)
+        return _WorkerResponse(path.read_text(encoding="utf-8"))
+
+
+def _entrypoint():
+    entrypoint = worker.Default()
+    entrypoint.env = types.SimpleNamespace(ASSETS=_WorkerAssets())
+    return entrypoint
+
+
 workers_stub = types.ModuleType("workers")
 workers_stub.Response = _WorkerResponse
 workers_stub.WorkerEntrypoint = _WorkerEntrypoint
@@ -30,6 +44,32 @@ with patch.dict(sys.modules, {"workers": workers_stub}):
 
 
 class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_template_options_endpoint_is_available_without_api_key(self):
+        request = types.SimpleNamespace(
+            method="GET",
+            url="https://worker.example/api/options?template=config_phone.json",
+            headers={},
+        )
+        response = await _entrypoint().fetch(request)
+
+        self.assertEqual(response.status, 200)
+        options = json.loads(response.body)
+        self.assertIn("dns_servers", options)
+        self.assertIn("groups", options)
+        self.assertIn("rule_sets", options)
+
+    async def test_homepage_is_loaded_from_worker_bundle(self):
+        request = types.SimpleNamespace(
+            method="GET",
+            url="https://worker.example/",
+            headers={},
+        )
+        response = await worker.Default().fetch(request)
+
+        self.assertEqual(response.status, 200)
+        self.assertIn("text/html", response.headers["Content-Type"])
+        self.assertIn("yaml2sb", response.body)
+
     async def test_fetch_subscription_passes_fetch_options_as_keywords(self):
         call = {}
 
@@ -110,7 +150,7 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
             url=f"https://worker.example/sub?url={url}",
             headers={},
         )
-        entrypoint = worker.Default()
+        entrypoint = _entrypoint()
 
         with patch.object(
             worker,

@@ -2,6 +2,19 @@
 
 将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。提供本地网页版、Docker、Vercel、Cloudflare Workers 与命令行用法。
 
+## 目录
+
+- [支持范围](#支持范围)
+- [部署概览](#部署概览)
+- [部署到 Vercel](#部署到-vercel)
+- [部署到 Cloudflare Workers](#部署到-cloudflare-workers)
+- [Docker Compose](#使用-docker-compose-部署)
+- [本地启动网页版](#本地启动网页版)
+- [HTTP API](#http-api-使用方法)
+- [命令行](#本地命令行)
+- [网页版与自定义配置](#网页版)
+- [注意事项](#注意事项)
+
 ## 许可证
 
 本项目采用 [MIT License](LICENSE)。
@@ -31,91 +44,22 @@
 - Workers 远程请求使用平台支持的 Fetch 参数格式，并校验每次重定向及订阅大小
 - Vercel 与 Workers 共用订阅 URL 校验和参数处理；远程下载失败返回 `502`，内容超限返回 `413`
 
-## 网页版部署向导
+## 部署概览
 
-按目标选择一种方式即可；都提供浏览器转换界面（粘贴订阅 / 远程链接、选平台模板、下载 JSON）。
+选择一种方式即可。各方式的完整步骤只在对应章节维护，避免快速指南与详细说明不一致。
 
-| 方式 | 适合谁 | 是否免费额度 | 部署难度 |
-|------|--------|--------------|----------|
-| **Vercel** | 想尽快上线公网网页 + API | 有免费额度 | 低（推荐） |
-| **Cloudflare Workers** | 已有 CF 账号，要边缘节点 + `/sub` 订阅 | 有免费额度 | 中 |
-| **Docker / 本机** | 私有化、旁路由、内网 | 自备机器 | 低 |
-
-### 向导 A：Vercel（推荐，约 5 分钟）
-
-1. 将本项目推送到 GitHub（公开或私有仓库均可）。
-2. 打开 [Vercel](https://vercel.com/) → **Add New → Project** → 导入该仓库。
-3. **Root Directory** 选项目根目录；框架选 **Other**（或保持自动检测）。
-4. **不要**填写特殊 Build / Output；依赖由 `pyproject.toml` 中的 PyYAML 自动安装。
-5. 点击 **Deploy**。完成后打开：
-   - 网页：`https://<项目名>.vercel.app/`
-   - API：`https://<项目名>.vercel.app/api`
-   - 远程订阅：`https://<项目名>.vercel.app/sub?url=<编码后的原订阅>&template=phone`
-6. （可选）在 Vercel 项目 **Settings → Environment Variables** 增加 `YAML2SB_API_KEY`，值为一串随机密钥；保存后重新 Deploy。启用后网页里需填写该密钥，API / `/sub` 也需带密钥。
-
-详细步骤与 CLI 部署见下方 [部署到 Vercel](#部署到-vercel)。
-
-### 向导 B：Cloudflare Workers
-
-1. 本机安装 [Node.js](https://nodejs.org/)、[uv](https://github.com/astral-sh/uv)，并注册 Cloudflare 账号。
-2. 在项目根目录执行：
-
-```sh
-uv sync
-uv add --dev workers-py workers-runtime-sdk
-uv run pywrangler login
-uv run pywrangler deploy
-```
-
-3. 部署成功后打开：
-   - 网页：`https://yaml2sb.<你的子域>.workers.dev/`
-   - 远程订阅：`https://yaml2sb.<你的子域>.workers.dev/sub?url=...&template=phone`
-4. （可选）`npx --yes wrangler secret put YAML2SB_API_KEY` 设置访问密钥。
-    设置完成后可以查看密钥名称是否存在，但不会显示密钥值：
-          `npx --yes wrangler secret list`
-
-> Cloudflare 的开发依赖只在本机用 `uv add --dev` 安装，**不要**写进会触发 Vercel `uv lock` 的主依赖，以免 Vercel 构建失败。
-
-详细说明见下方 [部署到 Cloudflare Workers](#部署到-cloudflare-workers)。
-
-### 向导 C：Docker / 本机网页
-
-**Docker Compose（推荐私有化）：**
-
-```sh
-docker compose up -d --build
-# 浏览器打开 http://localhost:8080
-```
-
-**本机直接跑：**
-
-```sh
-python3 -m pip install .
-python3 web_server.py --host 0.0.0.0 --port 8080
-```
-
-可选环境变量 `YAML2SB_API_KEY`。更多见下方 [网页版](#网页版)。
-
-### 部署后怎么用网页
-
-1. 打开首页，选择 **粘贴内容** 或 **远程订阅链接**。
-2. 在「sing-box 模板」中选择：
-   - **iPhone 配置**（`config_phone.json`）— 手机客户端
-   - **OpenWrt 配置** — 软路由
-   - **Momo 配置** — Momo
-   - 或 **上传自定义模板**
-3. 若启用了 API Key，在页面填写密钥。
-4. 点击 **转换并下载 JSON**，把文件导入 sing-box 客户端。
-
-需要客户端**自动更新**时，用 `GET /sub` 链接当远程配置（见 [远程订阅转换](#远程订阅转换get-sub客户端直接使用)），不必每次打开网页。
-
----
+| 方式 | 适用场景 | 详细步骤 |
+| --- | --- | --- |
+| Vercel | 快速发布公网网页与 API | [部署到 Vercel](#部署到-vercel) |
+| Cloudflare Workers | Cloudflare 边缘部署与远程订阅 | [部署到 Cloudflare Workers](#部署到-cloudflare-workers) |
+| Docker Compose | 自托管、旁路由或内网部署 | [Docker Compose](#使用-docker-compose-部署) |
+| 本机运行 | 本地调试或局域网使用 | [本地启动网页版](#本地启动网页版) |
 
 ## 部署到 Vercel
 
 ### 通过 Vercel 网站部署
 
-![yaml2sb 网页界面示例](./docs/images/vercel-web-ui.png)
+![yaml2sb 网页界面示例](./docs/images/web-ui.png)
 
 1. 将本项目目录推送到 GitHub 仓库。
 2. 登录 [Vercel](https://vercel.com/)，选择 **Add New → Project**，导入该仓库。
@@ -123,7 +67,7 @@ python3 web_server.py --host 0.0.0.0 --port 8080
 4. 保持 Python 项目自动检测设置；如 Vercel 要求选择框架，选择 **Other**。本项目不需要 Build Command 或 Output Directory。
 5. 点击 **Deploy**。部署完成后，API 地址为 `https://<项目名>.vercel.app/api`。
 
-部署配置位于 `vercel.json`。三个内置模板为项目根目录下的 `config_phone.json`、`config_openwrt.json` 和 `momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
+部署配置位于 `vercel.json`。三个内置模板位于 `templates/` 目录：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
 
 ### 通过 Vercel CLI 部署
 
@@ -155,20 +99,25 @@ vercel --prod
 在项目根目录执行：
 
 ```sh
-# 安装运行时依赖
-uv sync
-# Cloudflare Workers 开发工具（仅本机部署 CF 时需要，不要写进会影响 Vercel 的依赖组）
-uv add --dev workers-py workers-runtime-sdk
+# Worker SDK 要求 Python 3.11+；添加环境标记，保留项目本身对 Python 3.9+ 的支持
+uv add --dev \
+  "workers-py; python_version >= '3.11'" \
+  "workers-runtime-sdk; python_version >= '3.11'"
+
+# 使用 Python 3.11+ 安装开发依赖并运行 Worker 工具
+uv sync --group dev --python 3.11
 
 # 登录 Cloudflare（首次）
-uv run pywrangler login
+uv run --python 3.11 pywrangler login
 
 # 本地预览
-uv run pywrangler dev
+uv run --python 3.11 pywrangler dev
 
 # 部署到 Workers
-uv run pywrangler deploy
+uv run --python 3.11 pywrangler deploy
 ```
+
+注意：`uv add --dev` 会修改 Git 跟踪的 `pyproject.toml` 和 `uv.lock`，并非只安装到本机环境。执行后检查这两个文件的差异，再决定是否保留。Worker 工具应留在开发依赖组，不要移入项目运行依赖；Python 版本标记可避免它们阻止 Python 3.9/3.10 环境解析项目的其他依赖。运行 Cloudflare Worker 命令时使用 Python 3.11 或更高版本。
 
 部署成功后地址形如：
 
@@ -209,9 +158,11 @@ python3 -m json.tool sing-box.json > /dev/null
 ### 可选：启用 API Key
 
 ```sh
-uv run wrangler secret put YAML2SB_API_KEY
+uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
 # 按提示输入密钥
 ```
+
+`wrangler` 是 Node.js 工具，本项目通过 `pywrangler` 调用它；不要直接运行 `uv run wrangler`。也可以在 Cloudflare Dashboard 打开 **Workers & Pages → yaml2sb → Settings → Variables and Secrets**，添加名为 `YAML2SB_API_KEY` 的 Secret。
 
 启用后，请求需携带：
 
@@ -330,10 +281,10 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
     "outbounds": []
   },
   "node_count": 1
-}
+  部署配置位于 `vercel.json`。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
 ```
 
-上面的 `outbounds` 仅用于展示响应结构；实际内容是完整转换后的 sing-box 配置。
+  配置文件：`wrangler.toml`（入口 `worker.py`）。Worker 入口与转换逻辑位于项目根目录；模板统一读取 `templates/`，网页统一读取 `public/index.html`。Vercel、本地 Web 和 Workers 共用这些资源。
 
 ### 使用自定义模板
 
@@ -355,6 +306,55 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
 ```
 
 转换时会保留模板配置并追加节点。模板中的策略组若要引用新节点，需使用脚本支持的组名（例如 `手动选择`、`自动选择` 和地区策略组）；其他模板可只提供 `outbounds`，由客户端按需调整策略组。
+
+### 使用自定义制作配置
+
+网页选择 **自定义制作配置** 后，可从 iPhone、OpenWrt 或 Momo 配置开始制作。界面采用横向表单布局；未开放的配置部分保持所选基础配置默认值。国内和国际 DNS 均可直接点击选中或取消，每类最多选择两项；提供阿里云、腾讯 DNSPod、114DNS、Cloudflare、Google Public DNS、Quad9 等主流公共 DNS 及 DoH、DoT、DoQ、DoH3、UDP 等类型，也可直接点击添加自定义 DNS。已选择的 DNS 会显示在下方，可逐项移除；配置中的本地、Hosts 和 FakeIP DNS 作为内部依赖保留，不单独提供选择。
+
+应用分流和规则集都在“匹配规则与顺序”中选择：名称对应具体应用分流，初始出站可选地区、手动/自动组或直连；自定义应用名称会生成对应的 selector 组，所选出站作为该应用组的默认首选。规则集链接可在同一区域展开添加，名称和链接均可自定义，并选择 sing-box `binary` 或 `source` 格式。创建规则的表单与规则列表采用统一的字体和控件样式，添加后可上下移动或删除；未改动的模板默认出站保持原样。
+
+#### 默认匹配规则及顺序建议
+
+基础配置中的这些规则处理的是不同类型的流量：
+
+| 规则 | 意义 |
+| --- | --- |
+| `{"ip_is_private": true, "outbound": "直连"}` | 目标 IP 属于内网/私有地址时走直连，常用于访问局域网设备和本地服务。 |
+| `{"network": "icmp", "action": "resolve"}` | 匹配 ICMP 流量并执行解析动作；它本身不指定出站，不等同于“直连”。 |
+| `{"network": "icmp", "outbound": "直连"}` | 将匹配到的 ICMP 流量（例如 ping）交给直连接出站。 |
+| `{"clash_mode": "Direct", "outbound": "直连"}` | Clash 当前模式为 `Direct` 时，将匹配流量直连。 |
+| `{"clash_mode": "Global", "outbound": "GLOBAL"}` | Clash 当前模式为 `Global` 时，将匹配流量交给 `GLOBAL` 出站组，由该组决定具体出口。 |
+
+建议保留基础配置默认顺序：先处理内网地址、协议或其他基础例外，再处理 ICMP 的解析与直连，随后放置 `Direct` / `Global` 模式规则，然后排列应用分流和规则集规则，最后才放通用兜底规则。应用规则越具体越适合放在越前面；模式规则放在应用规则前，才能使 `Direct` / `Global` 模式覆盖常规应用分流。若希望特定应用在 `Global` 模式下仍使用自己的分流，可将该应用规则移到 `Global` 规则之前，但这会改变全局模式下的行为。ICMP 的 `resolve` 应排在 ICMP 直连之前，以免直连规则先结束对该流量的处理。
+
+部分模板（如 iPhone 配置）会出现两条相同的 `ip_is_private: true` 直连规则；两者条件和出站相同，后出现的重复项通常不会增加新的匹配效果。调整顺序时可将其视为同一条规则；如需精简，可移除重复项，但建议先确认没有依赖模板的其他自定义改动。
+
+程序会清理被取消规则集对应的规则和分流组引用；移除 DNS 服务器后，其余配置中指向该服务器的 DNS 引用会改指剩余可用 DNS。地区、手动/自动组和“延迟辅助”会作为出站保留，但不会作为应用名称显示。“延迟辅助”和直连不会出现在规则集的匹配目标出站选择器中；直连可作为自定义应用分流的初始出站，模板中已有的直连规则保持原样。
+
+同一功能也可通过 API 使用。`GET /api/options?template=config_phone.json` 返回对应基础模板可选的 DNS、分流组和规则集；分流组带有 `application` 标识，界面据此将应用组与地区出站区分，`matching_targets` 不包含应用组、直连或“延迟辅助”。配置了 `YAML2SB_API_KEY` 时，读取该接口也需要 API 密钥。转换请求的 `template_options` 可以传入 `dns_servers`、`custom_dns_servers`、`groups`、`custom_groups`、`rule_sets`、`custom_rule_sets`、`custom_matching_rules`、`rule_destinations`、`rule_order` 和 `rule_outbounds`。`custom_groups` 可通过 `rule_sets` 将规则集加入应用分流组；`custom_matching_rules` 可按名称、规则集和初始出站新增应用分流及匹配规则；`rule_order` 使用 `/api/options` 返回的匹配规则索引字符串，以及新增规则集对应的 `custom:<tag>` 或自定义匹配规则的 `builder-<序号>` 排列。`custom_dns_servers` 中的 DNS 对象按 sing-box DNS server 字段传入，例如 `{"tag":"doh","type":"https","server":"dns.example","server_port":443,"path":"/dns-query"}`。未提供 DNS 选择时，使用基础模板默认 DNS；被取消的内部 DNS 依赖仍会保留。
+
+```json
+{
+  "content": "proxies:\n  - name: Japan 01\n    type: vless\n    server: example.com\n    port: 443\n    uuid: 00000000-0000-0000-0000-000000000000\n    tls: true",
+  "template": "config_phone.json",
+  "template_options": {
+    "custom_dns_servers": [
+      {"tag": "custom-dns", "type": "https", "server": "1.1.1.1"}
+    ],
+    "custom_groups": [
+      {"tag": "Games", "rule_sets": ["geosite-youtube"]}
+    ],
+    "custom_rule_sets": [
+      {
+        "tag": "geosite-games",
+        "url": "https://example.com/games.srs",
+        "format": "binary",
+        "outbound": "Games"
+      }
+    ]
+  }
+}
+```
 
 ### 请求与错误
 
@@ -422,7 +422,7 @@ python3 sub2singbox.py ./subscription.yaml \
   ```
 
   如果需要更强的访问控制（OAuth、IP 限制、速率限制等），建议在 Vercel 前置一层认证/反向代理（例如 Cloudflare Access、NGINX、Caddy 或自托管的 proxy）。
-- 本地网页版和 Docker 部署也支持相同的 `YAML2SB_API_KEY` 令牌认证。启用后，`/api` 和 `/fetch` 需要 Bearer 或 `X-API-Key` 请求头；首页仍可打开，网页转换表单中填写 API 访问密钥即可使用。未设置该变量时，API 不启用令牌认证。
+- 本地网页版和 Docker 部署也支持相同的 `YAML2SB_API_KEY` 令牌认证。启用后，`/api`、`/api/options`、`/fetch`、`/sub` 和 `/api/sub` 需要 Bearer 或 `X-API-Key` 请求头；首页仍可打开，网页转换表单中填写 API 访问密钥即可使用。未设置该变量时，API 不启用令牌认证。
 - 自定义模板通过请求提交；内置模板通过文件名白名单选择，不允许传入任意文件路径。
 - 转换结果会携带订阅中的节点认证信息。请妥善保存响应内容，避免公开分享。
 - 输出是转换后的 sing-box 配置，不代表配置一定符合所有 sing-box 版本或运行环境的要求；部署/导入前请使用目标 sing-box 版本验证。
@@ -449,6 +449,17 @@ docker compose up --build -d
 ```sh
 YAML2SB_PORT=9090 docker compose up --build -d
 ```
+
+部署后可用以下命令检查首页、API 和模板选项接口是否返回 HTTP 200：
+
+```sh
+curl --fail --silent --show-error -o /dev/null -w '首页 HTTP %{http_code}\n' http://localhost:8080/
+curl --fail --silent --show-error -o /dev/null -w 'API HTTP %{http_code}\n' http://localhost:8080/api
+curl --fail --silent --show-error -o /dev/null -w '模板选项 HTTP %{http_code}\n' \
+  'http://localhost:8080/api/options?template=config_phone.json'
+```
+
+如果通过 `YAML2SB_PORT` 使用了其他宿主机端口，请相应替换命令中的 `8080`。启用了 API 密钥时，为后两条命令添加 `-H "Authorization: Bearer $YAML2SB_API_KEY"`。
 
 查看日志和停止服务：
 
