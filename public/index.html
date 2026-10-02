@@ -84,7 +84,8 @@
     textarea { min-height: 230px; padding: 14px; resize: vertical; line-height: 1.55; }
     input[type="url"], input[type="password"], select { min-height: 48px; padding: 0 13px; }
     .custom-template-panel { margin-top: 16px; }
-    .custom-template-panel input[type="file"] { width: 100%; }
+    #file,
+    #custom-template-file { width: 100%; }
     .base-template-controls {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -275,16 +276,21 @@
     .file-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #787774; font-size: 13px; }
     input[type="file"] { max-width: 100%; color: #5f5e5a; font-size: 13px; }
     input[type="file"]::file-selector-button {
+      -webkit-appearance: none;
+      appearance: none;
+      box-sizing: border-box;
+      width: 25%;
       height: 36px;
       min-height: 36px;
       margin-right: 8px;
-      padding: 0 10px;
+      padding: 0 8px;
       border: 1px solid #c9cdd1;
       border-radius: 4px;
       background: #fff;
       color: #37352f;
       font: inherit;
       line-height: 1.2;
+      text-align: left;
       cursor: pointer;
     }
     input[type="file"]::file-selector-button:hover { background: #f1f1ef; }
