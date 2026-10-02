@@ -83,12 +83,12 @@
     textarea:focus, input[type="url"]:focus, input[type="password"]:focus, select:focus { border-color: #a5a4a0; box-shadow: 0 0 0 2px rgb(55 53 47 / 8%); }
     textarea { min-height: 230px; padding: 14px; resize: vertical; line-height: 1.55; }
     input[type="url"], input[type="password"] { min-height: 48px; padding: 0 13px; }
-    select { height: 20px; min-height: 20px; }
+    select { height: 25px; min-height: 25px; }
     .custom-template-panel { margin-top: 16px; }
     #file,
     #custom-template-file { width: 100%; }
     #file::file-selector-button,
-    #custom-template-file::file-selector-button { height: 20px; min-height: 20px; }
+    #custom-template-file::file-selector-button { height: 25px; min-height: 25px; }
     .base-template-controls {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -125,8 +125,8 @@
     #base-template,
     .match-builder select,
     .rule-link-fields select,
-    .rule-actions select { height: 20px; min-height: 20px; }
-    .match-builder input { height: 20px; min-height: 20px; }
+    .rule-actions select { height: 25px; min-height: 25px; }
+    .match-builder input { height: 25px; min-height: 25px; }
     .base-template-controls .secondary,
     .rule-link-fields .secondary {
       width: 100%;
@@ -180,8 +180,8 @@
     .match-add-btn {
       width: 100%;
       min-width: 0;
-      min-height: 20px;
-      height: 20px;
+      min-height: 25px;
+      height: 25px;
       padding: 0 8px;
       border: 1px solid #c9cdd1;
       border-radius: 4px;
@@ -213,7 +213,7 @@
     .choice input { flex: none; margin: 2px 0 0; }
     .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: center; gap: 10px; margin-top: 10px; }
     .form-row input, .form-row select { min-width: 0; min-height: 38px; padding: 0 10px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; }
-    .form-row select { height: 20px; min-height: 20px; }
+    .form-row select { height: 25px; min-height: 25px; }
     .custom-dns-fields .form-row input, .custom-dns-fields .form-row select, .custom-dns-fields .form-row button { font-size: 13px; }
     .secondary { min-height: 38px; padding: 0 12px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; cursor: pointer; }
     .secondary:hover { background: #f1f1ef; }
@@ -250,8 +250,8 @@
     .match-name-fields .secondary {
       width: 36px;
       min-width: 36px;
-      min-height: 20px;
-      height: 20px;
+      min-height: 25px;
+      height: 25px;
       padding: 0;
       font-size: 18px;
       line-height: 1;
@@ -291,6 +291,9 @@
       margin-top: 12px;
     }
     .rule-link-fields label { margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+    #new-rule-tag,
+    #new-rule-url { height: 25px; min-height: 25px; }
+    #add-rule-set { height: 25px; min-height: 25px; }
     .rule-link-fields .rule-link-action label {
       visibility: hidden;
       user-select: none;
