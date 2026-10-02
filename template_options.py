@@ -72,8 +72,8 @@ def get_template_options(template):
                 "type": item.get("type", ""),
                 "server": item.get("server", ""),
                 "name": {
-                    "alibaba-cloud-dns": "阿里云 DNS（223.5.5.5）",
-                    "tencent-dnspod-dns": "腾讯 DNSPod",
+                    "alibaba-cloud-dns": "阿里云 DNS",
+                    "tencent-dnspod-dns": "腾讯DNS",
                     "google-public-dns": "Google Public DNS",
                     "local": "本地 DNS",
                     "hosts": "Hosts",

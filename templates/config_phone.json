@@ -4,7 +4,7 @@
       {"tag": "local", "type": "local", "prefer_go": true},
       {"tag": "alibaba-cloud-dns", "type": "udp", "server": "223.5.5.5"},
       {"tag": "tencent-dnspod-dns", "type": "https", "server": "doh.pub", "domain_resolver": "hosts"},
-      {"tag": "google-public-dns", "type": "https", "server": "8.8.8.8", "detour": "默认代理"},
+      {"tag": "google-public-dns", "type": "udp", "server": "8.8.8.8", "detour": "默认代理"},
       {"tag": "fakeip", "type": "fakeip", "inet4_range": "198.19.0.0/16", "inet6_range": "2001:db8::/32"},
       {"type": "hosts", "tag": "hosts", "predefined": {"doh.pub": ["1.12.12.21", "120.53.53.53"]}}
     ],

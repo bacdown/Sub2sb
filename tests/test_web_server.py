@@ -219,6 +219,14 @@ class WebServerTests(unittest.TestCase):
             next(item for item in options["dns_servers"] if item["tag"] == "alibaba-cloud-dns")["type"],
             "udp",
         )
+        self.assertEqual(
+            next(item for item in options["dns_servers"] if item["tag"] == "alibaba-cloud-dns")["name"],
+            "阿里云 DNS",
+        )
+        self.assertEqual(
+            next(item for item in options["dns_servers"] if item["tag"] == "tencent-dnspod-dns")["name"],
+            "腾讯DNS",
+        )
         self.assertNotIn(
             "ali",
             [item["tag"] for item in options["dns_servers"]],
@@ -254,13 +262,11 @@ class WebServerTests(unittest.TestCase):
         self.assertIn("日本自动", options["matching_targets"])
         self.assertNotIn("延迟辅助", options["matching_targets"])
 
-    def test_all_builtin_templates_use_udp_for_alibaba_ip_dns(self):
+    def test_all_builtin_templates_use_udp_for_ip_dns(self):
         for template_name in ("config_phone.json", "config_openwrt.json", "momo.json"):
             with self.subTest(template=template_name):
-                alibaba_dns = next(
-                    server for server in _load_named_template(template_name)["dns"]["servers"]
-                    if server["tag"] == "alibaba-cloud-dns"
-                )
+                dns_servers = _load_named_template(template_name)["dns"]["servers"]
+                alibaba_dns = next(server for server in dns_servers if server["tag"] == "alibaba-cloud-dns")
                 self.assertEqual(
                     alibaba_dns,
                     {
@@ -269,6 +275,9 @@ class WebServerTests(unittest.TestCase):
                         "server": "223.5.5.5",
                     },
                 )
+                google_dns = next(server for server in dns_servers if server["tag"] == "google-public-dns")
+                self.assertEqual(google_dns["type"], "udp")
+                self.assertEqual(google_dns["server"], "8.8.8.8")
 
     def test_composed_template_options_customize_dns_groups_and_rule_sets(self):
         template = _load_named_template("config_phone.json")
