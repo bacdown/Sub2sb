@@ -59,7 +59,7 @@
 
 ### 通过 Vercel 网站部署
 
-![yaml2sb 网页界面示例](./docs/images/vercel-web-ui.png)
+![yaml2sb 网页界面示例](./docs/images/web-ui.png)
 
 1. 将本项目目录推送到 GitHub 仓库。
 2. 登录 [Vercel](https://vercel.com/)，选择 **Add New → Project**，导入该仓库。
