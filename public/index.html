@@ -49,7 +49,9 @@
     }
     .eyebrow { color: #787774; font-size: 13px; letter-spacing: .08em; }
     h1 { margin: 9px 0 8px; font-size: clamp(28px, 6vw, 40px); letter-spacing: -.04em; }
-    .intro { margin: 0; color: #787774; line-height: 1.7; }
+    .intro { margin: 0; color: #62615c; line-height: 1.7; }
+    .deploy-options { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+    .deploy-options li { padding: 3px 8px; border: 1px solid #e3e2de; border-radius: 4px; color: #787774; background: #fff; font-size: 12px; line-height: 1.5; }
     .card {
       padding: clamp(18px, 3vw, 30px);
       border: 1px solid #d9dcdf;
@@ -438,7 +440,13 @@
     <header>
       <div class="header-copy">
         <h1>yaml2sb · sing-box</h1>
-        <p class="intro">修改 YAML 配置文件或订阅链接转换为 sing-box JSON。可本地、Docker 及 Vercel 部署。</p>
+        <p class="intro">YAML 配置与订阅链接，轻松转换为 sing-box JSON</p>
+        <ul class="deploy-options" aria-label="支持的部署方式">
+          <li>本地</li>
+          <li>Docker</li>
+          <li>Vercel</li>
+          <li>Cloudflare Workers</li>
+        </ul>
       </div>
       <a class="github-link" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener noreferrer" aria-label="访问 yaml2sb 项目主页（原作者：bacdown）" title="yaml2sb 项目主页 · 原作者 bacdown">
         <svg viewBox="0 0 24 24" aria-hidden="true">
