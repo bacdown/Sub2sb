@@ -87,16 +87,18 @@
     .custom-template-panel input[type="file"] { width: 100%; }
     .base-template-controls {
       display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 180px) auto;
       align-items: center;
       gap: 18px;
     }
     .base-template-controls select { min-width: 0; width: 100%; }
     .base-template-controls button {
-      width: 100%;
-      justify-self: stretch;
+      width: fit-content;
+      justify-self: start;
       white-space: nowrap;
     }
+    #template,
+    #base-template { width: min(100%, 180px); }
     /* Previous-version control style (match outbound select) */
     #template,
     #base-template,
@@ -266,7 +268,19 @@
     .move-rule { min-width: 34px; min-height: 34px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; cursor: pointer; }
     code { color: #5f5e5a; }
     .file-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #787774; font-size: 13px; }
-    input[type="file"] { max-width: 100%; color: #5f5e5a; }
+    input[type="file"] { max-width: 100%; color: #5f5e5a; font-size: 13px; }
+    input[type="file"]::file-selector-button {
+      min-height: 34px;
+      margin-right: 8px;
+      padding: 0 10px;
+      border: 1px solid #c9cdd1;
+      border-radius: 4px;
+      background: #fff;
+      color: #37352f;
+      font: inherit;
+      cursor: pointer;
+    }
+    input[type="file"]::file-selector-button:hover { background: #f1f1ef; }
     .hint { margin: 8px 0 0; color: #787774; font-size: 13px; line-height: 1.6; }
     .input-layout { display: grid; grid-template-columns: 1fr; gap: 0; padding-top: 24px; }
     .input-layout > .mode-panel { display: block; }
