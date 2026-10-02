@@ -150,10 +150,30 @@
     }
     #reload-options {
       width: fit-content;
-      height: 20px;
-      min-height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 48px;
+      min-height: 48px;
+      padding: 0 14px;
       justify-self: center;
       white-space: nowrap;
+      background: #e6e8eb;
+    }
+    #reload-options:hover {
+      background: #d9dce0;
+    }
+    #reload-options svg {
+      display: block;
+      flex: none;
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
     }
     /* Same look as outbound select; click-only, not a dropdown */
     .match-add-btn {
@@ -490,7 +510,12 @@
               <option value="config_openwrt.json">OpenWrt 配置</option>
               <option value="momo.json">Momo 配置</option>
             </select>
-            <button id="reload-options" class="secondary" type="button">读取 / 刷新基础配置选项</button>
+            <button id="reload-options" class="secondary" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 7v5h-5M4 17v-5h5M5.64 5.64A9 9 0 0 1 20 12M4 12a9 9 0 0 0 14.36 6.36"/>
+              </svg>
+              <span>读取 / 刷新基础配置选项</span>
+            </button>
           </div>
           <div class="compose-grid">
             <section class="compose-section">
