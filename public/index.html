@@ -215,7 +215,7 @@
     .dns-option-add:hover { background: #f1f1ef; }
     .dns-select-hint { margin-top: 5px; }
     .match-builder { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(190px, 1.2fr) minmax(190px, 1.2fr) minmax(150px, .8fr); align-items: end; gap: 10px; padding: 14px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
-    .match-builder label { margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+    .match-builder label { margin-bottom: 6px; font-size: 13px; font-weight: 600; text-align: center; }
     .match-builder .secondary { font-size: 13px; }
     .match-name-fields {
       display: grid;
@@ -275,14 +275,16 @@
       user-select: none;
     }
     .rule-order-list { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
-    .rule-order-item { display: grid; grid-template-columns: minmax(140px, .7fr) minmax(150px, 1fr) minmax(190px, 1.2fr) auto; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
+    .rule-order-item { display: grid; grid-template-columns: minmax(140px, .7fr) minmax(150px, 1fr) minmax(190px, 1.2fr) minmax(89px, auto); align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
     .rule-summary { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
     .rule-group-name { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
     .rule-set-name { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
     .rule-actions { display: flex; align-items: center; gap: 6px; }
+    .rule-actions select { width: 50%; }
     .rule-default-outbound, .rule-order-item .remove-item { font-size: 13px; }
     .rule-column-label { color: #787774; font-size: 11px; }
-    .move-rule { min-width: 34px; min-height: 34px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; cursor: pointer; }
+    .rule-header .rule-column-label:last-child { text-align: center; }
+    .move-rule { width: 25.5px; height: 25.5px; min-width: 25.5px; min-height: 25.5px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; cursor: pointer; }
     code { color: #5f5e5a; }
     .file-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #787774; font-size: 13px; }
     input[type="file"] { max-width: 100%; color: #5f5e5a; font-size: 13px; }
