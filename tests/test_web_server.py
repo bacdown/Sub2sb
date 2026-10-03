@@ -1,4 +1,6 @@
 import json
+import os
+import tempfile
 import threading
 import unittest
 from http.server import ThreadingHTTPServer
@@ -799,6 +801,77 @@ class WebServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(result["node_count"], 2)
         self.assertEqual(fetch.call_count, 2)
+
+    def test_api_merges_multiple_yaml_contents_independently(self):
+        second_subscription = SAMPLE_SUBSCRIPTION.replace("Japan 01", "Japan 02")
+        status, result = self.post_json(
+            "/api",
+            {"contents": [SAMPLE_SUBSCRIPTION, second_subscription]},
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(result["node_count"], 2)
+
+    def test_saved_profile_crud_and_public_json_short_link(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch("api.index.API_KEY", "test-secret"), patch.dict(
+                os.environ,
+                {"YAML2SB_DB_PATH": os.path.join(directory, "profiles.sqlite3")},
+            ):
+                status, created = self.post_json(
+                    "/api/subscriptions",
+                    {
+                        "name": "Japan profile",
+                        "contents": [SAMPLE_SUBSCRIPTION],
+                        "template": "phone",
+                        "node_filter": {"include_names": ["japan"]},
+                    },
+                    headers={"Authorization": "Bearer test-secret"},
+                )
+                self.assertEqual(status, 201)
+
+                with urlopen(self.base_url + created["short_path"]) as response:
+                    config = json.loads(response.read())
+                self.assertEqual(response.status, 200)
+                self.assertIn(
+                    "Japan 01",
+                    [item.get("tag") for item in config["outbounds"]],
+                )
+                with urlopen(self.base_url + "/api" + created["short_path"]) as response:
+                    self.assertEqual(response.status, 200)
+
+                request = Request(
+                    self.base_url + f"/api/subscriptions/{created['id']}",
+                    data=json.dumps({"name": "Updated profile"}).encode("utf-8"),
+                    headers={
+                        "Authorization": "Bearer test-secret",
+                        "Content-Type": "application/json",
+                    },
+                    method="PATCH",
+                )
+                with urlopen(request) as response:
+                    updated = json.loads(response.read())
+                self.assertEqual(updated["name"], "Updated profile")
+
+                request = Request(
+                    self.base_url + f"/api/subscriptions/{created['id']}",
+                    headers={"Authorization": "Bearer test-secret"},
+                    method="DELETE",
+                )
+                with urlopen(request) as response:
+                    self.assertEqual(json.loads(response.read()), {"deleted": True})
+
+    def test_profile_management_requires_api_key_configuration(self):
+        request = Request(
+            self.base_url + "/api/subscriptions",
+            data=json.dumps({"name": "test", "contents": [SAMPLE_SUBSCRIPTION]}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with patch("api.index.API_KEY", None):
+            with self.assertRaises(HTTPError) as error:
+                urlopen(request)
+        self.assertEqual(error.exception.code, 503)
 
     def test_sub_endpoint_maps_upstream_errors_to_502(self):
         request = Request(

@@ -1,6 +1,6 @@
 # yaml2sb
 
-将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。提供本地网页版、Docker、Vercel、Cloudflare Workers 与命令行用法。
+将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。支持多文件 / 多订阅合并、节点名称筛选、保存订阅组合和短链接远程 JSON；提供本地网页版、Docker、Vercel、Cloudflare Workers 与命令行用法。
 
 ## 目录
 
@@ -101,6 +101,10 @@ vercel --prod
 
 CLI 会交互式提示输入密钥。不要把密钥写入仓库文件或提交到 Git。
 
+### 启用订阅管理与短链接
+
+Vercel 函数没有持久本地磁盘。除 `YAML2SB_API_KEY` 外，还需在 Vercel 项目环境变量中配置 Upstash Redis REST 凭据：`UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`。可在 Vercel Storage 中创建/关联 Upstash Redis 数据库并导入对应环境变量。部署后，网页可保存订阅组合并生成 `/s/<id>` 短链接。
+
 ## 部署到 Cloudflare Workers
 
 本项目提供 Python Workers 入口（`worker.py`），在 Cloudflare 边缘提供与 Vercel 相同的能力：完整网页 UI、`GET /sub` 远程订阅、`POST /api`（内置模板与自定义 `template_json`）。
@@ -184,6 +188,18 @@ uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
 
 `wrangler` 是 Node.js 工具，本项目通过 `pywrangler` 调用它；不要直接运行 `uv run wrangler`。密钥使用方法见下文“API Key 使用方法”。
 
+### 启用订阅管理与短链接
+
+订阅管理需要持久 KV。创建一个 Cloudflare Workers KV namespace，并把它绑定到 Worker，binding 名称必须为 `SUBSCRIPTIONS`。使用 Wrangler 部署时，在 `wrangler.toml` 添加以下配置并将占位符替换为实际 namespace ID：
+
+```toml
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS"
+id = "<KV_NAMESPACE_ID>"
+```
+
+Cloudflare Dashboard 部署可在 Worker 的 **Settings → Bindings → KV namespace** 添加同名绑定。还必须设置 `YAML2SB_API_KEY`；短地址 `/s/<id>` 可公开访问，新增、编辑、删除和列表管理接口受该密钥保护。
+
 ### 客户端远程配置示例
 
 ```text
@@ -202,7 +218,7 @@ https://yaml2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&te
 
 Vercel、Cloudflare Workers、本地网页版和 Docker Compose 都使用环境变量 `YAML2SB_API_KEY`。未设置或值为空时，API 不要求密钥，服务保持公开访问；设置后，受保护的 API 路由需要有效密钥。首页仍可公开打开。
 
-受保护路由包括 `GET /api`、`POST /api`、`GET /api/options`、`GET /sub` 和 `GET /api/sub`；本地网页版和 Docker 另有 `POST /fetch`。密钥支持以下三种方式，优先使用请求头：
+受保护路由包括 `GET /api`、`POST /api`、`GET /api/options`、`GET /sub`、`GET /api/sub` 和 `/api/subscriptions` 管理接口；本地网页版和 Docker 另有 `POST /fetch`。公开短地址 `GET /s/<id>` 不要求 API Key。密钥支持以下三种方式，优先使用请求头：
 
 - `Authorization: Bearer <密钥>`（推荐）
 - `X-API-Key: <密钥>`
@@ -327,6 +343,33 @@ curl -o sing-box-momo.json \
 3. 客户端定时请求该地址，即可自动拿到转换后的 sing-box JSON。
 
 注意：原订阅地址必须整体做 **URL 编码**。启用 API Key 后，客户端需要按“API Key 使用方法”一节携带密钥。
+
+### 保存订阅组合与短链接
+
+在网页输入多条订阅链接或选择多份 YAML/TXT 文件，填写组合名称和可选的节点筛选条件，点击“保存并生成短链接”。每次访问短链接都会重新拉取远程来源并返回纯 sing-box JSON；单条来源更新后无需重新生成短链接。名称筛选忽略大小写，包含词按任一命中保留，排除词优先。
+
+管理接口必须配置 `YAML2SB_API_KEY`，并按部署方式配置持久存储：Docker Compose 使用自动创建的 SQLite 命名卷；Vercel 使用 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`；Cloudflare Workers 绑定 KV namespace `SUBSCRIPTIONS`。未配置持久存储时管理接口会返回 `503`，不会创建易失短链接。
+
+管理路由：`GET /api/subscriptions` 列表、`POST /api/subscriptions` 新建、`GET /api/subscriptions/<id>` 读取详情、`PATCH /api/subscriptions/<id>` 修改、`DELETE /api/subscriptions/<id>` 删除。公开客户端地址为 `GET /s/<id>`，返回可远程加载的 sing-box JSON，不需要管理密钥。
+
+创建请求示例：
+
+```json
+{
+  "name": "手机日常线路",
+  "urls": [
+    "https://provider-a.example/sub?token=...",
+    "https://provider-b.example/sub?token=..."
+  ],
+  "template": "phone",
+  "node_filter": {
+    "include_names": ["JP", "HK"],
+    "exclude_names": ["过期"]
+  }
+}
+```
+
+远程订阅 URL 或内嵌 YAML 都保存在配置存储中；其中可能含服务商凭据或节点密码。请保护 API Key、数据库/Redis/KV 访问权限，并避免公开分享来源详情。
 
 ### 使用内置模板转换（POST）
 
@@ -490,10 +533,12 @@ python3 sub2singbox.py ./subscription.yaml \
 
 网页版支持两种输入方式：
 
-1. 粘贴订阅内容，或一次选择多个本地 YAML / TXT 文件，内容会合并转换。
+1. 粘贴订阅内容，或一次选择多个本地 YAML / TXT 文件，每份文件会分别解析后合并转换。
 2. 输入一条或多条远程 HTTP(S) 订阅链接（每行一条），由服务端下载并合并转换。
 
 两种方式都可以选择手机、OpenWrt 或 Momo 内置模板（文件整理在 `templates/` 目录），也可以上传自定义 sing-box JSON 模板；页面会检查 JSON 根节点及 `outbounds` 必要项，通过校验后才允许转换。下载结果为转换后的 sing-box JSON。远程下载仅允许公网 HTTP(S) 地址，单次下载最大 2 MiB，并会检查重定向目标。Vercel 部署时首页由 `public/index.html` 提供，页面输入（含远程链接）统一提交至 `/api`。
+
+可填写节点名称包含/排除关键词（每行一项，忽略大小写）；包含条件按“任一匹配”处理，排除条件优先。填写组合名称后可保存当前来源、模板和筛选条件，生成稳定的 `/s/<id>` 短链接。客户端访问短链接时会重新拉取来源并输出纯 sing-box JSON。管理界面支持查看、编辑和删除保存项。
 
 ### 使用 Docker Compose 部署
 
@@ -505,6 +550,8 @@ docker compose up --build -d
 ```
 
 Compose 会将该变量传入容器。后续重建或更新容器时，也要在当前 shell 中设置同一个值；否则新容器会按未设置密钥的公开模式运行。不要把密钥提交到仓库。
+
+Compose 会把 SQLite 订阅库写入命名卷 `yaml2sb-data`，容器重建后数据保留。启用订阅管理时必须配置 `YAML2SB_API_KEY`。
 
 未启用密钥时，直接在项目目录运行：
 
@@ -542,6 +589,7 @@ docker compose down
 docker build -t yaml2sb .
 docker run --rm -p 8080:8080 \
   -e YAML2SB_API_KEY="$YAML2SB_API_KEY" \
+  -v yaml2sb-data:/data \
   yaml2sb
 ```
 

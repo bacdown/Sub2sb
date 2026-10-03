@@ -70,7 +70,7 @@ class WebHandler(ApiHandler):
                 **{
                     key: value
                     for key, value in payload.items()
-                    if key in ("template", "template_json", "template_options")
+                    if key in ("template", "template_json", "template_options", "node_filter")
                 },
             }
             result = convert_request(conversion_request)

@@ -11,6 +11,7 @@ from sub2singbox import (
     parse_hysteria2,
     parse_tuic,
     parse_uri,
+    convert_contents,
     _normalize_utls_fingerprint,
 )
 
@@ -110,6 +111,38 @@ class TuicConvertTests(unittest.TestCase):
         out = parse_tuic(uri)
         self.assertEqual(out["tls"]["alpn"], ["h3"])
         self.assertTrue(out["tls"]["insecure"])
+
+
+class SubscriptionNodeFilterTests(unittest.TestCase):
+    def test_filters_node_names_case_insensitively(self):
+        content = """proxies:
+  - name: Tokyo-A
+    type: socks5
+    server: tokyo.example
+    port: 1080
+  - name: US-West
+    type: socks5
+    server: us.example
+    port: 1080
+"""
+        config, count = convert_contents(
+            [content],
+            node_filter={"include_names": ["TOKYO"], "exclude_names": ["test"]},
+        )
+
+        self.assertEqual(count, 1)
+        self.assertIn("Tokyo-A", [item.get("tag") for item in config["outbounds"]])
+        self.assertNotIn("US-West", [item.get("tag") for item in config["outbounds"]])
+
+    def test_node_filter_rejects_empty_result(self):
+        content = """proxies:
+  - name: Tokyo-A
+    type: socks5
+    server: tokyo.example
+    port: 1080
+"""
+        with self.assertRaisesRegex(ValueError, "没有匹配的节点"):
+            convert_contents([content], node_filter={"include_names": ["London"]})
 
 
 class ShadowsocksPluginTests(unittest.TestCase):

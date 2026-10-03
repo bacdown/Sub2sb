@@ -17,6 +17,11 @@ if str(PROJECT_ROOT) not in sys.path:
 from converter import convert_contents
 from remote_subscription import fetch_remote_subscription
 from subscription_utils import SubscriptionFetchError, collect_subscription_urls
+from subscription_lab import (
+    SubscriptionStoreUnavailable,
+    get_subscription_store,
+    validate_profile,
+)
 from template_options import get_template_options as _template_options
 
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
@@ -648,7 +653,9 @@ def convert_request(payload):
             template_metadata = _template_options(template)
             template = _apply_template_options(template, template_options)
 
-    config, node_count = convert_contents(contents, template)
+    config, node_count = convert_contents(
+        contents, template, node_filter=payload.get("node_filter")
+    )
     if isinstance(template_options, dict) and isinstance(template_metadata, dict):
         group_destinations = {}
         rule_outbounds = template_options.get("rule_outbounds", {})
@@ -697,7 +704,7 @@ def _request_with_remote_urls(payload):
         **{
             key: value
             for key, value in payload.items()
-            if key in ("template", "template_json", "template_options")
+            if key in ("template", "template_json", "template_options", "node_filter")
         },
     }
 
@@ -710,7 +717,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         # Allow Authorization and X-API-Key for token-based access
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
         self.end_headers()
         self.wfile.write(body)
@@ -719,7 +726,7 @@ class handler(BaseHTTPRequestHandler):
         # Always allow preflight so browsers can check CORS before sending credentials
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
         self.send_header("Content-Length", "0")
         self.end_headers()
@@ -802,7 +809,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
             self.send_header(
                 "Access-Control-Allow-Headers",
                 "Content-Type, Authorization, X-API-Key",
@@ -823,6 +830,119 @@ class handler(BaseHTTPRequestHandler):
             logging.exception("GET /sub conversion failed")
             self._send_json(500, {"error": "转换失败，请检查订阅链接和模板"})
 
+    def _management_enabled(self):
+        if API_KEY:
+            return True
+        self._send_json(503, {"error": "订阅管理需要先配置 YAML2SB_API_KEY"})
+        return False
+
+    def _profile_summary(self, profile):
+        source = "urls" if "urls" in profile else "contents"
+        return {
+            "id": profile["id"],
+            "name": profile["name"],
+            "source_type": source,
+            "source_count": len(profile[source]),
+            "template": profile.get("template", "phone"),
+            "node_filter": profile.get("node_filter", {}),
+            "created_at": profile["created_at"],
+            "updated_at": profile["updated_at"],
+            "short_path": f"/s/{profile['id']}",
+        }
+
+    def _handle_profiles_get(self, path):
+        if not self._management_enabled():
+            return
+        try:
+            store = get_subscription_store()
+            profile_id = path.removeprefix("/api/subscriptions").strip("/")
+            if profile_id:
+                profile = store.get(profile_id)
+                if profile is None:
+                    self._send_json(404, {"error": "订阅配置不存在"})
+                    return
+                self._send_json(200, profile)
+                return
+            self._send_json(200, [self._profile_summary(item) for item in store.list()])
+        except SubscriptionStoreUnavailable as exc:
+            self._send_json(503, {"error": str(exc)})
+
+    def _handle_profile_create(self, payload):
+        if not self._management_enabled():
+            return
+        try:
+            record = validate_profile(payload)
+            profile = get_subscription_store().create(record)
+            self._send_json(201, self._profile_summary(profile))
+        except (ValueError, SubscriptionStoreUnavailable) as exc:
+            self._send_json(400 if isinstance(exc, ValueError) else 503, {"error": str(exc)})
+
+    def _handle_profile_update(self, profile_id, payload):
+        if not self._management_enabled():
+            return
+        try:
+            store = get_subscription_store()
+            existing = store.get(profile_id)
+            if existing is None:
+                self._send_json(404, {"error": "订阅配置不存在"})
+                return
+            merged = {**existing, **payload}
+            profile = store.update(profile_id, validate_profile(merged))
+            self._send_json(200, self._profile_summary(profile))
+        except (ValueError, SubscriptionStoreUnavailable) as exc:
+            self._send_json(400 if isinstance(exc, ValueError) else 503, {"error": str(exc)})
+
+    def _handle_profile_delete(self, profile_id):
+        if not self._management_enabled():
+            return
+        try:
+            deleted = get_subscription_store().delete(profile_id)
+            if not deleted:
+                self._send_json(404, {"error": "订阅配置不存在"})
+                return
+            self._send_json(200, {"deleted": True})
+        except SubscriptionStoreUnavailable as exc:
+            self._send_json(503, {"error": str(exc)})
+
+    def _handle_saved_sub_get(self, profile_id):
+        try:
+            profile = get_subscription_store().get(profile_id)
+            if profile is None:
+                self._send_json(404, {"error": "订阅配置不存在"})
+                return
+            if "urls" in profile:
+                contents = [fetch_remote_subscription(url) for url in profile["urls"]]
+            else:
+                contents = profile["contents"]
+            payload = {
+                "contents": contents,
+                "node_filter": profile.get("node_filter", {}),
+            }
+            if "template_json" in profile:
+                payload["template_json"] = profile["template_json"]
+            else:
+                payload["template"] = profile.get("template", "phone")
+                if "template_options" in profile:
+                    payload["template_options"] = profile["template_options"]
+            config = convert_request(payload)["config"]
+            body = json.dumps(config, ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "public, max-age=60")
+            self.send_header("Content-Disposition", f'inline; filename="sing-box-{profile_id}.json"')
+            self.end_headers()
+            self.wfile.write(body)
+        except ValueError as exc:
+            self._send_json(400, {"error": str(exc)})
+        except SubscriptionFetchError as exc:
+            self._send_json(exc.status_code, {"error": str(exc)})
+        except SubscriptionStoreUnavailable as exc:
+            self._send_json(503, {"error": str(exc)})
+        except Exception:
+            logging.exception("Saved subscription conversion failed")
+            self._send_json(500, {"error": "订阅配置转换失败"})
+
     def do_GET(self):
         path = self._request_path()
 
@@ -836,6 +956,22 @@ class handler(BaseHTTPRequestHandler):
                 self._send_json(200, _template_options(_load_named_template(template_name)))
             except ValueError as exc:
                 self._send_json(400, {"error": str(exc)})
+            return
+
+        if path == "/api/subscriptions" or path.startswith("/api/subscriptions/"):
+            if not self._is_authorized():
+                self._send_unauthorized()
+                return
+            self._handle_profiles_get(path)
+            return
+
+        if path.startswith("/s/") or path.startswith("/api/s/"):
+            prefix = "/api/s/" if path.startswith("/api/s/") else "/s/"
+            profile_id = path.removeprefix(prefix)
+            if not re.fullmatch(r"[A-Za-z0-9_-]{8,24}", profile_id):
+                self._send_json(404, {"error": "订阅配置不存在"})
+                return
+            self._handle_saved_sub_get(profile_id)
             return
 
         # 远程订阅转换：客户端可直接填此 URL 作为远程配置
@@ -855,7 +991,13 @@ class handler(BaseHTTPRequestHandler):
             200,
             {
                 "name": "yaml2sb",
-                "methods": ["GET /sub", "POST /api"],
+                "methods": [
+                    "GET /sub",
+                    "GET /s/{id}",
+                    "POST /api",
+                    "GET/POST /api/subscriptions",
+                    "GET/PATCH/DELETE /api/subscriptions/{id}",
+                ],
                 "templates": sorted(TEMPLATE_FILES),
                 "template_aliases": {
                     "phone": "config_phone.json",
@@ -902,6 +1044,9 @@ class handler(BaseHTTPRequestHandler):
 
             raw_body = self.rfile.read(content_length)
             payload = json.loads(raw_body.decode("utf-8"))
+            if self._request_path() == "/api/subscriptions":
+                self._handle_profile_create(payload)
+                return
             if isinstance(payload, dict) and ("url" in payload or "urls" in payload):
                 payload = _request_with_remote_urls(payload)
             result = convert_request(payload)
@@ -920,6 +1065,37 @@ class handler(BaseHTTPRequestHandler):
             return
 
         self._send_json(200, result)
+
+    def do_PATCH(self):
+        if not self._is_authorized():
+            self._send_unauthorized()
+            return
+        path = self._request_path()
+        prefix = "/api/subscriptions/"
+        if not path.startswith(prefix) or not path[len(prefix):]:
+            self._send_json(404, {"error": "Not found"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if length <= 0 or length > MAX_REQUEST_BYTES:
+                raise ValueError("请求体为空或超过 2 MiB")
+            payload = json.loads(self.rfile.read(length).decode("utf-8"))
+            if not isinstance(payload, dict):
+                raise ValueError("请求 JSON 根节点必须是对象")
+            self._handle_profile_update(path[len(prefix):], payload)
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+            self._send_json(400, {"error": f"请求无效：{exc}"})
+
+    def do_DELETE(self):
+        if not self._is_authorized():
+            self._send_unauthorized()
+            return
+        prefix = "/api/subscriptions/"
+        path = self._request_path()
+        if not path.startswith(prefix) or not path[len(prefix):]:
+            self._send_json(404, {"error": "Not found"})
+            return
+        self._handle_profile_delete(path[len(prefix):])
 
     def log_message(self, format, *args):
         logging.info("%s - %s", self.address_string(), format % args)

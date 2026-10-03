@@ -18,6 +18,7 @@ py-modules = [
     "sub2singbox",
     "remote_subscription",
     "subscription_utils",
+    "subscription_lab",
     "template_options",
 ]
 

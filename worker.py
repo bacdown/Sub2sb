@@ -15,8 +15,11 @@ from __future__ import annotations
 
 import json
 import logging
+import re
+import secrets
 import sys
 from pathlib import Path
+from datetime import datetime, timezone
 from urllib.parse import parse_qs, urljoin, urlparse
 
 from workers import Response, WorkerEntrypoint, fetch
@@ -56,10 +59,12 @@ MAX_BODY_BYTES = 2 * 1024 * 1024
 MAX_SUBSCRIPTION_BYTES = 2 * 1024 * 1024
 MAX_REDIRECTS = 5
 REDIRECT_STATUSES = {301, 302, 303, 307, 308}
+PROFILE_PREFIX = "yaml2sb:profile:"
+MAX_PROFILE_COUNT = 1000
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
 }
 
@@ -219,9 +224,81 @@ def _load_custom_template(value) -> dict:
     return value
 
 
-def _convert(contents: list[str], template: dict) -> tuple[dict, int]:
-    config, node_count = convert_contents(contents, template)
+def _convert(
+    contents: list[str], template: dict, node_filter: dict | None = None
+) -> tuple[dict, int]:
+    config, node_count = convert_contents(contents, template, node_filter=node_filter)
     return config, node_count
+
+
+def _validate_profile(payload: dict) -> dict:
+    if not isinstance(payload, dict):
+        raise ValueError("订阅配置必须是 JSON 对象")
+    name = payload.get("name")
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > 80:
+        raise ValueError("名称必须为 1 到 80 个字符")
+    urls = payload.get("urls")
+    contents = payload.get("contents")
+    if urls is not None and contents is not None:
+        raise ValueError("远程订阅链接与 YAML 内容只能选择一种来源")
+    if urls is not None:
+        urls = collect_subscription_urls({"urls": urls})
+        if not urls:
+            raise ValueError("请至少提供一个订阅链接")
+        for url in urls:
+            validate_public_url_syntax(url)
+        source = {"urls": urls}
+    elif (
+        isinstance(contents, list)
+        and contents
+        and all(isinstance(item, str) and item.strip() for item in contents)
+    ):
+        if sum(len(item.encode("utf-8")) for item in contents) > MAX_BODY_BYTES:
+            raise ValueError("订阅内容总大小不能超过 2 MiB")
+        source = {"contents": contents}
+    else:
+        raise ValueError("请提供 urls 或 contents 作为订阅来源")
+
+    node_filter = payload.get("node_filter", {})
+    if not isinstance(node_filter, dict):
+        raise ValueError("node_filter 必须是对象")
+    normalized_filter = {}
+    for key in ("include_names", "exclude_names"):
+        values = node_filter.get(key, [])
+        if (
+            not isinstance(values, list)
+            or len(values) > 50
+            or any(not isinstance(value, str) or not value.strip() for value in values)
+        ):
+            raise ValueError(f"node_filter.{key} 必须是最多 50 项的非空字符串数组")
+        normalized_filter[key] = [value.strip() for value in values]
+
+    template_name = payload.get("template", DEFAULT_TEMPLATE)
+    if not isinstance(template_name, str):
+        raise ValueError("template 必须是模板名称")
+    try:
+        _resolve_template_name(template_name)
+    except ValueError as exc:
+        raise ValueError("template 必须是 phone、openwrt 或 momo") from exc
+    if payload.get("template_json") is not None:
+        _load_custom_template(payload["template_json"])
+        if payload.get("template_options") is not None:
+            raise ValueError("自定义模板不能与 template_options 同时使用")
+    if payload.get("template_options") is not None and not isinstance(
+        payload["template_options"], dict
+    ):
+        raise ValueError("template_options 必须是对象")
+
+    result = {
+        "name": name.strip(),
+        **source,
+        "template": template_name.strip(),
+        "node_filter": normalized_filter,
+    }
+    for key in ("template_json", "template_options"):
+        if payload.get(key) is not None:
+            result[key] = payload[key]
+    return result
 
 
 def _load_index_html() -> str:
@@ -260,10 +337,31 @@ class Default(WorkerEntrypoint):
                 },
             )
 
+        if method == "GET" and path.startswith("/s/"):
+            profile_id = path.removeprefix("/s/")
+            if not re.fullmatch(r"[A-Za-z0-9_-]{8,24}", profile_id):
+                return _json_response(404, {"error": "订阅配置不存在"})
+            try:
+                return await self._handle_saved_profile(profile_id)
+            except SubscriptionFetchError as exc:
+                return _json_response(exc.status_code, {"error": str(exc)})
+            except ValueError as exc:
+                return _json_response(400, {"error": str(exc)})
+            except RuntimeError as exc:
+                return _json_response(503, {"error": str(exc)})
+            except Exception:
+                logging.exception("Saved subscription conversion failed")
+                return _json_response(500, {"error": "订阅配置转换失败"})
+
         if not _is_authorized(request, self.env, query):
             return _json_response(401, {"error": "Unauthorized"})
 
         try:
+            if path == "/api/subscriptions" or path.startswith("/api/subscriptions/"):
+                if not _api_key_from_env(self.env):
+                    return _json_response(503, {"error": "订阅管理需要先配置 YAML2SB_API_KEY"})
+                return await self._handle_profiles(request, method, path)
+
             if method == "GET" and path == "/api/options":
                 template_name = (query.get("template") or [DEFAULT_TEMPLATE])[0]
                 template = await _load_template(self.env, template_name)
@@ -286,8 +384,126 @@ class Default(WorkerEntrypoint):
             return _json_response(exc.status_code, {"error": str(exc)})
         except ValueError as exc:
             return _json_response(400, {"error": str(exc)})
+        except RuntimeError as exc:
+            return _json_response(503, {"error": str(exc)})
         except Exception:
+            logging.exception("Worker request failed")
             return _json_response(500, {"error": "转换失败，请检查订阅链接和模板"})
+
+    def _profile_kv(self):
+        binding = getattr(self.env, "SUBSCRIPTIONS", None)
+        if binding is None:
+            raise RuntimeError("请为 Worker 配置名为 SUBSCRIPTIONS 的 KV namespace")
+        return binding
+
+    async def _read_profile(self, profile_id):
+        value = await self._profile_kv().get(PROFILE_PREFIX + profile_id)
+        if not value:
+            return None
+        return json.loads(value) if isinstance(value, str) else value
+
+    def _profile_summary(self, profile_id, profile):
+        source = "urls" if "urls" in profile else "contents"
+        return {
+            "id": profile_id,
+            "name": profile["name"],
+            "source_type": source,
+            "source_count": len(profile[source]),
+            "template": profile.get("template", DEFAULT_TEMPLATE),
+            "node_filter": profile.get("node_filter", {}),
+            "created_at": profile["created_at"],
+            "updated_at": profile["updated_at"],
+            "short_path": f"/s/{profile_id}",
+        }
+
+    async def _handle_profiles(self, request, method, path):
+        binding = self._profile_kv()
+        profile_id = path.removeprefix("/api/subscriptions").strip("/")
+        if method == "GET":
+            if profile_id:
+                profile = await self._read_profile(profile_id)
+                if profile is None:
+                    return _json_response(404, {"error": "订阅配置不存在"})
+                return _json_response(200, {"id": profile_id, **profile})
+            page = await binding.list({"prefix": PROFILE_PREFIX, "limit": MAX_PROFILE_COUNT})
+            summaries = []
+            for key in page.get("keys", []):
+                key_name = key["name"] if isinstance(key, dict) else key.name
+                current_id = key_name.removeprefix(PROFILE_PREFIX)
+                profile = await self._read_profile(current_id)
+                if profile is not None:
+                    summaries.append(self._profile_summary(current_id, profile))
+            summaries.sort(key=lambda item: item["updated_at"], reverse=True)
+            return _json_response(200, summaries)
+
+        if method not in ("POST", "PATCH", "PUT", "DELETE"):
+            return _json_response(405, {"error": "Method not allowed"})
+        if method == "DELETE":
+            if not profile_id:
+                return _json_response(404, {"error": "Not found"})
+            existing = await self._read_profile(profile_id)
+            if existing is None:
+                return _json_response(404, {"error": "订阅配置不存在"})
+            await binding.delete(PROFILE_PREFIX + profile_id)
+            return _json_response(200, {"deleted": True})
+
+        raw = await request.text()
+        if not raw or len(raw.encode("utf-8")) > MAX_BODY_BYTES:
+            return _json_response(413, {"error": "请求体为空或超过 2 MiB"})
+        payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise ValueError("请求 JSON 根节点必须是对象")
+        if method == "POST":
+            if profile_id:
+                return _json_response(404, {"error": "Not found"})
+            record = _validate_profile(payload)
+            for _ in range(5):
+                profile_id = secrets.token_urlsafe(12)
+                if await self._read_profile(profile_id) is None:
+                    break
+            else:
+                raise RuntimeError("无法生成唯一的短链接 ID")
+            now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            record.update({"created_at": now, "updated_at": now})
+        else:
+            if not profile_id:
+                return _json_response(404, {"error": "Not found"})
+            existing = await self._read_profile(profile_id)
+            if existing is None:
+                return _json_response(404, {"error": "订阅配置不存在"})
+            record = _validate_profile({**existing, **payload})
+            record["created_at"] = existing["created_at"]
+            record["updated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        await binding.put(PROFILE_PREFIX + profile_id, json.dumps(record, ensure_ascii=False))
+        return _json_response(
+            201 if method == "POST" else 200,
+            self._profile_summary(profile_id, record),
+        )
+
+    async def _handle_saved_profile(self, profile_id):
+        profile = await self._read_profile(profile_id)
+        if profile is None:
+            return _json_response(404, {"error": "订阅配置不存在"})
+        if "urls" in profile:
+            contents = [await _fetch_subscription(url) for url in profile["urls"]]
+        else:
+            contents = profile["contents"]
+        template = (
+            _load_custom_template(profile["template_json"])
+            if "template_json" in profile
+            else await _load_template(self.env, profile.get("template", DEFAULT_TEMPLATE))
+        )
+        config, _node_count = _convert(contents, template, profile.get("node_filter", {}))
+        return Response(
+            json.dumps(config, ensure_ascii=False),
+            status=200,
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Cache-Control": "public, max-age=60",
+                "Content-Disposition": f'inline; filename="sing-box-{profile_id}.json"',
+                **CORS_HEADERS,
+            },
+        )
 
     def _handle_info(self):
         return _json_response(
@@ -299,6 +515,9 @@ class Default(WorkerEntrypoint):
                     "GET /",
                     "GET /sub",
                     "GET /api/sub",
+                    "GET /s/{id}",
+                    "GET/POST /api/subscriptions",
+                    "GET/PATCH/DELETE /api/subscriptions/{id}",
                     "GET /api/options",
                     "GET /api",
                     "POST /api",
@@ -399,5 +618,5 @@ class Default(WorkerEntrypoint):
                 raise ValueError("请在 content 字段中提供 YAML 或订阅文本")
             contents = raw_contents
 
-        config, node_count = _convert(contents, template_obj)
+        config, node_count = _convert(contents, template_obj, payload.get("node_filter"))
         return _json_response(200, {"config": config, "node_count": node_count})

@@ -35,6 +35,41 @@ def _entrypoint():
     return entrypoint
 
 
+class _WorkerKV:
+    def __init__(self):
+        self.values = {}
+
+    async def get(self, key):
+        return self.values.get(key)
+
+    async def put(self, key, value):
+        self.values[key] = value
+
+    async def delete(self, key):
+        self.values.pop(key, None)
+
+    async def list(self, options):
+        prefix = options.get("prefix", "")
+        return {
+            "keys": [
+                {"name": key}
+                for key in self.values
+                if key.startswith(prefix)
+            ]
+        }
+
+
+class _WorkerRequest:
+    def __init__(self, method, url, headers=None, body=""):
+        self.method = method
+        self.url = url
+        self.headers = headers or {}
+        self.body = body
+
+    async def text(self):
+        return self.body
+
+
 workers_stub = types.ModuleType("workers")
 workers_stub.Response = _WorkerResponse
 workers_stub.WorkerEntrypoint = _WorkerEntrypoint
@@ -44,6 +79,55 @@ with patch.dict(sys.modules, {"workers": workers_stub}):
 
 
 class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_saved_profile_uses_kv_and_public_short_link(self):
+        kv = _WorkerKV()
+        entrypoint = _entrypoint()
+        entrypoint.env.SUBSCRIPTIONS = kv
+        entrypoint.env.YAML2SB_API_KEY = "test-secret"
+        profile_content = """proxies:
+  - name: Japan 01
+    type: socks5
+    server: japan.example
+    port: 1080
+  - name: US West
+    type: socks5
+    server: us.example
+    port: 1080
+"""
+        created = await entrypoint.fetch(
+            _WorkerRequest(
+                "POST",
+                "https://worker.example/api/subscriptions",
+                {"Authorization": "Bearer test-secret"},
+                json.dumps({
+                    "name": "Phone",
+                    "contents": [profile_content],
+                    "template": "phone",
+                    "node_filter": {"include_names": ["japan"]},
+                }),
+            )
+        )
+
+        self.assertEqual(created.status, 201)
+        summary = json.loads(created.body)
+        config_response = await entrypoint.fetch(
+            _WorkerRequest("GET", f"https://worker.example{summary['short_path']}")
+        )
+        self.assertEqual(config_response.status, 200)
+        config = json.loads(config_response.body)
+        node_tags = [item.get("tag") for item in config["outbounds"]]
+        self.assertIn("Japan 01", node_tags)
+        self.assertNotIn("US West", node_tags)
+
+        listed = await entrypoint.fetch(
+            _WorkerRequest(
+                "GET",
+                "https://worker.example/api/subscriptions",
+                {"Authorization": "Bearer test-secret"},
+            )
+        )
+        self.assertEqual(len(json.loads(listed.body)), 1)
+
     async def test_template_options_endpoint_is_available_without_api_key(self):
         request = types.SimpleNamespace(
             method="GET",

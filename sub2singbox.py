@@ -1699,11 +1699,45 @@ def convert_content(content, template=None):
     return convert_contents([content], template)
 
 
-def convert_contents(contents, template=None):
+def _filter_node_outbounds(outbounds, node_filter):
+    if node_filter is None:
+        return outbounds
+    if not isinstance(node_filter, dict):
+        raise ValueError("node_filter 必须是对象")
+
+    include_names = node_filter.get("include_names", [])
+    exclude_names = node_filter.get("exclude_names", [])
+    for label, values in (
+        ("include_names", include_names),
+        ("exclude_names", exclude_names),
+    ):
+        if (
+            not isinstance(values, list)
+            or any(not isinstance(value, str) or not value.strip() for value in values)
+            or len(values) > 50
+        ):
+            raise ValueError(f"node_filter.{label} 必须是最多 50 项的非空字符串数组")
+
+    included = [value.strip().casefold() for value in include_names]
+    excluded = [value.strip().casefold() for value in exclude_names]
+    return [
+        outbound
+        for outbound in outbounds
+        if isinstance(outbound, dict)
+        and isinstance(outbound.get("tag"), str)
+        and (not included or any(term in outbound["tag"].casefold() for term in included))
+        and not any(term in outbound["tag"].casefold() for term in excluded)
+    ]
+
+
+def convert_contents(contents, template=None, node_filter=None):
     """将多段订阅内容合并转换为 sing-box 配置。"""
     outbounds = []
     for content in contents:
         outbounds.extend(parse_subscription_content(content))
+    outbounds = _filter_node_outbounds(outbounds, node_filter)
+    if node_filter is not None and not outbounds:
+        raise ValueError("节点筛选后没有匹配的节点")
     outbounds = filter_subscription_info_nodes(outbounds)
     return build_config(outbounds, template), len(outbounds)
 

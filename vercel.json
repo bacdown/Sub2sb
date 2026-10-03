@@ -6,6 +6,7 @@
   },
   "rewrites": [
     { "source": "/sub", "destination": "/api/sub" },
-    { "source": "/sub/", "destination": "/api/sub" }
+    { "source": "/sub/", "destination": "/api/sub" },
+    { "source": "/s/:id", "destination": "/api/s/:id" }
   ]
 }

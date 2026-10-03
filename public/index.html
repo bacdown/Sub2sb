@@ -83,6 +83,7 @@
       color: #37352f;
     }
     textarea:focus, input[type="url"]:focus, input[type="password"]:focus, select:focus { border-color: #a5a4a0; box-shadow: 0 0 0 2px rgb(55 53 47 / 8%); }
+    textarea::placeholder, input::placeholder { color: #9b9a97; opacity: 1; }
     textarea { min-height: 230px; padding: 14px; resize: vertical; line-height: 1.55; }
     input[type="url"], input[type="password"] { min-height: 48px; padding: 0 13px; }
     select { height: 25px; min-height: 25px; }
@@ -413,6 +414,27 @@
     .status { min-height: 24px; margin: 14px 0 0; color: #787774; font-size: 14px; line-height: 1.6; }
     .status.error { color: #c4554d; }
     .status.success { color: #448361; }
+    .node-filter-grid, .save-profile-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .node-filter-grid textarea, .profile-editor textarea { min-height: 78px; padding: 9px 10px; font-size: 13px; }
+    .save-profile-row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+    .save-profile-row label { font-size: 13px; }
+    .save-profile-row input, .profile-editor input, .profile-editor select, .profile-editor textarea { width: 100%; min-width: 0; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; }
+    .save-profile-row input, .profile-editor input, .profile-editor select { min-height: 38px; padding: 0 10px; }
+    #save-profile, #refresh-profiles { width: 134px; height: 36px; min-height: 36px; padding: 0 14px; border: 1px solid #c9cdd1; border-radius: 4px; background: #e6e8eb; color: #37352f; font-size: 13px; font-weight: 400; line-height: 1.2; white-space: nowrap; }
+    #save-profile:hover, #refresh-profiles:hover { background: #d9dce0; }
+    .profile-manager { margin-top: 24px; padding: 20px; border: 1px solid #d9dcdf; border-radius: 5px; background: #fff; }
+    .profile-manager-header, .profile-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .profile-manager h2 { margin: 0; font-size: 18px; }
+    .profile-list { display: grid; gap: 10px; margin-top: 14px; }
+    .profile-row { min-width: 0; padding: 12px; border: 1px solid #e3e2de; border-radius: 4px; background: #fbfbfa; }
+    .profile-row-title { min-width: 0; overflow-wrap: anywhere; font-weight: 650; }
+    .profile-row-link { display: block; margin-top: 4px; color: #286b65; overflow-wrap: anywhere; font-size: 13px; }
+    .profile-actions { justify-content: flex-start; margin-top: 10px; }
+    .profile-actions .danger { color: #a33f38; }
+    .profile-editor { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e3e2de; }
+    .profile-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .profile-empty { padding: 14px 0; color: #787774; font-size: 14px; }
+    @media (max-width: 620px) { .node-filter-grid, .save-profile-row, .profile-editor-grid { grid-template-columns: 1fr; } .save-profile-row button { max-width: 100%; justify-self: start; } }
     footer { margin: 18px 3px 0; color: #787774; font-size: 12px; line-height: 1.7; }
     footer a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
     footer a:hover { color: #000; text-decoration-color: currentColor; }
@@ -513,6 +535,24 @@
             <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
           </div>
         </div>
+        <div class="node-filter-grid">
+          <div>
+            <label for="include-names">保留节点名称关键词</label>
+            <textarea id="include-names" rows="2" placeholder="每行一个关键词；留空表示不限制"></textarea>
+          </div>
+          <div>
+            <label for="exclude-names">排除节点名称关键词</label>
+            <textarea id="exclude-names" rows="2" placeholder="每行一个关键词"></textarea>
+          </div>
+        </div>
+        <div class="save-profile-row">
+          <div>
+            <label for="profile-name">保存为订阅组合</label>
+            <input id="profile-name" type="text" maxlength="80" placeholder="例如：手机日常线路">
+          </div>
+          <button id="save-profile" class="secondary" type="button">保存并生成短链接</button>
+        </div>
+        <p id="profile-create-status" class="status" role="status" aria-live="polite"></p>
         <section id="compose-panel" class="compose-panel" aria-label="自定义配置制作" hidden>
           <p class="hint">以所选内置配置为底稿。未开放的配置项保持原样；DNS、分流组和规则集的未选择项会从配置中移除。</p>
           <label for="base-template">基础配置</label>
@@ -647,6 +687,15 @@
       </form>
     </section>
 
+    <section class="profile-manager" aria-label="订阅管理">
+      <div class="profile-manager-header">
+        <h2>订阅管理</h2>
+        <button id="refresh-profiles" class="secondary" type="button">刷新列表</button>
+      </div>
+      <div id="profile-list" class="profile-list" aria-live="polite"></div>
+      <p id="profile-manager-status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
     <footer>
       项目作者：<a href="https://github.com/bacdown" target="_blank" rel="noopener noreferrer">bacdown</a> ·
       订阅链接可能包含私密凭据。请仅在可信环境中部署；公网开放服务前应配置身份验证与访问控制。
@@ -686,10 +735,18 @@
     const templateStatus = document.querySelector("#template-status");
     const button = document.querySelector("#submit");
     const status = document.querySelector("#status");
+    const includeNames = document.querySelector("#include-names");
+    const excludeNames = document.querySelector("#exclude-names");
+    const profileName = document.querySelector("#profile-name");
+    const profileList = document.querySelector("#profile-list");
+    const profileManagerStatus = document.querySelector("#profile-manager-status");
+    const profileCreateStatus = document.querySelector("#profile-create-status");
     const tabs = [...document.querySelectorAll(".tab")];
     let activeMode = "paste";
     let customTemplate = null;
     let uploadedFiles = [];
+    let uploadedContents = [];
+    let uploadedContentSnapshot = "";
     let configurationOptions = null;
     let customDnsServers = [];
     let customGroups = [];
@@ -1614,6 +1671,200 @@
       if (!newlySelected.length) return;
 
       const combinedFiles = [...uploadedFiles, ...newlySelected];
+
+    async function profileRequest(path, options = {}) {
+      if (!apiKey.value.trim()) throw new Error("请先填写 API 访问密钥。");
+      const response = await fetch(path, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          Authorization: `Bearer ${apiKey.value.trim()}`,
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+        },
+      });
+      const result = response.status === 204 ? null : await response.json();
+      if (!response.ok) throw new Error(result?.error || "订阅管理请求失败。");
+      return result;
+    }
+
+    function profileStatus(message, kind = "") {
+      profileManagerStatus.textContent = message;
+      profileManagerStatus.className = `status ${kind}`.trim();
+    }
+
+    function makeButton(label, onClick, extraClass = "") {
+      const control = document.createElement("button");
+      control.type = "button";
+      control.className = `secondary ${extraClass}`.trim();
+      control.textContent = label;
+      control.addEventListener("click", onClick);
+      return control;
+    }
+
+    async function editProfile(profileId, row) {
+      const oldEditor = row.querySelector(".profile-editor");
+      if (oldEditor) {
+        oldEditor.remove();
+        return;
+      }
+      try {
+        const profile = await profileRequest(`/api/subscriptions/${encodeURIComponent(profileId)}`);
+        const editor = document.createElement("form");
+        editor.className = "profile-editor";
+        editor.innerHTML = `
+          <div class="profile-editor-grid">
+            <div><label>名称</label><input data-name maxlength="80" required></div>
+            <div><label>来源类型</label><select data-source-type><option value="urls">远程订阅 URL</option><option value="contents">内嵌 YAML / 订阅</option></select></div>
+          </div>
+          <div><label data-source-label>来源</label><textarea data-source required></textarea></div>
+          <div class="profile-editor-grid">
+            <div><label>保留名称关键词</label><textarea data-include></textarea></div>
+            <div><label>排除名称关键词</label><textarea data-exclude></textarea></div>
+          </div>
+          <div class="profile-editor-grid">
+            <div><label>sing-box 模板</label><select data-template><option value="phone">iPhone</option><option value="openwrt">OpenWrt</option><option value="momo">Momo</option></select></div>
+            <div class="profile-actions"><button class="primary" type="submit">保存修改</button><button class="secondary" type="button" data-cancel>取消</button></div>
+          </div>`;
+        const sourceType = editor.querySelector("[data-source-type]");
+        const source = editor.querySelector("[data-source]");
+        const sourceLabel = editor.querySelector("[data-source-label]");
+        const renderSource = () => {
+          const remote = sourceType.value === "urls";
+          sourceLabel.textContent = remote ? "订阅链接（每行一条）" : "YAML 内容（用单独一行 --- 分隔多份）";
+          source.placeholder = remote ? "https://example.com/sub" : "粘贴 Clash YAML 或 URI 订阅";
+        };
+        editor.querySelector("[data-name]").value = profile.name;
+        sourceType.value = profile.urls ? "urls" : "contents";
+        source.value = profile.urls
+          ? profile.urls.join("\n")
+          : (profile.contents || []).join("\n\n---\n\n");
+        editor.querySelector("[data-include]").value = (profile.node_filter?.include_names || []).join("\n");
+        editor.querySelector("[data-exclude]").value = (profile.node_filter?.exclude_names || []).join("\n");
+        const selectedTemplate = String(profile.template || "phone");
+        editor.querySelector("[data-template]").value = selectedTemplate.includes("openwrt")
+          ? "openwrt"
+          : selectedTemplate.includes("momo") ? "momo" : "phone";
+        sourceType.addEventListener("change", renderSource);
+        renderSource();
+        editor.querySelector("[data-cancel]").addEventListener("click", () => editor.remove());
+        editor.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const remote = sourceType.value === "urls";
+          const sourceItems = remote
+            ? source.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean)
+            : source.value.split(/\r?\n\s*---\s*\r?\n/).map((item) => item.trim()).filter(Boolean);
+          try {
+            const updated = {
+              name: editor.querySelector("[data-name]").value.trim(),
+              urls: remote ? sourceItems : null,
+              contents: remote ? null : sourceItems,
+              template: editor.querySelector("[data-template]").value,
+              template_json: null,
+              template_options: null,
+              node_filter: {
+                include_names: editor.querySelector("[data-include]").value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
+                exclude_names: editor.querySelector("[data-exclude]").value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
+              },
+            };
+            await profileRequest(`/api/subscriptions/${encodeURIComponent(profileId)}`, {
+              method: "PATCH",
+              body: JSON.stringify(updated),
+            });
+            await refreshProfiles();
+            profileStatus("订阅配置已更新。", "success");
+          } catch (error) {
+            profileStatus(error.message, "error");
+          }
+        });
+        row.append(editor);
+      } catch (error) {
+        profileStatus(error.message, "error");
+      }
+    }
+
+    function renderProfiles(profiles) {
+      profileList.replaceChildren();
+      if (!profiles.length) {
+        const empty = document.createElement("div");
+        empty.className = "profile-empty";
+        empty.textContent = "还没有保存的订阅配置。";
+        profileList.append(empty);
+        return;
+      }
+      for (const profile of profiles) {
+        const row = document.createElement("article");
+        row.className = "profile-row";
+        const title = document.createElement("div");
+        title.className = "profile-row-title";
+        title.textContent = `${profile.name} · ${profile.source_count} 个来源`;
+        const link = document.createElement("a");
+        link.className = "profile-row-link";
+        link.href = profile.short_path;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = `${location.origin}${profile.short_path}`;
+        const actions = document.createElement("div");
+        actions.className = "profile-actions";
+        actions.append(
+          makeButton("复制短链接", async () => {
+            try {
+              await navigator.clipboard.writeText(link.href);
+              profileStatus("短链接已复制。", "success");
+            } catch {
+              window.prompt("复制远程 JSON 链接", link.href);
+            }
+          }),
+          makeButton("编辑", () => editProfile(profile.id, row)),
+          makeButton("删除", async () => {
+            if (!window.confirm(`删除“${profile.name}”？现有短链接将立即失效。`)) return;
+            try {
+              await profileRequest(`/api/subscriptions/${encodeURIComponent(profile.id)}`, { method: "DELETE" });
+              await refreshProfiles();
+              profileStatus("订阅配置已删除。", "success");
+            } catch (error) {
+              profileStatus(error.message, "error");
+            }
+          }, "danger"),
+        );
+        row.append(title, link, actions);
+        profileList.append(row);
+      }
+    }
+
+    async function refreshProfiles() {
+      if (!apiKey.value.trim()) {
+        profileStatus("填写 API 访问密钥后可管理已保存的订阅。", "");
+        return;
+      }
+      profileStatus("正在读取订阅列表…");
+      try {
+        renderProfiles(await profileRequest("/api/subscriptions"));
+        profileStatus("");
+      } catch (error) {
+        profileStatus(error.message, "error");
+      }
+    }
+
+    document.querySelector("#refresh-profiles").addEventListener("click", refreshProfiles);
+    document.querySelector("#save-profile").addEventListener("click", async () => {
+      profileCreateStatus.textContent = "";
+      profileCreateStatus.className = "status";
+      try {
+        if (!profileName.value.trim()) throw new Error("请先填写订阅组合名称。");
+        const payload = currentConversionPayload();
+        payload.name = profileName.value.trim();
+        const saved = await profileRequest("/api/subscriptions", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        profileCreateStatus.textContent = `已保存：${location.origin}${saved.short_path}`;
+        profileCreateStatus.className = "status success";
+        await refreshProfiles();
+      } catch (error) {
+        profileCreateStatus.textContent = error.message;
+        profileCreateStatus.className = "status error";
+      }
+    });
       if (combinedFiles.reduce((total, selected) => total + selected.size, 0) > 2 * 1024 * 1024) {
         status.textContent = "已选择文件的总大小不能超过 2 MiB。";
         status.className = "status error";
@@ -1623,7 +1874,9 @@
       try {
         const texts = await Promise.all(combinedFiles.map((selected) => selected.text()));
         uploadedFiles = combinedFiles;
+        uploadedContents = texts;
         content.value = texts.join("\n");
+        uploadedContentSnapshot = content.value;
         fileName.textContent = `已添加 ${uploadedFiles.length} 个文件：${uploadedFiles.map((selected) => selected.name).join("、")}`;
         status.textContent = "";
         status.className = "status";
@@ -1634,6 +1887,47 @@
       }
     });
 
+    content.addEventListener("input", () => {
+      if (uploadedContentSnapshot && content.value !== uploadedContentSnapshot) {
+        uploadedContents = [];
+        uploadedContentSnapshot = "";
+        uploadedFiles = [];
+        fileName.textContent = "内容已编辑，将作为一份 YAML / 订阅文本提交。";
+      }
+    });
+
+    function linesFrom(textarea) {
+      return textarea.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+    }
+
+    function currentConversionPayload() {
+      const payload = activeMode === "url"
+        ? { urls: linesFrom(url) }
+        : uploadedContents.length && content.value === uploadedContentSnapshot
+          ? { contents: [...uploadedContents] }
+          : { contents: [content.value] };
+      if (template.value === "custom") {
+        if (!customTemplate) throw new Error("请上传并通过校验一个自定义 JSON 模板。");
+        payload.template_json = customTemplate;
+      } else if (template.value === "compose") {
+        payload.template = baseTemplate.value;
+        payload.template_options = collectTemplateOptions();
+      } else {
+        payload.template = template.value;
+      }
+      payload.node_filter = {
+        include_names: linesFrom(includeNames),
+        exclude_names: linesFrom(excludeNames),
+      };
+      if (activeMode === "paste" && !payload.contents.some((item) => item.trim())) {
+        throw new Error("请先粘贴订阅内容或选择本地文件。");
+      }
+      if (activeMode === "url" && !payload.urls.length) {
+        throw new Error("请先输入订阅链接。");
+      }
+      return payload;
+    }
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       status.textContent = "正在转换…";
@@ -1641,24 +1935,7 @@
       button.disabled = true;
       try {
         const endpoint = "/api";
-        const payload = activeMode === "url"
-          ? { urls: url.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean) }
-          : { content: content.value };
-        if (template.value === "custom") {
-          if (!customTemplate) throw new Error("请上传并通过校验一个自定义 JSON 模板。");
-          payload.template_json = customTemplate;
-        } else if (template.value === "compose") {
-          payload.template = baseTemplate.value;
-          payload.template_options = collectTemplateOptions();
-        } else {
-          payload.template = template.value;
-        }
-        if (activeMode === "paste" && !payload.content.trim()) {
-          throw new Error("请先粘贴订阅内容或选择本地文件。");
-        }
-        if (activeMode === "url" && !payload.urls.length) {
-          throw new Error("请先输入订阅链接。");
-        }
+        const payload = currentConversionPayload();
         const response = await fetch(endpoint, {
           method: "POST",
           headers: {

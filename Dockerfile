@@ -1,12 +1,13 @@
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    YAML2SB_DB_PATH=/data/subscriptions.sqlite3
 
 WORKDIR /app
 
 COPY pyproject.toml .
-COPY converter.py remote_subscription.py sub2singbox.py subscription_utils.py ./
+COPY converter.py remote_subscription.py sub2singbox.py subscription_utils.py subscription_lab.py ./
 RUN pip install --no-cache-dir .
 
 COPY api ./api
