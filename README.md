@@ -350,6 +350,15 @@ curl -o sing-box-momo.json \
 
 管理接口必须配置 `YAML2SB_API_KEY`，并按部署方式配置持久存储：Docker Compose 使用自动创建的 SQLite 命名卷；Vercel 使用 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`；Cloudflare Workers 绑定 KV namespace `SUBSCRIPTIONS`。未配置持久存储时管理接口会返回 `503`，不会创建易失短链接。
 
+| 运行方式 | 短链接数据存储 | 设置方法 |
+| --- | --- | --- |
+| 本机运行 / 自建 Web | SQLite，默认 `data/subscriptions.sqlite3` | 确保该目录位于持久、可写磁盘；可通过 `YAML2SB_DB_PATH` 指定其他 SQLite 文件路径 |
+| Docker Compose | SQLite 命名卷 `yaml2sb-data` | Compose 已自动挂载到 `/data/subscriptions.sqlite3`；重建容器会保留数据，删除命名卷则会清空 |
+| Vercel | Upstash Redis | 在 Vercel 项目环境变量中配置 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`，然后重新部署 |
+| Cloudflare Workers | Workers KV | 创建 KV namespace 并绑定为 `SUBSCRIPTIONS`；详见[Cloudflare Workers 部署说明](#部署到-cloudflare-workers) |
+
+以上四种方式都还需要配置 `YAML2SB_API_KEY` 才能管理订阅。`/s/<id>` 是公开读取地址，不需要 API Key。若只使用 `/sub?url=...` 远程转换直链，则不保存组合配置，也不需要 Redis、KV 或 SQLite。Docker 部署细节见 [Docker Compose](#使用-docker-compose-部署)，云平台请按各自部署章节绑定对应存储。
+
 管理路由：`GET /api/subscriptions` 列表、`POST /api/subscriptions` 新建、`GET /api/subscriptions/<id>` 读取详情、`PATCH /api/subscriptions/<id>` 修改、`DELETE /api/subscriptions/<id>` 删除。公开客户端地址为 `GET /s/<id>`，返回可远程加载的 sing-box JSON，不需要管理密钥。
 
 创建请求示例：
@@ -543,6 +552,10 @@ python3 sub2singbox.py ./subscription.yaml \
 若填写了 API Key，生成的直链会把密钥放入 `api_key` 查询参数，以便不支持自定义请求头的客户端访问。完整 URL 会包含密钥，请勿公开分享；查询参数认证也可能出现在客户端历史记录或服务端访问日志中。
 
 可填写节点名称包含/排除关键词（每行一项，忽略大小写）；包含条件按“任一匹配”处理，排除条件优先。填写组合名称后可保存当前来源、模板和筛选条件，生成稳定的 `/s/<id>` 短链接。客户端访问短链接时会重新拉取来源并输出纯 sing-box JSON。管理界面支持查看、编辑和删除保存项。
+
+### sing-box 客户端无延迟排查
+
+当前 Hysteria2 转换会输出 `disable_chrome_parrot`，该字段要求 sing-box 1.14.0 或更高版本。低于该版本的客户端可能无法加载整个配置，而不只是 HY2 节点；升级客户端后重新更新远程配置。若当前版本已满足要求但所有节点仍无延迟，先查看客户端日志中是否有配置解析错误，并确认远程配置响应是纯 sing-box JSON、节点已实际加载；随后用同版本 sing-box 执行 `sing-box check -c sing-box.json` 检查配置。若只有个别节点测速失败，再检查该节点的 TLS/SNI、证书校验、端口和协议参数。
 
 ### 使用 Docker Compose 部署
 

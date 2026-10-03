@@ -417,13 +417,20 @@
     .status { min-height: 24px; margin: 14px 0 0; color: #787774; font-size: 14px; line-height: 1.6; }
     .status.error { color: #c4554d; }
     .status.success { color: #448361; }
-    .node-filter-grid, .save-profile-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
-    .node-filter-grid textarea, .profile-editor textarea { min-height: 78px; padding: 9px 10px; font-size: 13px; }
-    .save-profile-row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-    .save-profile-row label { font-size: 13px; }
-    .save-profile-row input, .profile-editor input, .profile-editor select, .profile-editor textarea { width: 100%; min-width: 0; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; }
-    .save-profile-row input, .profile-editor input, .profile-editor select { min-height: 38px; padding: 0 10px; }
+    .subscription-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 12px; margin-top: 18px; }
+    .node-filter-panel, .save-profile-panel { display: flex; min-width: 0; min-height: 132px; flex-direction: column; }
+    .node-filter-header, .profile-name-header, .profile-keyword-header { display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .node-filter-title, .profile-name-header label, .profile-keyword-header label { margin: 0; font-size: 13px; }
+    .filter-mode-tabs { display: flex; flex: none; gap: 3px; padding: 3px; border-radius: 6px; background: #f1f1ef; }
+    .filter-mode-tab { min-height: 28px; padding: 0 10px; border: 0; border-radius: 4px; color: #787774; background: transparent; font-size: 13px; cursor: pointer; white-space: nowrap; }
+    .filter-mode-tab[aria-pressed="true"] { color: #37352f; background: #fff; box-shadow: 0 1px 2px rgb(15 15 15 / 10%); }
+    .subscription-controls textarea, .profile-keyword-control textarea, .profile-editor textarea { width: 100%; min-height: 78px; padding: 9px 10px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
+    .node-filter-panel textarea { flex: 1; }
+    .profile-save-fields { display: flex; min-height: 78px; flex: 1; flex-direction: column; }
+    .save-profile-panel label { font-size: 13px; }
+    .save-profile-panel input, .profile-editor input, .profile-editor select { width: 100%; min-width: 0; min-height: 38px; padding: 0 10px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
     #save-profile, #refresh-profiles { width: 134px; height: 36px; min-height: 36px; padding: 0 14px; border: 1px solid #c9cdd1; border-radius: 4px; background: #e6e8eb; color: #37352f; font-size: 13px; font-weight: 400; line-height: 1.2; white-space: nowrap; }
+    #save-profile { width: 100%; margin-top: auto; }
     #save-profile:hover, #refresh-profiles:hover { background: #d9dce0; }
     .profile-manager { margin-top: 24px; padding: 20px; border: 1px solid #d9dcdf; border-radius: 5px; background: #fff; }
     .profile-manager-header, .profile-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
@@ -437,7 +444,7 @@
     .profile-editor { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e3e2de; }
     .profile-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .profile-empty { padding: 14px 0; color: #787774; font-size: 14px; }
-    @media (max-width: 620px) { .node-filter-grid, .save-profile-row, .profile-editor-grid { grid-template-columns: 1fr; } .save-profile-row button { max-width: 100%; justify-self: start; } }
+    @media (max-width: 620px) { .subscription-controls, .profile-editor-grid { grid-template-columns: 1fr; } }
     footer { margin: 18px 3px 0; color: #787774; font-size: 12px; line-height: 1.7; }
     footer a { color: #37352f; text-decoration: underline; text-decoration-color: #c7c6c1; text-underline-offset: 2px; }
     footer a:hover { color: #000; text-decoration-color: currentColor; }
@@ -544,22 +551,26 @@
           <button id="copy-remote-subscription-link" class="secondary" type="button">复制链接</button>
         </div>
         <p id="remote-link-status" class="status" role="status" aria-live="polite"></p>
-        <div class="node-filter-grid">
-          <div>
-            <label for="include-names">保留节点名称关键词</label>
-            <textarea id="include-names" rows="2" placeholder="每行一个关键词；留空表示不限制"></textarea>
-          </div>
-          <div>
-            <label for="exclude-names">排除节点名称关键词</label>
-            <textarea id="exclude-names" rows="2" placeholder="每行一个关键词"></textarea>
-          </div>
-        </div>
-        <div class="save-profile-row">
-          <div>
-            <label for="profile-name">保存为订阅组合</label>
-            <input id="profile-name" type="text" maxlength="80" placeholder="例如：手机日常线路">
-          </div>
-          <button id="save-profile" class="secondary" type="button">保存并生成短链接</button>
+        <div class="subscription-controls">
+          <section class="node-filter-panel" aria-label="节点名称关键词筛选">
+            <div class="node-filter-header">
+              <label id="node-filter-label" class="node-filter-title" for="node-name-keywords">保留节点名称关键词</label>
+              <div class="filter-mode-tabs" role="group" aria-label="关键词筛选方式">
+                <button class="filter-mode-tab" type="button" data-filter-mode="include" aria-pressed="true">保留</button>
+                <button class="filter-mode-tab" type="button" data-filter-mode="exclude" aria-pressed="false">排除</button>
+              </div>
+            </div>
+            <textarea id="node-name-keywords" rows="2" placeholder="每行一个关键词；留空表示不限制"></textarea>
+          </section>
+          <section class="save-profile-panel" aria-label="保存订阅组合">
+            <div class="profile-name-header">
+              <label for="profile-name">保存为订阅组合</label>
+            </div>
+            <div class="profile-save-fields">
+              <input id="profile-name" type="text" maxlength="80" placeholder="例如：手机日常线路">
+              <button id="save-profile" class="secondary" type="button">保存并生成短链接</button>
+            </div>
+          </section>
         </div>
         <p id="profile-create-status" class="status" role="status" aria-live="polite"></p>
         <section id="compose-panel" class="compose-panel" aria-label="自定义配置制作" hidden>
@@ -744,8 +755,9 @@
     const templateStatus = document.querySelector("#template-status");
     const button = document.querySelector("#submit");
     const status = document.querySelector("#status");
-    const includeNames = document.querySelector("#include-names");
-    const excludeNames = document.querySelector("#exclude-names");
+    const nodeNameKeywords = document.querySelector("#node-name-keywords");
+    const nodeFilterLabel = document.querySelector("#node-filter-label");
+    const filterModeButtons = [...document.querySelectorAll("[data-filter-mode]")];
     const profileName = document.querySelector("#profile-name");
     const profileList = document.querySelector("#profile-list");
     const profileManagerStatus = document.querySelector("#profile-manager-status");
@@ -755,6 +767,8 @@
     const remoteLinkStatus = document.querySelector("#remote-link-status");
     const tabs = [...document.querySelectorAll(".tab")];
     let activeMode = "paste";
+    let activeFilterMode = "include";
+    const filterValues = { include: "", exclude: "" };
     let customTemplate = null;
     let uploadedFiles = [];
     let uploadedContents = [];
@@ -1677,6 +1691,24 @@
 
     tabs.forEach((tab) => tab.addEventListener("click", () => selectMode(tab.id === "paste-tab" ? "paste" : "url")));
 
+    nodeNameKeywords.addEventListener("input", () => {
+      filterValues[activeFilterMode] = nodeNameKeywords.value;
+      clearRemoteLink();
+    });
+
+    filterModeButtons.forEach((control) => control.addEventListener("click", () => {
+      filterValues[activeFilterMode] = nodeNameKeywords.value;
+      activeFilterMode = control.dataset.filterMode;
+      nodeNameKeywords.value = filterValues[activeFilterMode];
+      nodeFilterLabel.textContent = activeFilterMode === "include"
+        ? "保留节点名称关键词"
+        : "排除节点名称关键词";
+      for (const button of filterModeButtons) {
+        button.setAttribute("aria-pressed", String(button === control));
+      }
+      clearRemoteLink();
+    }));
+
     file.addEventListener("change", async () => {
       const newlySelected = [...file.files];
       file.value = "";
@@ -1729,9 +1761,15 @@
             <div><label>来源类型</label><select data-source-type><option value="urls">远程订阅 URL</option><option value="contents">内嵌 YAML / 订阅</option></select></div>
           </div>
           <div><label data-source-label>来源</label><textarea data-source required></textarea></div>
-          <div class="profile-editor-grid">
-            <div><label>保留名称关键词</label><textarea data-include></textarea></div>
-            <div><label>排除名称关键词</label><textarea data-exclude></textarea></div>
+          <div class="profile-keyword-control">
+            <div class="profile-keyword-header">
+              <label for="profile-keywords-${profileId}" data-keyword-label>保留名称关键词</label>
+              <div class="filter-mode-tabs" role="group" aria-label="关键词筛选方式">
+                <button class="filter-mode-tab" type="button" data-keyword-mode="include" aria-pressed="true">保留</button>
+                <button class="filter-mode-tab" type="button" data-keyword-mode="exclude" aria-pressed="false">排除</button>
+              </div>
+            </div>
+            <textarea id="profile-keywords-${profileId}" data-keywords></textarea>
           </div>
           <div class="profile-editor-grid">
             <div><label>sing-box 模板</label><select data-template><option value="phone">iPhone</option><option value="openwrt">OpenWrt</option><option value="momo">Momo</option></select></div>
@@ -1740,6 +1778,28 @@
         const sourceType = editor.querySelector("[data-source-type]");
         const source = editor.querySelector("[data-source]");
         const sourceLabel = editor.querySelector("[data-source-label]");
+        const keywordInput = editor.querySelector("[data-keywords]");
+        const keywordLabel = editor.querySelector("[data-keyword-label]");
+        const keywordButtons = [...editor.querySelectorAll("[data-keyword-mode]")];
+        const keywordValues = {
+          include: (profile.node_filter?.include_names || []).join("\n"),
+          exclude: (profile.node_filter?.exclude_names || []).join("\n"),
+        };
+        let keywordMode = keywordValues.include || !keywordValues.exclude ? "include" : "exclude";
+        keywordInput.value = keywordValues[keywordMode];
+        const setKeywordMode = (mode) => {
+          keywordValues[keywordMode] = keywordInput.value;
+          keywordMode = mode;
+          keywordInput.value = keywordValues[keywordMode];
+          keywordLabel.textContent = keywordMode === "include" ? "保留名称关键词" : "排除名称关键词";
+          for (const control of keywordButtons) {
+            control.setAttribute("aria-pressed", String(control.dataset.keywordMode === keywordMode));
+          }
+        };
+        for (const control of keywordButtons) {
+          control.setAttribute("aria-pressed", String(control.dataset.keywordMode === keywordMode));
+          control.addEventListener("click", () => setKeywordMode(control.dataset.keywordMode));
+        }
         const renderSource = () => {
           const remote = sourceType.value === "urls";
           sourceLabel.textContent = remote ? "订阅链接（每行一条）" : "YAML 内容（用单独一行 --- 分隔多份）";
@@ -1750,8 +1810,6 @@
         source.value = profile.urls
           ? profile.urls.join("\n")
           : (profile.contents || []).join("\n\n---\n\n");
-        editor.querySelector("[data-include]").value = (profile.node_filter?.include_names || []).join("\n");
-        editor.querySelector("[data-exclude]").value = (profile.node_filter?.exclude_names || []).join("\n");
         const selectedTemplate = String(profile.template || "phone");
         editor.querySelector("[data-template]").value = selectedTemplate.includes("openwrt")
           ? "openwrt"
@@ -1765,6 +1823,7 @@
           const sourceItems = remote
             ? source.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean)
             : source.value.split(/\r?\n\s*---\s*\r?\n/).map((item) => item.trim()).filter(Boolean);
+          keywordValues[keywordMode] = keywordInput.value;
           try {
             const updated = {
               name: editor.querySelector("[data-name]").value.trim(),
@@ -1774,8 +1833,8 @@
               template_json: null,
               template_options: null,
               node_filter: {
-                include_names: editor.querySelector("[data-include]").value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
-                exclude_names: editor.querySelector("[data-exclude]").value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
+                include_names: linesFromText(keywordValues.include),
+                exclude_names: linesFromText(keywordValues.exclude),
               },
             };
             await profileRequest(`/api/subscriptions/${encodeURIComponent(profileId)}`, {
@@ -1908,8 +1967,12 @@
       }
     });
 
+    function linesFromText(value) {
+      return value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+    }
+
     function linesFrom(textarea) {
-      return textarea.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+      return linesFromText(textarea.value);
     }
 
     function clearRemoteLink() {
@@ -1918,7 +1981,7 @@
       remoteLinkStatus.className = "status";
     }
 
-    [url, template, includeNames, excludeNames, apiKey].forEach((field) => {
+    [url, template, apiKey].forEach((field) => {
       field.addEventListener("input", clearRemoteLink);
       field.addEventListener("change", clearRemoteLink);
     });
@@ -1982,9 +2045,10 @@
       } else {
         payload.template = template.value;
       }
+      filterValues[activeFilterMode] = nodeNameKeywords.value;
       payload.node_filter = {
-        include_names: linesFrom(includeNames),
-        exclude_names: linesFrom(excludeNames),
+        include_names: linesFromText(filterValues.include),
+        exclude_names: linesFromText(filterValues.exclude),
       };
       if (activeMode === "paste" && !payload.contents.some((item) => item.trim())) {
         throw new Error("请先粘贴订阅内容或选择本地文件。");
