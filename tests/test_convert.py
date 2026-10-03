@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """协议转换单元测试。"""
 
+import base64
 import unittest
 
 from sub2singbox import (
@@ -247,6 +248,19 @@ class ExtraProtocolTests(unittest.TestCase):
 
 
 class UriDispatchTests(unittest.TestCase):
+    def test_base64_encoded_vless_subscription_content(self):
+        uri = (
+            "vless://00000000-0000-0000-0000-000000000001@example.com:443"
+            "?type=ws&security=tls&host=cdn.example.com&path=%2Fws#test-node"
+        )
+        encoded = base64.b64encode(uri.encode()).decode().rstrip("=")
+
+        outbounds = parse_subscription_content(encoded)
+
+        self.assertEqual(len(outbounds), 1)
+        self.assertEqual(outbounds[0]["type"], "vless")
+        self.assertEqual(outbounds[0]["tag"], "test-node")
+
     def test_hy2_alias(self):
         out = parse_uri("hy2://pwd@example.com:443?sni=example.com&insecure=1#n")
         self.assertIsNotNone(out)

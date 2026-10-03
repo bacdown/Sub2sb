@@ -182,7 +182,14 @@ async def _fetch_subscription(url: str) -> str:
         break
 
     if status < 200 or status >= 300:
-        raise ValueError(f"下载订阅失败：HTTP {status}")
+        message = f"下载订阅失败：HTTP {status}"
+        if status == 403:
+            message += (
+                "。请检查订阅地址和授权是否有效；如果该地址在本地可访问但 Worker 返回 403，"
+                "可能是服务商限制了 Cloudflare Worker 的出口请求。"
+                "如果已取得 Base64 订阅内容，可切换到网页的粘贴模式直接转换。"
+            )
+        raise SubscriptionFetchError(message)
 
     content_length = response.headers.get("content-length")
     if content_length:

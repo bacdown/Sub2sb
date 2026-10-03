@@ -268,6 +268,24 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status, 502)
         self.assertEqual(json.loads(response.body), {"error": "远程服务器无法访问"})
 
+    async def test_sub_endpoint_explains_upstream_403(self):
+        url = quote("https://subscriptions.example/sub", safe="")
+        request = types.SimpleNamespace(
+            method="GET",
+            url=f"https://worker.example/sub?url={url}",
+            headers={},
+        )
+
+        async def fake_fetch(resource, **options):
+            return _WorkerResponse(status=403)
+
+        with patch.object(worker, "fetch", fake_fetch):
+            response = await _entrypoint().fetch(request)
+
+        self.assertEqual(response.status, 502)
+        self.assertIn("HTTP 403", json.loads(response.body)["error"])
+        self.assertIn("Cloudflare Worker", json.loads(response.body)["error"])
+
 
 if __name__ == "__main__":
     unittest.main()
