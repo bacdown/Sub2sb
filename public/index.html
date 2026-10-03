@@ -1996,7 +1996,8 @@
         if (template.value === "custom" || template.value === "compose") {
           throw new Error("直链仅支持内置模板；自定义模板请保存为订阅短链接。");
         }
-        if (linesFrom(includeNames).length || linesFrom(excludeNames).length) {
+        filterValues[activeFilterMode] = nodeNameKeywords.value;
+        if (linesFromText(filterValues.include).length || linesFromText(filterValues.exclude).length) {
           throw new Error("直链暂不支持节点名称筛选；请保存为订阅短链接。");
         }
 

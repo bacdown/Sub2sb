@@ -103,7 +103,15 @@ CLI 会交互式提示输入密钥。不要把密钥写入仓库文件或提交�
 
 ### 启用订阅管理与短链接
 
-Vercel 函数没有持久本地磁盘。除 `YAML2SB_API_KEY` 外，还需在 Vercel 项目环境变量中配置 Upstash Redis REST 凭据：`UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`。可在 Vercel Storage 中创建/关联 Upstash Redis 数据库并导入对应环境变量。部署后，网页可保存订阅组合并生成 `/s/<id>` 短链接。
+Vercel 函数没有持久本地磁盘。除 `YAML2SB_API_KEY` 外，还需关联 Upstash Redis 数据库，为项目提供 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`：
+
+1. 打开 [Vercel Marketplace 的 Upstash for Redis](https://vercel.com/marketplace/upstash)，选择 **Install** / **Add Integration**。
+2. 登录或授权 Upstash，选择要关联的 Vercel 项目。
+3. 选择已有 Redis 数据库，或在 Upstash 中新建数据库后关联到该项目。
+4. 检查 Vercel 项目的 **Settings → Environment Variables**，确认已添加 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`，且包含要启用的 Production 环境；如需 Preview 环境也启用，请一并选择。
+5. 重新部署项目，使环境变量在函数运行环境中生效。
+
+部署后，网页可保存订阅组合并生成 `/s/<id>` 短链接。Vercel KV 已停止提供新建服务；新项目请使用 Marketplace 中的 Redis 集成。
 
 ## 部署到 Cloudflare Workers
 
@@ -190,15 +198,23 @@ uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
 
 ### 启用订阅管理与短链接
 
-订阅管理需要持久 KV。创建一个 Cloudflare Workers KV namespace，并把它绑定到 Worker，binding 名称必须为 `SUBSCRIPTIONS`。使用 Wrangler 部署时，在 `wrangler.toml` 添加以下配置并将占位符替换为实际 namespace ID：
+订阅管理需要一个 Cloudflare Workers KV namespace，并且必须将它绑定到 Worker，binding 名称必须为 `SUBSCRIPTIONS`。可以通过 Wrangler 创建 namespace：
+
+```sh
+npx wrangler kv namespace create yaml2sb-subscriptions
+```
+
+命令会返回 namespace ID。将它填入项目根目录的 `wrangler.toml`：
 
 ```toml
 [[kv_namespaces]]
 binding = "SUBSCRIPTIONS"
-id = "<KV_NAMESPACE_ID>"
+id = "<上一步返回的 namespace ID>"
 ```
 
-Cloudflare Dashboard 部署可在 Worker 的 **Settings → Bindings → KV namespace** 添加同名绑定。还必须设置 `YAML2SB_API_KEY`；短地址 `/s/<id>` 可公开访问，新增、编辑、删除和列表管理接口受该密钥保护。
+也可以在 Cloudflare Dashboard 中创建和绑定：打开 **Workers KV** 页面，选择 **Create instance** 创建 namespace；然后打开 **Workers & Pages → yaml2sb → Bindings → Add binding**，选择 **KV namespace**，将 **Variable name** 填为 `SUBSCRIPTIONS`，并选择刚创建的 namespace，保存并部署。若之后使用 Wrangler 部署，仍需把该 namespace ID 写入 `wrangler.toml`，使绑定与仓库配置一致。
+
+还必须设置 `YAML2SB_API_KEY`；短地址 `/s/<id>` 可公开访问，新增、编辑、删除和列表管理接口受该密钥保护。只使用 `/sub?url=...` 直链转换时无需创建 KV namespace。
 
 ### 客户端远程配置示例
 
@@ -354,8 +370,8 @@ curl -o sing-box-momo.json \
 | --- | --- | --- |
 | 本机运行 / 自建 Web | SQLite，默认 `data/subscriptions.sqlite3` | 确保该目录位于持久、可写磁盘；可通过 `YAML2SB_DB_PATH` 指定其他 SQLite 文件路径 |
 | Docker Compose | SQLite 命名卷 `yaml2sb-data` | Compose 已自动挂载到 `/data/subscriptions.sqlite3`；重建容器会保留数据，删除命名卷则会清空 |
-| Vercel | Upstash Redis | 在 Vercel 项目环境变量中配置 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`，然后重新部署 |
-| Cloudflare Workers | Workers KV | 创建 KV namespace 并绑定为 `SUBSCRIPTIONS`；详见[Cloudflare Workers 部署说明](#部署到-cloudflare-workers) |
+| Vercel | Upstash Redis | 通过 [Vercel Marketplace](https://vercel.com/marketplace/upstash) 创建或关联数据库；详见[Vercel 部署说明](#部署到-vercel) |
+| Cloudflare Workers | Workers KV | 创建 namespace 并绑定为 `SUBSCRIPTIONS`；详见[Cloudflare Workers 部署说明](#部署到-cloudflare-workers) |
 
 以上四种方式都还需要配置 `YAML2SB_API_KEY` 才能管理订阅。`/s/<id>` 是公开读取地址，不需要 API Key。若只使用 `/sub?url=...` 远程转换直链，则不保存组合配置，也不需要 Redis、KV 或 SQLite。Docker 部署细节见 [Docker Compose](#使用-docker-compose-部署)，云平台请按各自部署章节绑定对应存储。
 

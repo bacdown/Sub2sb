@@ -58,6 +58,8 @@ class WebServerTests(unittest.TestCase):
         self.assertEqual(response.status, 200)
         self.assertIn("粘贴 / 上传文件", page)
         self.assertIn("远程订阅链接", page)
+        self.assertIn("filterValues[activeFilterMode] = nodeNameKeywords.value;", page)
+        self.assertNotIn("linesFrom(includeNames)", page)
         self.assertIn("iPhone 配置", page)
         self.assertIn('href="https://github.com/bacdown"', page)
         self.assertIn("<h1>yaml2sb · sing-box</h1>", page)
