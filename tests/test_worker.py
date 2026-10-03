@@ -79,6 +79,28 @@ with patch.dict(sys.modules, {"workers": workers_stub}):
 
 
 class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_sub_endpoint_returns_sing_box_json_for_remote_subscription(self):
+        url = quote("https://subscriptions.example/sub", safe="")
+        request = _WorkerRequest(
+            "GET",
+            f"https://worker.example/sub?url={url}&template=phone",
+        )
+        entrypoint = _entrypoint()
+        subscription = """proxies:
+  - name: Japan 01
+    type: socks5
+    server: japan.example
+    port: 1080
+"""
+
+        with patch.object(worker, "_fetch_subscription", return_value=subscription):
+            response = await entrypoint.fetch(request)
+
+        self.assertEqual(response.status, 200)
+        self.assertIn("application/json", response.headers["Content-Type"])
+        config = json.loads(response.body)
+        self.assertIn("Japan 01", [item.get("tag") for item in config["outbounds"]])
+
     async def test_saved_profile_uses_kv_and_public_short_link(self):
         kv = _WorkerKV()
         entrypoint = _entrypoint()

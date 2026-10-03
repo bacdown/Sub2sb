@@ -398,6 +398,9 @@
     .shared-controls .primary {
       min-height: 44px;
     }
+    .remote-link-result { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+    #remote-link-result[hidden] { display: none; }
+    .remote-link-result a { min-width: 0; overflow-wrap: anywhere; color: #286b65; font-size: 13px; }
     .primary {
       width: 100%;
       min-height: 50px;
@@ -533,8 +536,14 @@
               </div>
             </div>
             <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
+            <button id="generate-subscription-link" class="secondary" type="button">生成远程订阅链接</button>
           </div>
         </div>
+        <div id="remote-link-result" class="remote-link-result" hidden>
+          <a id="remote-subscription-link" target="_blank" rel="noopener noreferrer"></a>
+          <button id="copy-remote-subscription-link" class="secondary" type="button">复制链接</button>
+        </div>
+        <p id="remote-link-status" class="status" role="status" aria-live="polite"></p>
         <div class="node-filter-grid">
           <div>
             <label for="include-names">保留节点名称关键词</label>
@@ -741,6 +750,9 @@
     const profileList = document.querySelector("#profile-list");
     const profileManagerStatus = document.querySelector("#profile-manager-status");
     const profileCreateStatus = document.querySelector("#profile-create-status");
+    const remoteLinkResult = document.querySelector("#remote-link-result");
+    const remoteSubscriptionLink = document.querySelector("#remote-subscription-link");
+    const remoteLinkStatus = document.querySelector("#remote-link-status");
     const tabs = [...document.querySelectorAll(".tab")];
     let activeMode = "paste";
     let customTemplate = null;
@@ -1899,6 +1911,61 @@
     function linesFrom(textarea) {
       return textarea.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
     }
+
+    function clearRemoteLink() {
+      remoteLinkResult.hidden = true;
+      remoteLinkStatus.textContent = "";
+      remoteLinkStatus.className = "status";
+    }
+
+    [url, template, includeNames, excludeNames, apiKey].forEach((field) => {
+      field.addEventListener("input", clearRemoteLink);
+      field.addEventListener("change", clearRemoteLink);
+    });
+
+    document.querySelector("#generate-subscription-link").addEventListener("click", () => {
+      clearRemoteLink();
+      try {
+        if (activeMode !== "url") throw new Error("请切换到“远程订阅链接”并填写来源 URL。");
+        const sourceUrls = linesFrom(url);
+        if (!sourceUrls.length) throw new Error("请先输入至少一个远程订阅链接。");
+        if (sourceUrls.length > 10) throw new Error("远程订阅链接最多支持 10 个来源。");
+        if (template.value === "custom" || template.value === "compose") {
+          throw new Error("直链仅支持内置模板；自定义模板请保存为订阅短链接。");
+        }
+        if (linesFrom(includeNames).length || linesFrom(excludeNames).length) {
+          throw new Error("直链暂不支持节点名称筛选；请保存为订阅短链接。");
+        }
+
+        const params = new URLSearchParams();
+        sourceUrls.forEach((sourceUrl) => params.append("url", sourceUrl));
+        params.set("template", template.value === "config_phone.json"
+          ? "phone"
+          : template.value === "config_openwrt.json" ? "openwrt" : "momo");
+        const secret = apiKey.value.trim();
+        if (secret) params.set("api_key", secret);
+        remoteSubscriptionLink.href = `${location.origin}/sub?${params.toString()}`;
+        remoteSubscriptionLink.textContent = remoteSubscriptionLink.href;
+        remoteLinkResult.hidden = false;
+        remoteLinkStatus.textContent = secret
+          ? "链接已生成。它包含 API Key，请按敏感凭据保管。"
+          : "链接已生成，可添加到 sing-box 客户端作为远程配置。";
+        remoteLinkStatus.className = "status success";
+      } catch (error) {
+        remoteLinkStatus.textContent = error.message;
+        remoteLinkStatus.className = "status error";
+      }
+    });
+
+    document.querySelector("#copy-remote-subscription-link").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(remoteSubscriptionLink.href);
+        remoteLinkStatus.textContent = "远程订阅链接已复制。";
+        remoteLinkStatus.className = "status success";
+      } catch {
+        window.prompt("复制远程订阅链接", remoteSubscriptionLink.href);
+      }
+    });
 
     function currentConversionPayload() {
       const payload = activeMode === "url"
