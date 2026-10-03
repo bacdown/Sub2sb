@@ -7,6 +7,7 @@ import unittest
 from sub2singbox import (
     clash_proxy_to_outbound,
     clash_tls_config,
+    parse_subscription_content,
     parse_hysteria2,
     parse_tuic,
     parse_uri,
@@ -141,6 +142,20 @@ class ShadowsocksPluginTests(unittest.TestCase):
         self.assertEqual(out["plugin"], "obfs-local")
         self.assertIn("obfs=http", out["plugin_opts"])
         self.assertIn("obfs-host=www.bing.com", out["plugin_opts"])
+
+    def test_sip002_base64_userinfo_through_subscription_parser(self):
+        content = (
+            "ss://YWVzLTI1Ni1nY206cGFzcw==@example.com:8388#padded\n"
+            "ss://YWVzLTI1Ni1nY206cGFzcw@example.org:443#unpadded"
+        )
+
+        outbounds = parse_subscription_content(content)
+
+        self.assertEqual(len(outbounds), 2)
+        self.assertEqual(outbounds[0]["method"], "aes-256-gcm")
+        self.assertEqual(outbounds[0]["password"], "pass")
+        self.assertEqual(outbounds[0]["server"], "example.com")
+        self.assertEqual(outbounds[1]["server"], "example.org")
 
 
 class ExtraProtocolTests(unittest.TestCase):

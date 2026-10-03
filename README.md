@@ -84,6 +84,23 @@ vercel
 vercel --prod
 ```
 
+### 启用 API Key（可选）
+
+在 Vercel 项目中打开 **Settings → Environment Variables**，添加：
+
+- **Key**：`YAML2SB_API_KEY`
+- **Value**：强随机密钥，例如在本机运行 `openssl rand -hex 32` 生成
+- **Environment**：选择需要保护的 Production、Preview 和/或 Development 环境
+
+保存后重新部署，使新变量应用到函数运行环境。也可用 Vercel CLI 添加生产环境变量：
+
+```sh
+vercel env add YAML2SB_API_KEY production
+vercel --prod
+```
+
+CLI 会交互式提示输入密钥。不要把密钥写入仓库文件或提交到 Git。
+
 ## 部署到 Cloudflare Workers
 
 本项目提供 Python Workers 入口（`worker.py`），在 Cloudflare 边缘提供与 Vercel 相同的能力：完整网页 UI、`GET /sub` 远程订阅、`POST /api`（内置模板与自定义 `template_json`）。
@@ -147,27 +164,25 @@ curl --get --fail-with-body \
 python3 -m json.tool sing-box.json > /dev/null
 ```
 
-若已配置 `YAML2SB_API_KEY`，在两个 `curl` 请求中都添加：
+启用 API Key 后，上述 `/api` 和 `/sub` 请求都需要认证。推荐使用请求头：
 
 ```sh
--H "Authorization: Bearer $YAML2SB_API_KEY"
+curl -H "Authorization: Bearer $YAML2SB_API_KEY" "$WORKER_URL/api"
 ```
 
 成功时 `/sub` 返回可直接导入客户端的纯 sing-box JSON。测试时请使用有效订阅地址；不要把包含凭据的真实订阅链接提交到仓库或 issue。
 
 ### 可选：启用 API Key
 
+在项目根目录运行以下命令，并按提示输入密钥：
+
 ```sh
 uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
-# 按提示输入密钥
 ```
 
-`wrangler` 是 Node.js 工具，本项目通过 `pywrangler` 调用它；不要直接运行 `uv run wrangler`。也可以在 Cloudflare Dashboard 打开 **Workers & Pages → yaml2sb → Settings → Variables and Secrets**，添加名为 `YAML2SB_API_KEY` 的 Secret。
+也可在 Cloudflare Dashboard 打开 **Workers & Pages → yaml2sb → Settings → Variables and Secrets**，新增名为 `YAML2SB_API_KEY` 的 **Secret**。保存 Secret 后重新部署 Worker。
 
-启用后，请求需携带：
-
-- 查询参数 `api_key=...`，或
-- 请求头 `Authorization: Bearer ...` / `X-API-Key: ...`
+`wrangler` 是 Node.js 工具，本项目通过 `pywrangler` 调用它；不要直接运行 `uv run wrangler`。密钥使用方法见下文“API Key 使用方法”。
 
 ### 客户端远程配置示例
 
@@ -182,6 +197,65 @@ https://yaml2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&te
 | `momo` | Momo |
 
 配置文件：`wrangler.toml`（入口 `worker.py`）。Worker 入口与转换逻辑位于项目根目录；模板统一读取 `templates/`，网页统一读取 `public/index.html`。Vercel、本地 Web 和 Workers 共用这些资源。
+
+## API Key 使用方法
+
+Vercel、Cloudflare Workers、本地网页版和 Docker Compose 都使用环境变量 `YAML2SB_API_KEY`。未设置或值为空时，API 不要求密钥，服务保持公开访问；设置后，受保护的 API 路由需要有效密钥。首页仍可公开打开。
+
+受保护路由包括 `GET /api`、`POST /api`、`GET /api/options`、`GET /sub` 和 `GET /api/sub`；本地网页版和 Docker 另有 `POST /fetch`。密钥支持以下三种方式，优先使用请求头：
+
+- `Authorization: Bearer <密钥>`（推荐）
+- `X-API-Key: <密钥>`
+- 查询参数 `api_key=<密钥>`（仅在客户端无法添加请求头时使用）
+
+### 网页表单
+
+打开部署首页，在“API 访问密钥”输入框填写服务端配置的密钥，再执行转换或刷新基础配置选项。网页会自动以 `Authorization: Bearer` 请求头发送密钥；密钥不会保存在浏览器中。未启用服务端密钥时无需填写。
+
+### curl 调用 API
+
+先设置部署地址和密钥环境变量：
+
+```sh
+BASE_URL='https://<项目名>.vercel.app' # Cloudflare Workers 替换为对应 workers.dev 地址
+export YAML2SB_API_KEY='部署时设置的同一个密钥'
+```
+
+Bearer Header 示例；`X-API-Key` 可替换为 `-H "X-API-Key: $YAML2SB_API_KEY"`：
+
+```sh
+curl -H "Authorization: Bearer $YAML2SB_API_KEY" "$BASE_URL/api"
+curl -H "Authorization: Bearer $YAML2SB_API_KEY" \
+  "$BASE_URL/api/options?template=config_phone.json"
+curl -X POST "$BASE_URL/api" \
+  -H "Authorization: Bearer $YAML2SB_API_KEY" \
+  -H 'Content-Type: application/json' \
+  --data-binary @request.json
+```
+
+`request.json` 可以提交 `content`（YAML/URI/订阅正文），也可以提交 `url` 或 `urls` 让服务端拉取远程订阅。JSON 请求体中的订阅链接可原样保留 `&` 等查询参数。
+
+### curl 远程订阅
+
+`GET /sub` 返回可供客户端导入的纯 sing-box JSON。通过 `--data-urlencode` 同时编码原订阅链接和其他查询参数，避免订阅 URL 中的 `&token=...` 被误解析成 API 参数：
+
+```sh
+SUBSCRIPTION_URL='https://example.com/subscribe?user=abc&token=xyz'
+curl --get --fail-with-body \
+  -H "Authorization: Bearer $YAML2SB_API_KEY" \
+  --data-urlencode "url=$SUBSCRIPTION_URL" \
+  --data-urlencode 'template=phone' \
+  "$BASE_URL/sub" \
+  -o sing-box.json
+```
+
+若客户端支持自定义请求头，设置 `Authorization: Bearer <密钥>` 或 `X-API-Key: <密钥>`。若客户端**不支持请求头**，可将 `api_key=<URL编码后的密钥>` 放入转换服务 URL，例如：
+
+```text
+https://<项目域名>/sub?url=<URL编码后的原订阅>&template=phone&api_key=<URL编码后的密钥>
+```
+
+查询参数认证会使密钥暴露在 URL、客户端历史记录及可能的访问日志中；只在客户端不支持请求头时使用，不要公开分享包含密钥的完整 URL。订阅原地址也必须整体 URL 编码。
 
 部署后：
 
@@ -241,9 +315,9 @@ curl -o sing-box.json \
 curl -o sing-box-openwrt.json \
   'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=openwrt'
 
-# Momo 模板 + API Key
+# Momo 模板
 curl -o sing-box-momo.json \
-  'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=momo&api_key=你的密钥'
+  'https://<项目名>.vercel.app/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=momo'
 ```
 
 **在 sing-box 客户端里使用：**
@@ -252,7 +326,7 @@ curl -o sing-box-momo.json \
 2. 在 SFA / SFI / Hiddify / NekoBox 等中添加**远程配置**或**订阅**，粘贴该链接。
 3. 客户端定时请求该地址，即可自动拿到转换后的 sing-box JSON。
 
-注意：原订阅地址必须做 **URL 编码**（例如 `https://` → `https%3A%2F%2F`）。启用了 `YAML2SB_API_KEY` 时，把密钥放在查询参数 `api_key` 或请求头 `Authorization: Bearer …` / `X-API-Key` 中。
+注意：原订阅地址必须整体做 **URL 编码**。启用 API Key 后，客户端需要按“API Key 使用方法”一节携带密钥。
 
 ### 使用内置模板转换（POST）
 
@@ -281,10 +355,8 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
     "outbounds": []
   },
   "node_count": 1
-  部署配置位于 `vercel.json`。三个内置模板整理在 `templates/` 目录中：`templates/config_phone.json`、`templates/config_openwrt.json` 和 `templates/momo.json`。修改脚本或模板后，推送到已连接的分支即可触发重新部署。
+}
 ```
-
-  配置文件：`wrangler.toml`（入口 `worker.py`）。Worker 入口与转换逻辑位于项目根目录；模板统一读取 `templates/`，网页统一读取 `public/index.html`。Vercel、本地 Web 和 Workers 共用这些资源。
 
 ### 使用自定义模板
 
@@ -409,20 +481,7 @@ python3 sub2singbox.py ./subscription.yaml \
 ## 注意事项
 
 - 订阅链接通常包含私密凭据。不要将真实订阅链接、节点密码、UUID 或完整配置提交到公开仓库，也不要在公开 issue 或日志中粘贴。
-- 可选的令牌认证：当前代码支持通过设置 Vercel 环境变量 YAML2SB_API_KEY 启用简单的 token 保护。将该变量设置为一个强随机字符串后，服务端会拒绝未携带密钥的请求（保持向后兼容：未设置时仍为公开）。支持的认证方式：
-  - HTTP Header: Authorization: Bearer <key>
-  - HTTP Header: X-API-Key: <key>
-  - 查询字符串: ?api_key=<key>
-
-  例如：
-
-  ```sh
-  curl -H "Authorization: Bearer $YAML2SB_API_KEY" -H 'Content-Type: application/json' \
-    -X POST https://<项目名>.vercel.app/api --data-binary @request.json
-  ```
-
-  如果需要更强的访问控制（OAuth、IP 限制、速率限制等），建议在 Vercel 前置一层认证/反向代理（例如 Cloudflare Access、NGINX、Caddy 或自托管的 proxy）。
-- 本地网页版和 Docker 部署也支持相同的 `YAML2SB_API_KEY` 令牌认证。启用后，`/api`、`/api/options`、`/fetch`、`/sub` 和 `/api/sub` 需要 Bearer 或 `X-API-Key` 请求头；首页仍可打开，网页转换表单中填写 API 访问密钥即可使用。未设置该变量时，API 不启用令牌认证。
+- API Key 可按部署方式启用；网页、curl、请求头和客户端远程订阅的完整配置方法见“API Key 使用方法”。未设置密钥时接口保持公开。该密钥是简单的共享令牌，不提供用户身份、配额或速率限制；公网服务需要更强访问控制时，可在前面增加 Cloudflare Access 或反向代理。
 - 自定义模板通过请求提交；内置模板通过文件名白名单选择，不允许传入任意文件路径。
 - 转换结果会携带订阅中的节点认证信息。请妥善保存响应内容，避免公开分享。
 - 输出是转换后的 sing-box 配置，不代表配置一定符合所有 sing-box 版本或运行环境的要求；部署/导入前请使用目标 sing-box 版本验证。
@@ -438,7 +497,16 @@ python3 sub2singbox.py ./subscription.yaml \
 
 ### 使用 Docker Compose 部署
 
-在项目目录执行：
+默认不启用 API Key。需要启用时，在项目目录生成并导出一个强随机密钥，再启动 Compose：
+
+```sh
+export YAML2SB_API_KEY="$(openssl rand -hex 32)"
+docker compose up --build -d
+```
+
+Compose 会将该变量传入容器。后续重建或更新容器时，也要在当前 shell 中设置同一个值；否则新容器会按未设置密钥的公开模式运行。不要把密钥提交到仓库。
+
+未启用密钥时，直接在项目目录运行：
 
 ```sh
 docker compose up --build -d
@@ -472,7 +540,9 @@ docker compose down
 
 ```sh
 docker build -t yaml2sb .
-docker run --rm -p 8080:8080 yaml2sb
+docker run --rm -p 8080:8080 \
+  -e YAML2SB_API_KEY="$YAML2SB_API_KEY" \
+  yaml2sb
 ```
 
 ### 本地启动网页版
@@ -495,4 +565,4 @@ python3 web_server.py --host 0.0.0.0 --port 8080
 YAML2SB_API_KEY='替换为强随机密钥' python3 web_server.py
 ```
 
-Docker Compose 会把当前环境中的 `YAML2SB_API_KEY` 传给容器；可在启动前导出该变量或放入 Compose `.env` 文件。直接运行 Docker 镜像时使用 `-e YAML2SB_API_KEY='替换为强随机密钥'`。启用后，网页首页仍可打开，在页面的“API 访问密钥”栏输入密钥；调用 API 的客户端使用 `Authorization: Bearer <密钥>` 或 `X-API-Key: <密钥>` 请求头。密钥未设置时仍是公开访问，因此不要直接把未保护的服务暴露到公网；公网部署还应使用 HTTPS、访问控制和适当的用量限制。
+Docker Compose 会把当前 shell 中导出的 `YAML2SB_API_KEY` 传给容器；直接运行 Docker 镜像时使用 `-e YAML2SB_API_KEY="$YAML2SB_API_KEY"`。启用后，网页首页仍可打开，在页面的“API 访问密钥”栏输入密钥；调用 API 的客户端使用 `Authorization: Bearer <密钥>` 或 `X-API-Key: <密钥>` 请求头。密钥未设置时仍是公开访问，因此不要直接把未保护的服务暴露到公网；公网部署还应使用 HTTPS、访问控制和适当的用量限制。

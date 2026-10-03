@@ -453,6 +453,11 @@ def parse_ss(uri):
         userinfo = urllib.parse.unquote(parsed.username)
 
         if ":" not in userinfo:
+            decoded_userinfo = b64decode_auto(userinfo)
+            if ":" in decoded_userinfo:
+                userinfo = decoded_userinfo
+
+        if ":" not in userinfo:
             raise ValueError("SS 用户信息格式错误")
 
         method, password = userinfo.split(":", 1)
