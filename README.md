@@ -103,15 +103,16 @@ CLI 会交互式提示输入密钥。不要把密钥写入仓库文件或提交�
 
 ### 启用订阅管理与短链接
 
-Vercel 函数没有持久本地磁盘。除 `YAML2SB_API_KEY` 外，还需关联 Upstash Redis 数据库，为项目提供 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`：
+Vercel 函数没有持久本地磁盘，短链必须存入 Upstash Redis。短链管理同时要求 Redis 凭据和 `YAML2SB_API_KEY`，只配其中一项不会启用短链管理。
 
-1. 打开 [Vercel Marketplace 的 Upstash for Redis](https://vercel.com/marketplace/upstash)，选择 **Install** / **Add Integration**。
-2. 登录或授权 Upstash，选择要关联的 Vercel 项目。
-3. 选择已有 Redis 数据库，或在 Upstash 中新建数据库后关联到该项目。
-4. 检查 Vercel 项目的 **Settings → Environment Variables**，确认已添加 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`，且包含要启用的 Production 环境；如需 Preview 环境也启用，请一并选择。
-5. 重新部署项目，使环境变量在函数运行环境中生效。
+1. 打开 [Vercel Marketplace 的 Upstash for Redis](https://vercel.com/marketplace/upstash)，选择 **Install** / **Add Integration**，授权并选择 yaml2sb 的 Vercel 项目。
+2. 在安装流程中选择现有 Upstash 数据库，或新建一个数据库后关联到项目。请确认关联的是实际要使用的 Vercel 项目，而不只是创建了一个未关联的 Redis 数据库。
+3. 打开 **Vercel → 项目 → Settings → Environment Variables**，确认存在 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`。两项都必须对 **Production** 生效；若要在 Preview 部署中管理短链，也要勾选 **Preview**。Marketplace 未自动注入变量时，可从 Upstash 数据库的 **REST API** 页面复制 REST URL 和 REST Token，在这里分别新增变量。不要将 token 放进仓库或公开日志。
+4. 在同一页面添加 `YAML2SB_API_KEY`，值使用强随机密钥（例如 `openssl rand -hex 32`）。它用于保护创建、列表、修改和删除短链的管理 API；短链读取地址 `/s/<id>` 本身是公开的。
+5. 保存后进入 **Deployments**，对目标 Production 分支重新部署。环境变量只会在新部署的函数中生效；Preview 也要单独重新部署对应分支。
+6. 按下文“验证短链存储”发送创建请求，再打开响应中的 `short_path`。若创建接口返回 `503`，先检查两个 Upstash 变量的名称、环境范围、值及部署是否已重新执行。
 
-部署后，网页可保存订阅组合并生成 `/s/<id>` 短链接。Vercel KV 已停止提供新建服务；新项目请使用 Marketplace 中的 Redis 集成。
+Vercel KV 已停止提供新建服务；新项目请使用 Marketplace 中的 Upstash Redis 集成。不要设置 `YAML2SB_STORE=sqlite` 来绕过 Redis：Vercel 函数的本地文件系统不是持久存储。
 
 ## 部署到 Cloudflare Workers
 
@@ -198,13 +199,15 @@ uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
 
 ### 启用订阅管理与短链接
 
-订阅管理需要一个 Cloudflare Workers KV namespace，并且必须将它绑定到 Worker，binding 名称必须为 `SUBSCRIPTIONS`。可以通过 Wrangler 创建 namespace：
+短链管理需要 Workers KV namespace，且 Worker binding 名称必须精确为 `SUBSCRIPTIONS`。只创建 namespace 不会自动绑定到 Worker；本仓库的 `wrangler.toml` 默认没有填写账号专属的 namespace ID，因此需要完成下面的创建、配置和部署步骤。
+
+推荐用 Wrangler 管理绑定，确保后续从命令行部署时配置仍然存在。在项目根目录创建生产 namespace：
 
 ```sh
 npx wrangler kv namespace create yaml2sb-subscriptions
 ```
 
-命令会返回 namespace ID。将它填入项目根目录的 `wrangler.toml`：
+命令输出中会包含 namespace ID。将以下配置追加到项目根目录的 `wrangler.toml`，并把占位值替换为真实 ID：
 
 ```toml
 [[kv_namespaces]]
@@ -212,9 +215,33 @@ binding = "SUBSCRIPTIONS"
 id = "<上一步返回的 namespace ID>"
 ```
 
-也可以在 Cloudflare Dashboard 中创建和绑定：打开 **Workers KV** 页面，选择 **Create instance** 创建 namespace；然后打开 **Workers & Pages → yaml2sb → Bindings → Add binding**，选择 **KV namespace**，将 **Variable name** 填为 `SUBSCRIPTIONS`，并选择刚创建的 namespace，保存并部署。若之后使用 Wrangler 部署，仍需把该 namespace ID 写入 `wrangler.toml`，使绑定与仓库配置一致。
+保存配置后，设置管理 API 密钥并重新部署：
 
-还必须设置 `YAML2SB_API_KEY`；短地址 `/s/<id>` 可公开访问，新增、编辑、删除和列表管理接口受该密钥保护。只使用 `/sub?url=...` 直链转换时无需创建 KV namespace。
+```sh
+uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
+uv run --python 3.11 pywrangler deploy
+```
+
+`secret put` 会交互式提示输入密钥。若已经设置过密钥，无需重复设置；修改 namespace 配置后仍要重新部署。
+
+如果需要隔离 Preview / 本地开发数据，另建一个 namespace：
+
+```sh
+npx wrangler kv namespace create yaml2sb-subscriptions-preview
+```
+
+将返回的另一个 ID 作为 `preview_id` 加入同一个 binding 配置：
+
+```toml
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS"
+id = "<生产 namespace ID>"
+preview_id = "<预览 namespace ID>"
+```
+
+生产和预览建议使用不同 namespace，避免测试数据写入生产短链存储。若改用 Cloudflare Dashboard 配置，打开 **Workers & Pages → yaml2sb → Settings → Bindings → Add binding**，选择 **KV namespace**，将 **Variable name** 填为 `SUBSCRIPTIONS`，再选中已创建的 namespace，保存并部署。之后若改用 Wrangler 部署，也要把该绑定及 namespace ID 写入 `wrangler.toml`，并以实际部署使用的配置为准。
+
+短地址 `/s/<id>` 可公开访问，新增、编辑、删除和列表管理接口受 `YAML2SB_API_KEY` 保护。只使用 `/sub?url=...` 直链转换时无需创建 KV namespace 或 API Key。
 
 ### 客户端远程配置示例
 
@@ -374,6 +401,50 @@ curl -o sing-box-momo.json \
 | Cloudflare Workers | Workers KV | 创建 namespace 并绑定为 `SUBSCRIPTIONS`；详见[Cloudflare Workers 部署说明](#部署到-cloudflare-workers) |
 
 以上四种方式都还需要配置 `YAML2SB_API_KEY` 才能管理订阅。`/s/<id>` 是公开读取地址，不需要 API Key。若只使用 `/sub?url=...` 远程转换直链，则不保存组合配置，也不需要 Redis、KV 或 SQLite。Docker 部署细节见 [Docker Compose](#使用-docker-compose-部署)，云平台请按各自部署章节绑定对应存储。
+
+#### 验证短链存储
+
+先设置部署地址和管理密钥。Vercel 使用 Production 域名；Workers 使用 `workers.dev` 或自定义域名：
+
+```sh
+BASE_URL='https://<你的部署域名>'
+export YAML2SB_API_KEY='<部署时设置的同一个密钥>'
+```
+
+用一个内嵌的测试 SOCKS5 节点创建短链，不需要真实订阅服务：
+
+```sh
+CREATE_RESPONSE=$(curl --fail-with-body -sS -X POST "$BASE_URL/api/subscriptions" \
+  -H "Authorization: Bearer $YAML2SB_API_KEY" \
+  -H 'Content-Type: application/json' \
+  --data-binary '{"name":"storage-smoke-test","contents":["proxies:\n  - name: storage-smoke-test\n    type: socks5\n    server: 127.0.0.1\n    port: 1080\n"],"template":"phone"}')
+printf '%s\n' "$CREATE_RESPONSE"
+SHORT_PATH=$(printf '%s' "$CREATE_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["short_path"])')
+curl --fail-with-body -sS "$BASE_URL$SHORT_PATH" | python3 -c 'import json,sys; config=json.load(sys.stdin); tags=[item.get("tag") for item in config.get("outbounds", [])]; assert "storage-smoke-test" in tags, tags; print("short link OK:", ", ".join(tags))'
+```
+
+创建成功应返回 `201` 和形如 `/s/<id>` 的 `short_path`；读取短链应返回 sing-box JSON，且包含 `storage-smoke-test` 节点。这个短链公开可读；验证后可在网页的订阅管理页删除测试记录，或通过带认证的 `DELETE /api/subscriptions/<id>` 删除。
+
+也可以通过 API 删除这条测试记录：
+
+```sh
+PROFILE_ID=${SHORT_PATH#/s/}
+curl --fail-with-body -sS -X DELETE "$BASE_URL/api/subscriptions/$PROFILE_ID" \
+  -H "Authorization: Bearer $YAML2SB_API_KEY"
+```
+
+常见故障判断：
+
+| 现象 | 优先检查 |
+| --- | --- |
+| 创建接口 `401 Unauthorized` | 请求密钥是否与部署环境的 `YAML2SB_API_KEY` 一致；Preview 和 Production 的密钥可能不同 |
+| Vercel 创建接口 `503`，提示配置 Upstash | `UPSTASH_REDIS_REST_URL` 与 `UPSTASH_REDIS_REST_TOKEN` 是否都存在、选中了当前部署环境，并在添加/修改变量后重新部署 |
+| Workers 创建接口 `503`，提示缺少 `SUBSCRIPTIONS` | namespace 是否已在 `wrangler.toml` 中绑定，binding 名称是否完全一致，部署是否在配置更新后重新执行 |
+| 创建返回成功，但 `/s/<id>` 返回 `404` | 访问的域名/部署环境是否与创建时相同；Vercel Preview、Production 及 Workers 的不同 namespace 数据互不共享 |
+| `/s/<id>` 返回 `400` | 保存的 YAML / URI 内容无效，或节点筛选后没有匹配项 |
+| `/s/<id>` 返回 `502` | 配置保存的是远程订阅 URL，检查来源地址当前是否可访问 |
+| `/s/<id>` 返回 `503` | 检查 Vercel Upstash 凭据或 Workers `SUBSCRIPTIONS` binding；也确认当前域名对应的部署环境已经配置存储 |
+| `/s/<id>` 返回 `500` | 检查平台函数日志，通常是未预期的存储或转换异常 |
 
 管理路由：`GET /api/subscriptions` 列表、`POST /api/subscriptions` 新建、`GET /api/subscriptions/<id>` 读取详情、`PATCH /api/subscriptions/<id>` 修改、`DELETE /api/subscriptions/<id>` 删除。公开客户端地址为 `GET /s/<id>`，返回可远程加载的 sing-box JSON，不需要管理密钥。
 
