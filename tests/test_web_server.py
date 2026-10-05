@@ -68,6 +68,53 @@ class WebServerTests(unittest.TestCase):
         self.assertEqual(response.status, 200)
         self.assertIn("粘贴 / 上传文件", page)
         self.assertIn("远程订阅链接", page)
+        self.assertIn('id="manage-tab" data-mode="manage"', page)
+        self.assertIn('id="profile-manager" class="profile-manager" role="tabpanel"', page)
+        self.assertIn('id="fill-selected-urls"', page)
+        self.assertIn('id="save-selected-combo"', page)
+        self.assertIn('id="profile-selection-count"', page)
+        self.assertIn('id="selected-combo-name"', page)
+        self.assertIn('id="manage-input-panel"', page)
+        self.assertIn('id="airport-name"', page)
+        self.assertIn('id="airport-url"', page)
+        self.assertIn('id="add-airport-subscription"', page)
+        self.assertIn('id="airport-selection-list"', page)
+        self.assertIn(".manage-input-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));", page)
+        self.assertIn(".input-layout { display: grid; grid-template-columns: 1fr; min-height: 362px;", page)
+        self.assertIn(".input-layout { min-height: 440px; }", page)
+        self.assertIn(".input-layout { min-height: 484px; }", page)
+        self.assertLess(page.index('id="airport-selection-list"'), page.index('class="profile-selection-toolbar"'))
+        self.assertLess(page.index('class="profile-selection-toolbar"'), page.index('<div class="controls-row">'))
+        self.assertIn("function renderAirportSelections(profiles)", page)
+        self.assertIn('profile.source_type === "urls"', page)
+        self.assertIn("convertForm.hidden = false;", page)
+        self.assertIn("async function getSelectedProfileUrls()", page)
+        self.assertIn('url.value = urls.join("\\n");', page)
+        self.assertIn('selectMode("url");', page)
+        self.assertIn('fetch("/api", {', page)
+        self.assertIn('id="profile-name-label"', page)
+        self.assertIn('"保存订阅并生成短链接"', page)
+        self.assertIn("main { width: min(1080px, 100%); margin: auto; }", page)
+        self.assertIn('id="input-api-key-slot"', page)
+        self.assertNotIn('id="manage-api-key-slot"', page)
+        self.assertNotIn('id="manage-profile-slot"', page)
+        self.assertLess(page.index('<div class="shared-controls">'), page.index('id="api-key-panel"'))
+        self.assertLess(page.index('id="api-key-panel"'), page.index('id="submit"'))
+        self.assertLess(page.index('<div class="subscription-controls">'), page.index('id="save-profile-panel"'))
+        self.assertLess(page.index('id="save-profile-panel"'), page.index('id="compose-panel"'))
+        self.assertLess(page.index('</form>'), page.index('<div class="subscription-controls">'))
+        self.assertLess(page.index('<div class="subscription-controls">'), page.index('id="profile-manager"'))
+        self.assertLess(page.index('id="profile-manager"'), page.index('id="compose-panel"'))
+        self.assertIn(".profile-manager { display: flex; min-width: 0; min-height: 136px; flex-direction: column; gap: 8px; }", page)
+        self.assertIn(".node-filter-panel textarea { flex: none; height: 78px; min-height: 78px; }", page)
+        self.assertIn(".profile-list { display: grid; gap: 8px; }", page)
+        self.assertIn('selectMode("paste");', page)
+        self.assertIn(".profile-save-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: auto; }", page)
+        self.assertIn(".save-profile-panel { display: flex; min-width: 0; min-height: 136px; flex-direction: column; gap: 8px; }", page)
+        self.assertIn(".profile-save-hint { margin: 0; font-size: 11px; line-height: 1.35; }", page)
+        self.assertIn("#profile-create-status { min-height: 24px; margin: 0; }", page)
+        self.assertIn('data-add-url>添加订阅链接</button>', page)
+        self.assertIn('aria-label", "删除此订阅链接"', page)
         self.assertEqual(page.count("证书验证</span>"), 2)
         self.assertIn('{ value: "unchanged", label: "不修改" }', page)
         self.assertIn('{ value: "verify", label: "验证" }', page)
@@ -83,7 +130,6 @@ class WebServerTests(unittest.TestCase):
         self.assertIn('aria-label="支持的部署方式"', page)
         self.assertIn("Cloudflare Workers", page)
         self.assertIn("默认配置文件均支持 sing-box 1.14.x", page)
-        self.assertIn('const endpoint = "/api";', page)
         self.assertIn("自定义制作配置", page)
         self.assertIn("/api/options?template=", page)
         self.assertIn('id="dns-domestic-options"', page)
@@ -847,6 +893,28 @@ class WebServerTests(unittest.TestCase):
 
         self.assertEqual(status, 200)
         self.assertEqual(result["node_count"], 2)
+
+    def test_saved_profile_accepts_multiple_remote_urls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch("api.index.API_KEY", "test-secret"), patch.dict(
+                os.environ,
+                {"YAML2SB_DB_PATH": os.path.join(directory, "profiles.sqlite3")},
+            ):
+                status, result = self.post_json(
+                    "/api/subscriptions",
+                    {
+                        "name": "Japan and Singapore",
+                        "urls": [
+                            "https://subscriptions.example/japan",
+                            "https://subscriptions.example/singapore",
+                        ],
+                    },
+                    headers={"Authorization": "Bearer test-secret"},
+                )
+
+        self.assertEqual(status, 201)
+        self.assertEqual(result["source_type"], "urls")
+        self.assertEqual(result["source_count"], 2)
 
     def test_saved_profile_crud_and_public_json_short_link(self):
         with tempfile.TemporaryDirectory() as directory:
