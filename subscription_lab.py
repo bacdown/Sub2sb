@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from subscription_utils import collect_subscription_urls, validate_public_url_syntax
+from sub2singbox import normalize_certificate_policies
 
 MAX_PROFILE_BYTES = 2 * 1024 * 1024
 PROFILE_PREFIX = "yaml2sb:profile:"
@@ -69,6 +70,9 @@ def validate_profile(payload):
         ):
             raise ValueError(f"node_filter.{key} 必须是最多 50 项的非空字符串数组")
         normalized_filter[key] = [value.strip() for value in values]
+    normalized_filter["tls_insecure"] = normalize_certificate_policies(
+        node_filter.get("tls_insecure", {})
+    )
 
     template = payload.get("template", "phone")
     if not isinstance(template, str) or template.strip().lower() not in {
