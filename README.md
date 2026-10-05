@@ -199,7 +199,7 @@ uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
 
 ### 启用订阅管理与短链接
 
-短链管理需要 Workers KV namespace，且 Worker binding 名称必须精确为 `SUBSCRIPTIONS`。只创建 namespace 不会自动绑定到 Worker；本仓库的 `wrangler.toml` 默认没有填写账号专属的 namespace ID，因此需要完成下面的创建、配置和部署步骤。
+短链管理需要 Workers KV namespace，且 Worker binding 名称必须精确为 `SUBSCRIPTIONS`。只创建 namespace 不会自动绑定到 Worker；仓库的 `wrangler.toml` 已包含该 binding，但其中的 `your-kv-namespace-id` 只是示例值，部署前必须替换为自己创建的 namespace ID。
 
 推荐用 Wrangler 管理绑定，确保后续从命令行部署时配置仍然存在。在项目根目录创建生产 namespace：
 
@@ -207,12 +207,12 @@ uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
 npx wrangler kv namespace create yaml2sb-subscriptions
 ```
 
-命令输出中会包含 namespace ID。将以下配置追加到项目根目录的 `wrangler.toml`，并把占位值替换为真实 ID：
+命令输出中会包含 namespace ID。打开项目根目录的 `wrangler.toml`，将现有 `[[kv_namespaces]]` 配置中的 `id` 示例值替换为命令返回的 ID；不要重复追加第二个同名 binding：
 
 ```toml
 [[kv_namespaces]]
 binding = "SUBSCRIPTIONS"
-id = "<上一步返回的 namespace ID>"
+id = "your-kv-namespace-id" # 替换为上一步返回的 namespace ID
 ```
 
 保存配置后，设置管理 API 密钥并重新部署：
@@ -639,6 +639,21 @@ python3 sub2singbox.py ./subscription.yaml \
 若填写了 API Key，生成的直链会把密钥放入 `api_key` 查询参数，以便不支持自定义请求头的客户端访问。完整 URL 会包含密钥，请勿公开分享；查询参数认证也可能出现在客户端历史记录或服务端访问日志中。
 
 可填写节点名称包含/排除关键词（每行一项，忽略大小写）；包含条件按“任一匹配”处理，排除条件优先。填写组合名称后可保存当前来源、模板和筛选条件，生成稳定的 `/s/<id>` 短链接。客户端访问短链接时会重新拉取来源并输出纯 sing-box JSON。管理界面支持查看、编辑和删除保存项。
+
+证书验证策略可按节点类型选择“保持不变”“验证”或“跳过验证”，支持 VLESS、VMess、Trojan、Hysteria、Hysteria2、TUIC 和 AnyTLS。普通转换和保存订阅组合时，该策略会应用到远程订阅或本地上传 YAML 转换后对应节点的 `tls.insecure`；“验证”设为 `false`，“跳过验证”设为 `true`，未选择的类型保持来源原值。它不影响服务端下载远程订阅 URL 时对上游 HTTPS 服务器证书的校验；单独生成 `/sub` 远程直链也不应用页面上的节点筛选策略。
+
+订阅组合/API 请求可通过 `node_filter.tls_insecure` 设置策略，键为节点类型，值为 `unchanged`、`verify` 或 `skip`。例如：
+
+```json
+{
+  "node_filter": {
+    "tls_insecure": {
+      "vless": "skip",
+      "hysteria2": "verify"
+    }
+  }
+}
+```
 
 ### sing-box 客户端无延迟排查
 
