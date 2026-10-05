@@ -14,3 +14,8 @@ compatibility_flags = ["python_workers"]
 directory = "./templates/"
 binding = "ASSETS"
 run_worker_first = true
+
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS"
+id = "f6bb42d850204c3fb9f26f041ba881aa"
+

@@ -539,7 +539,7 @@
               <label for="api-key">API 访问密钥（可选）</label>
               <div class="api-key-input-wrap">
                 <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
-                <p id="api-key-hint" class="hint api-key-hint">仅在服务端设置了 YAML2SB_API_KEY 时需要填写；密钥只随本次请求发送，不会保存在浏览器中。</p>
+                <p id="api-key-hint" class="hint api-key-hint">保存和管理订阅短链接必须先在服务端设置 YAML2SB_API_KEY，并在此填写；普通转换仅在服务端启用了密钥时需要填写。密钥只随本次请求发送，不会保存在浏览器中。</p>
               </div>
             </div>
             <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
@@ -1715,6 +1715,8 @@
       if (!newlySelected.length) return;
 
       const combinedFiles = [...uploadedFiles, ...newlySelected];
+      await processCombinedFiles(combinedFiles);
+    });
 
     async function profileRequest(path, options = {}) {
       if (!apiKey.value.trim()) throw new Error("请先填写 API 访问密钥。");
@@ -1936,6 +1938,8 @@
         profileCreateStatus.className = "status error";
       }
     });
+
+    async function processCombinedFiles(combinedFiles) {
       if (combinedFiles.reduce((total, selected) => total + selected.size, 0) > 2 * 1024 * 1024) {
         status.textContent = "已选择文件的总大小不能超过 2 MiB。";
         status.className = "status error";
@@ -1956,7 +1960,7 @@
         status.textContent = `读取文件失败：${error.message || "请重试。"}`;
         status.className = "status error";
       }
-    });
+    }
 
     content.addEventListener("input", () => {
       if (uploadedContentSnapshot && content.value !== uploadedContentSnapshot) {
