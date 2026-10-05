@@ -417,19 +417,23 @@
     .status { min-height: 24px; margin: 14px 0 0; color: #787774; font-size: 14px; line-height: 1.6; }
     .status.error { color: #c4554d; }
     .status.success { color: #448361; }
-    .subscription-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 12px; margin-top: 18px; }
-    .node-filter-panel, .save-profile-panel { display: flex; min-width: 0; min-height: 132px; flex-direction: column; }
+    .subscription-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 12px; margin-top: 18px; }
+    .node-filter-panel, .certificate-policy-panel, .save-profile-panel { display: flex; min-width: 0; min-height: 136px; flex-direction: column; }
     .node-filter-header, .profile-name-header, .profile-keyword-header { display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-    .node-filter-title, .profile-name-header label, .profile-keyword-header label { margin: 0; font-size: 13px; }
+    .node-filter-title, .profile-name-header label, .profile-keyword-header label { margin: 0; font-size: 13px; font-weight: 600; }
     .filter-mode-tabs { display: flex; flex: none; gap: 3px; padding: 3px; border-radius: 6px; background: #f1f1ef; }
     .filter-mode-tab { min-height: 28px; padding: 0 10px; border: 0; border-radius: 4px; color: #787774; background: transparent; font-size: 13px; cursor: pointer; white-space: nowrap; }
     .filter-mode-tab[aria-pressed="true"] { color: #37352f; background: #fff; box-shadow: 0 1px 2px rgb(15 15 15 / 10%); }
+    .certificate-type-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .certificate-policy-modes { justify-content: flex-start; }
+    .certificate-policy-modes .filter-mode-tab:disabled { cursor: not-allowed; opacity: .55; }
     .subscription-controls textarea, .profile-keyword-control textarea, .profile-editor textarea { width: 100%; min-height: 78px; padding: 9px 10px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
     .node-filter-panel textarea { flex: 1; }
     .profile-save-fields { display: flex; min-height: 78px; flex: 1; flex-direction: column; }
     .save-profile-panel label { font-size: 13px; }
     .save-profile-panel input, .profile-editor input, .profile-editor select { width: 100%; min-width: 0; min-height: 38px; padding: 0 10px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
     #save-profile, #refresh-profiles { width: 134px; height: 36px; min-height: 36px; padding: 0 14px; border: 1px solid #c9cdd1; border-radius: 4px; background: #e6e8eb; color: #37352f; font-size: 13px; font-weight: 400; line-height: 1.2; white-space: nowrap; }
+    .profile-actions .secondary { width: 134px; height: 36px; min-height: 36px; padding: 0 14px; font-size: 13px; font-weight: 400; line-height: 1.2; white-space: nowrap; }
     #save-profile { width: 100%; margin-top: auto; }
     #save-profile:hover, #refresh-profiles:hover { background: #d9dce0; }
     .profile-manager { margin-top: 24px; padding: 20px; border: 1px solid #d9dcdf; border-radius: 5px; background: #fff; }
@@ -561,6 +565,13 @@
               </div>
             </div>
             <textarea id="node-name-keywords" rows="2" placeholder="每行一个关键词；留空表示不限制"></textarea>
+          </section>
+          <section id="certificate-policy-control" class="certificate-policy-panel" aria-label="跳过证书验证">
+            <div class="node-filter-header">
+              <span class="node-filter-title">跳过证书验证</span>
+              <div class="filter-mode-tabs certificate-policy-modes" data-certificate-modes role="group" aria-label="证书验证策略"></div>
+            </div>
+            <div class="certificate-type-list" data-certificate-types role="group" aria-label="选择节点类型"></div>
           </section>
           <section class="save-profile-panel" aria-label="保存订阅组合">
             <div class="profile-name-header">
@@ -769,6 +780,20 @@
     let activeMode = "paste";
     let activeFilterMode = "include";
     const filterValues = { include: "", exclude: "" };
+    const CERTIFICATE_NODE_TYPES = [
+      { value: "vless", label: "VLESS" },
+      { value: "vmess", label: "VMess" },
+      { value: "trojan", label: "Trojan" },
+      { value: "hysteria", label: "Hysteria" },
+      { value: "hysteria2", label: "Hysteria2" },
+      { value: "tuic", label: "TUIC" },
+      { value: "anytls", label: "AnyTLS" },
+    ];
+    const CERTIFICATE_POLICY_OPTIONS = [
+      { value: "unchanged", label: "不修改" },
+      { value: "verify", label: "不跳过" },
+      { value: "skip", label: "跳过" },
+    ];
     let customTemplate = null;
     let uploadedFiles = [];
     let uploadedContents = [];
@@ -1747,6 +1772,66 @@
       return control;
     }
 
+    function setupCertificatePolicy(root, initialPolicies = {}, onChange = () => {}) {
+      const typeList = root.querySelector("[data-certificate-types]");
+      const modeList = root.querySelector("[data-certificate-modes]");
+      const policies = { ...initialPolicies };
+      let activeType = "";
+
+      function renderModes() {
+        modeList.replaceChildren();
+        for (const option of CERTIFICATE_POLICY_OPTIONS) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "filter-mode-tab";
+          button.textContent = option.label;
+          button.disabled = !activeType;
+          button.setAttribute("aria-pressed", String(Boolean(activeType) && (policies[activeType] || "unchanged") === option.value));
+          button.addEventListener("click", () => {
+            policies[activeType] = option.value;
+            for (const control of modeList.children) {
+              control.setAttribute("aria-pressed", String(control === button));
+            }
+            onChange();
+          });
+          modeList.append(button);
+        }
+        modeList.hidden = false;
+      }
+
+      for (const nodeType of CERTIFICATE_NODE_TYPES) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "filter-mode-tab";
+        button.textContent = nodeType.label;
+        button.dataset.certificateType = nodeType.value;
+        button.setAttribute("aria-pressed", "false");
+        button.addEventListener("click", () => {
+          activeType = nodeType.value;
+          for (const control of typeList.children) {
+            control.setAttribute("aria-pressed", String(control === button));
+          }
+          renderModes();
+        });
+        typeList.append(button);
+      }
+      renderModes();
+
+      return {
+        getOverrides() {
+          return Object.fromEntries(
+            Object.entries(policies).filter(([, policy]) => policy !== "unchanged"),
+          );
+        },
+      };
+    }
+
+    const certificatePolicy = setupCertificatePolicy(
+      document.querySelector("#certificate-policy-control"),
+      {},
+      clearRemoteLink,
+    );
+
     async function editProfile(profileId, row) {
       const oldEditor = row.querySelector(".profile-editor");
       if (oldEditor) {
@@ -1773,6 +1858,13 @@
             </div>
             <textarea id="profile-keywords-${profileId}" data-keywords></textarea>
           </div>
+          <div id="profile-certificate-policy-${profileId}" class="certificate-policy-panel" data-certificate-policy>
+            <div class="node-filter-header">
+              <span class="node-filter-title">跳过证书验证</span>
+              <div class="filter-mode-tabs certificate-policy-modes" data-certificate-modes role="group" aria-label="证书验证策略"></div>
+            </div>
+            <div class="certificate-type-list" data-certificate-types role="group" aria-label="选择节点类型"></div>
+          </div>
           <div class="profile-editor-grid">
             <div><label>sing-box 模板</label><select data-template><option value="phone">iPhone</option><option value="openwrt">OpenWrt</option><option value="momo">Momo</option></select></div>
             <div class="profile-actions"><button class="primary" type="submit">保存修改</button><button class="secondary" type="button" data-cancel>取消</button></div>
@@ -1787,6 +1879,10 @@
           include: (profile.node_filter?.include_names || []).join("\n"),
           exclude: (profile.node_filter?.exclude_names || []).join("\n"),
         };
+        const certificatePolicy = setupCertificatePolicy(
+          editor.querySelector("[data-certificate-policy]"),
+          profile.node_filter?.tls_insecure || {},
+        );
         let keywordMode = keywordValues.include || !keywordValues.exclude ? "include" : "exclude";
         keywordInput.value = keywordValues[keywordMode];
         const setKeywordMode = (mode) => {
@@ -1837,6 +1933,7 @@
               node_filter: {
                 include_names: linesFromText(keywordValues.include),
                 exclude_names: linesFromText(keywordValues.exclude),
+                tls_insecure: certificatePolicy.getOverrides(),
               },
             };
             await profileRequest(`/api/subscriptions/${encodeURIComponent(profileId)}`, {
@@ -2054,6 +2151,7 @@
       payload.node_filter = {
         include_names: linesFromText(filterValues.include),
         exclude_names: linesFromText(filterValues.exclude),
+        tls_insecure: certificatePolicy.getOverrides(),
       };
       if (activeMode === "paste" && !payload.contents.some((item) => item.trim())) {
         throw new Error("请先粘贴订阅内容或选择本地文件。");
