@@ -1699,6 +1699,26 @@ def convert_content(content, template=None):
     return convert_contents([content], template)
 
 
+CERTIFICATE_POLICY_TYPES = {"vless", "vmess", "trojan", "hysteria", "hysteria2", "tuic", "anytls"}
+CERTIFICATE_POLICY_MODES = {"unchanged", "verify", "skip"}
+
+
+def normalize_certificate_policies(policies):
+    if not isinstance(policies, dict):
+        raise ValueError("node_filter.tls_insecure 必须是对象")
+    if any(
+        not isinstance(node_type, str) or node_type not in CERTIFICATE_POLICY_TYPES
+        for node_type in policies
+    ):
+        raise ValueError("node_filter.tls_insecure 包含不支持的节点类型")
+    if any(
+        not isinstance(mode, str) or mode not in CERTIFICATE_POLICY_MODES
+        for mode in policies.values()
+    ):
+        raise ValueError("node_filter.tls_insecure 的值必须是 unchanged、verify 或 skip")
+    return {node_type: mode for node_type, mode in policies.items() if mode != "unchanged"}
+
+
 def _filter_node_outbounds(outbounds, node_filter):
     if node_filter is None:
         return outbounds
@@ -1720,7 +1740,7 @@ def _filter_node_outbounds(outbounds, node_filter):
 
     included = [value.strip().casefold() for value in include_names]
     excluded = [value.strip().casefold() for value in exclude_names]
-    return [
+    filtered = [
         outbound
         for outbound in outbounds
         if isinstance(outbound, dict)
@@ -1728,6 +1748,15 @@ def _filter_node_outbounds(outbounds, node_filter):
         and (not included or any(term in outbound["tag"].casefold() for term in included))
         and not any(term in outbound["tag"].casefold() for term in excluded)
     ]
+    certificate_policies = normalize_certificate_policies(
+        node_filter.get("tls_insecure", {})
+    )
+    for outbound in filtered:
+        policy = certificate_policies.get(outbound.get("type"))
+        tls = outbound.get("tls")
+        if policy and isinstance(tls, dict):
+            tls["insecure"] = policy == "skip"
+    return filtered
 
 
 def convert_contents(contents, template=None, node_filter=None):
