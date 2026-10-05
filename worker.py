@@ -36,6 +36,7 @@ if str(ROOT) not in sys.path:
 
 
 from converter import convert_contents  # noqa: E402
+from sub2singbox import normalize_certificate_policies  # noqa: E402
 from template_options import get_template_options  # noqa: E402
 from subscription_utils import (  # noqa: E402
     SubscriptionFetchError,
@@ -279,6 +280,9 @@ def _validate_profile(payload: dict) -> dict:
         ):
             raise ValueError(f"node_filter.{key} 必须是最多 50 项的非空字符串数组")
         normalized_filter[key] = [value.strip() for value in values]
+    normalized_filter["tls_insecure"] = normalize_certificate_policies(
+        node_filter.get("tls_insecure", {})
+    )
 
     template_name = payload.get("template", DEFAULT_TEMPLATE)
     if not isinstance(template_name, str):
