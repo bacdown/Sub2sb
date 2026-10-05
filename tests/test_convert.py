@@ -145,6 +145,42 @@ class SubscriptionNodeFilterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "没有匹配的节点"):
             convert_contents([content], node_filter={"include_names": ["London"]})
 
+    def test_certificate_policy_has_unchanged_verify_and_skip_states(self):
+        content = """proxies:
+  - name: Japan HY2
+    type: hysteria2
+    server: japan.example
+    port: 443
+    password: test-password
+    skip-cert-verify: true
+"""
+        expected = {"unchanged": True, "verify": False, "skip": True}
+        for policy, insecure in expected.items():
+            with self.subTest(policy=policy):
+                config, _count = convert_contents(
+                    [content],
+                    node_filter={"tls_insecure": {"hysteria2": policy}},
+                )
+                node = next(
+                    item for item in config["outbounds"]
+                    if item.get("tag") == "Japan HY2"
+                )
+                self.assertIs(node["tls"]["insecure"], insecure)
+
+    def test_certificate_policy_rejects_non_string_modes(self):
+        content = """proxies:
+  - name: Japan HY2
+    type: hysteria2
+    server: japan.example
+    port: 443
+    password: test-password
+"""
+        with self.assertRaisesRegex(ValueError, "值必须是 unchanged"):
+            convert_contents(
+                [content],
+                node_filter={"tls_insecure": {"hysteria2": []}},
+            )
+
 
 class ShadowsocksPluginTests(unittest.TestCase):
     def test_plain_ss(self):
