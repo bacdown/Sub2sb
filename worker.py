@@ -502,7 +502,7 @@ class Default(WorkerEntrypoint):
         )
         config, _node_count = _convert(contents, template, profile.get("node_filter", {}))
         return Response(
-            json.dumps(config, ensure_ascii=False),
+            json.dumps(config, ensure_ascii=False, indent=2),
             status=200,
             headers={
                 "Content-Type": "application/json; charset=utf-8",
@@ -566,7 +566,7 @@ class Default(WorkerEntrypoint):
         contents = [await _fetch_subscription(u) for u in urls]
         template = await _load_template(self.env, template_name)
         config, _node_count = _convert(contents, template)
-        body = json.dumps(config, ensure_ascii=False)
+        body = json.dumps(config, ensure_ascii=False, indent=2)
         headers = {
             "Content-Type": "application/json; charset=utf-8",
             "Cache-Control": "public, max-age=60",

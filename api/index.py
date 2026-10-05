@@ -804,7 +804,7 @@ class handler(BaseHTTPRequestHandler):
             result = convert_request(payload)
             # 客户端远程配置需要纯 sing-box JSON，不要外层包装
             config = result["config"]
-            body = json.dumps(config, ensure_ascii=False).encode("utf-8")
+            body = json.dumps(config, ensure_ascii=False, indent=2).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -925,7 +925,7 @@ class handler(BaseHTTPRequestHandler):
                 if "template_options" in profile:
                     payload["template_options"] = profile["template_options"]
             config = convert_request(payload)["config"]
-            body = json.dumps(config, ensure_ascii=False).encode("utf-8")
+            body = json.dumps(config, ensure_ascii=False, indent=2).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))

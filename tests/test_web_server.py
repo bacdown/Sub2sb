@@ -23,6 +23,16 @@ SAMPLE_SUBSCRIPTION = """proxies:
     tls: true
 """
 
+HY2_SUBSCRIPTION = (
+    "proxies:\n"
+    "  - name: Japan HY2\n"
+    "    type: hysteria2\n"
+    "    server: japan.example\n"
+    "    port: 443\n"
+    "    password: test-password\n"
+    "    skip-cert-verify: true\n"
+)
+
 
 class WebServerTests(unittest.TestCase):
     @classmethod
@@ -758,6 +768,24 @@ class WebServerTests(unittest.TestCase):
         self.assertEqual(result["node_count"], 1)
         fetch.assert_called_once_with("https://subscriptions.example/sub")
 
+    def test_direct_sub_endpoint_preserves_hy2_insecure_and_formats_json(self):
+        with patch(
+            "api.index.fetch_remote_subscription",
+            return_value=HY2_SUBSCRIPTION,
+        ):
+            with urlopen(
+                self.base_url + "/sub?url=https%3A%2F%2Fsubscriptions.example%2Fsub"
+            ) as response:
+                body = response.read().decode("utf-8")
+                config = json.loads(body)
+
+        self.assertEqual(response.status, 200)
+        self.assertIn('\n  "dns": {', body)
+        node = next(
+            item for item in config["outbounds"] if item.get("tag") == "Japan HY2"
+        )
+        self.assertTrue(node["tls"]["insecure"])
+
     def test_link_endpoint_accepts_custom_template(self):
         with patch("web_server.fetch_remote_subscription", return_value=SAMPLE_SUBSCRIPTION):
             status, result = self.post_json(
@@ -824,7 +852,7 @@ class WebServerTests(unittest.TestCase):
                     "/api/subscriptions",
                     {
                         "name": "Japan profile",
-                        "contents": [SAMPLE_SUBSCRIPTION],
+                        "contents": [HY2_SUBSCRIPTION],
                         "template": "phone",
                         "node_filter": {"include_names": ["japan"]},
                     },
@@ -833,12 +861,19 @@ class WebServerTests(unittest.TestCase):
                 self.assertEqual(status, 201)
 
                 with urlopen(self.base_url + created["short_path"]) as response:
-                    config = json.loads(response.read())
+                    body = response.read().decode("utf-8")
+                    config = json.loads(body)
                 self.assertEqual(response.status, 200)
+                self.assertIn('\n  "dns": {', body)
                 self.assertIn(
-                    "Japan 01",
+                    "Japan HY2",
                     [item.get("tag") for item in config["outbounds"]],
                 )
+                node = next(
+                    item for item in config["outbounds"]
+                    if item.get("tag") == "Japan HY2"
+                )
+                self.assertTrue(node["tls"]["insecure"])
                 with urlopen(self.base_url + "/api" + created["short_path"]) as response:
                     self.assertEqual(response.status, 200)
 

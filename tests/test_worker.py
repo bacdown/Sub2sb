@@ -87,10 +87,12 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
         )
         entrypoint = _entrypoint()
         subscription = """proxies:
-  - name: Japan 01
-    type: socks5
+  - name: Japan HY2
+    type: hysteria2
     server: japan.example
-    port: 1080
+    port: 443
+    password: test-password
+    skip-cert-verify: true
 """
 
         with patch.object(worker, "_fetch_subscription", return_value=subscription):
@@ -98,8 +100,10 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status, 200)
         self.assertIn("application/json", response.headers["Content-Type"])
+        self.assertIn('\n  "dns": {', response.body)
         config = json.loads(response.body)
-        self.assertIn("Japan 01", [item.get("tag") for item in config["outbounds"]])
+        node = next(item for item in config["outbounds"] if item.get("tag") == "Japan HY2")
+        self.assertTrue(node["tls"]["insecure"])
 
     async def test_saved_profile_uses_kv_and_public_short_link(self):
         kv = _WorkerKV()
@@ -108,9 +112,11 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
         entrypoint.env.YAML2SB_API_KEY = "test-secret"
         profile_content = """proxies:
   - name: Japan 01
-    type: socks5
+    type: hysteria2
     server: japan.example
-    port: 1080
+    port: 443
+    password: test-password
+    skip-cert-verify: true
   - name: US West
     type: socks5
     server: us.example
@@ -136,10 +142,13 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
             _WorkerRequest("GET", f"https://worker.example{summary['short_path']}")
         )
         self.assertEqual(config_response.status, 200)
+        self.assertIn('\n  "dns": {', config_response.body)
         config = json.loads(config_response.body)
         node_tags = [item.get("tag") for item in config["outbounds"]]
         self.assertIn("Japan 01", node_tags)
         self.assertNotIn("US West", node_tags)
+        node = next(item for item in config["outbounds"] if item.get("tag") == "Japan 01")
+        self.assertTrue(node["tls"]["insecure"])
 
         listed = await entrypoint.fetch(
             _WorkerRequest(
