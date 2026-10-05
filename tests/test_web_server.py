@@ -854,7 +854,10 @@ class WebServerTests(unittest.TestCase):
                         "name": "Japan profile",
                         "contents": [HY2_SUBSCRIPTION],
                         "template": "phone",
-                        "node_filter": {"include_names": ["japan"]},
+                        "node_filter": {
+                            "include_names": ["japan"],
+                            "tls_insecure": {"hysteria2": "verify"},
+                        },
                     },
                     headers={"Authorization": "Bearer test-secret"},
                 )
@@ -873,7 +876,7 @@ class WebServerTests(unittest.TestCase):
                     item for item in config["outbounds"]
                     if item.get("tag") == "Japan HY2"
                 )
-                self.assertTrue(node["tls"]["insecure"])
+                self.assertFalse(node["tls"]["insecure"])
                 with urlopen(self.base_url + "/api" + created["short_path"]) as response:
                     self.assertEqual(response.status, 200)
 
