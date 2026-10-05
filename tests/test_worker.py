@@ -131,7 +131,10 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
                     "name": "Phone",
                     "contents": [profile_content],
                     "template": "phone",
-                    "node_filter": {"include_names": ["japan"]},
+                    "node_filter": {
+                        "include_names": ["japan"],
+                        "tls_insecure": {"hysteria2": "verify"},
+                    },
                 }),
             )
         )
@@ -148,7 +151,7 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Japan 01", node_tags)
         self.assertNotIn("US West", node_tags)
         node = next(item for item in config["outbounds"] if item.get("tag") == "Japan 01")
-        self.assertTrue(node["tls"]["insecure"])
+        self.assertFalse(node["tls"]["insecure"])
 
         listed = await entrypoint.fetch(
             _WorkerRequest(
