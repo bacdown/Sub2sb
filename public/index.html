@@ -1346,8 +1346,32 @@ input, textarea, select { font-size: 13px; }
 #profile-create-status { min-height:20px; margin-top:2px; }
 .profile-selection-actions { gap:10px; }
 .profile-combo-action { display:grid; grid-template-columns:minmax(150px,190px) auto; align-items:center; gap:7px; }
-.profile-combo-action input { width:100%; height:36px; min-height:36px; }
-#save-selected-combo { width:auto; min-width:132px; padding:0 13px; white-space:nowrap; }
+.profile-combo-action input {
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  background: var(--ui-input);
+  color: var(--ui-text);
+}
+#save-selected-combo {
+  width: auto;
+  min-width: 132px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 13px;
+  white-space: nowrap;
+}
+.theme-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.theme-options .secondary {
+  min-width: 76px;
+}
 @media (max-width:620px) {
   #save-profile-panel .profile-save-fields { grid-template-columns:1fr; }
   #save-profile-panel #save-profile { width:100%; }
