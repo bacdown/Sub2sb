@@ -513,38 +513,796 @@
       .base-template-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
       .match-add-btn { width: 100%; }
     }
+
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Noto Sans SC", sans-serif;
+      background: #f6f8fc;
+      color: #182033;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --surface: #fff;
+      --surface-soft: #f8faff;
+      --line: #e5e9f2;
+      --text: #182033;
+      --muted: #73809a;
+      --accent: #536dfe;
+      --accent-soft: #eef1ff;
+      --success: #1e9e6a;
+      --danger: #d9534f;
+    }
+    body { padding: 0 28px 28px; background: #f6f8fc; color: var(--text); }
+    main { width: min(1440px, 100%); }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      align-items: center;
+      margin: 0 -28px 26px;
+      padding: 14px max(28px, calc((100vw - 1440px) / 2 + 28px));
+      border-bottom: 1px solid var(--line);
+      background: rgb(255 255 255 / 92%);
+      backdrop-filter: blur(14px);
+    }
+    .header-copy h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0; }
+    .intro { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .deploy-options { margin-top: 8px; }
+    .deploy-options li {
+      padding: 2px 7px;
+      border-color: var(--line);
+      border-radius: 5px;
+      color: var(--muted);
+      background: var(--surface-soft);
+      font-size: 10px;
+    }
+    .github-link {
+      min-height: 38px;
+      border-color: var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      font-size: 12px;
+    }
+    .github-link:hover { color: var(--accent); background: var(--accent-soft); }
+    .github-link:focus-visible { outline-color: var(--accent); }
+    .card {
+      padding: 22px;
+      border-color: var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 8px 28px rgb(33 48 80 / 6%);
+    }
+    .tabs { background: var(--surface-soft); }
+    .tab { min-height: 40px; border-radius: 7px; font-size: 12px; font-weight: 650; }
+    .tab[aria-selected="true"] { color: var(--accent); box-shadow: 0 2px 7px rgb(33 48 80 / 8%); }
+    label { color: var(--text); font-size: 12px; font-weight: 700; }
+    textarea, input[type="url"], input[type="password"], select {
+      border-color: var(--line);
+      border-radius: 8px;
+      color: var(--text);
+    }
+    textarea:focus, input[type="url"]:focus, input[type="password"]:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgb(83 109 254 / 13%);
+    }
+    textarea::placeholder, input::placeholder { color: #8c98ad; }
+    textarea { min-height: 190px; padding: 12px; font-size: 12px; }
+    .mode-panel { padding-top: 18px; }
+    .input-layout { min-height: 0; padding-top: 18px; }
+    .hint { color: var(--muted); font-size: 11px; }
+    .api-key-field > label { text-align: left; }
+    .api-key-hint {
+      position: static;
+      display: block;
+      margin: 6px 0 0;
+      padding: 0;
+      font-size: 10px;
+      line-height: 1.5;
+      text-align: left;
+    }
+    .compose-panel {
+      border-color: var(--line);
+      border-radius: 10px;
+      background: var(--surface-soft);
+    }
+    .compose-section {
+      border-color: var(--line);
+      border-radius: 9px;
+      background: var(--surface);
+    }
+    .compose-section h3 { color: var(--text); font-size: 13px; }
+    .choice-group, .rule-link-details, .match-builder {
+      border-color: var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+    }
+    .secondary, .base-template-controls .secondary, .rule-link-fields .secondary,
+    .match-add-btn, .move-rule {
+      border-color: var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .secondary:hover, .base-template-controls .secondary:hover,
+    .rule-link-fields .secondary:hover, .match-add-btn:hover, .move-rule:hover {
+      border-color: #bac5fb;
+      background: var(--accent-soft);
+    }
+    .primary {
+      border-radius: 9px;
+      background: linear-gradient(135deg, #536dfe, #6258dc);
+      box-shadow: 0 7px 16px rgb(83 109 254 / 20%);
+    }
+    .primary:hover { background: linear-gradient(135deg, #465fe9, #554acb); }
+    .file-row, input[type="file"] { color: var(--muted); }
+    input[type="file"]::file-selector-button {
+      border-color: var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+    input[type="file"]::file-selector-button:hover { background: var(--accent-soft); }
+    .subscription-controls { gap: 10px; }
+    .node-filter-panel, .certificate-policy-panel, .save-profile-panel, .profile-manager {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface-soft);
+    }
+    .node-filter-title, .profile-name-header label, .profile-keyword-header label,
+    .save-profile-panel label, .profile-manager h2 { color: var(--text); font-size: 12px; }
+    .filter-mode-tabs { background: #edf0f7; }
+    .filter-mode-tab[aria-pressed="true"] {
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgb(33 48 80 / 10%);
+    }
+    .subscription-controls textarea, .profile-keyword-control textarea, .profile-editor textarea,
+    .save-profile-panel input, .manage-add-fields input, .profile-editor input,
+    .profile-editor select, .profile-combo-action input, .profile-url-row input,
+    .form-row input, .form-row select {
+      border-color: var(--line);
+      border-radius: 8px;
+      color: var(--text);
+    }
+    .profile-row, .added-item {
+      border-color: var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .profile-row-link, .remote-link-result a { color: #287b6d; }
+    .status { color: var(--muted); font-size: 12px; }
+    .status.error { color: var(--danger); }
+    .status.success { color: var(--success); }
+    footer { color: var(--muted); }
+    footer a { color: var(--text); }
+    @media (max-width: 800px) {
+      body { padding: 0 14px 20px; }
+      header { margin: 0 -14px 18px; padding: 12px 14px; }
+      .card { padding: 16px; }
+    }
+    @media (max-width: 520px) {
+      header { align-items: flex-start; }
+      .card { padding: 13px; }
+      .deploy-options { gap: 4px; }
+    }
+    html.dark {
+      --bg: #0b1020;
+      --surface: #111827;
+      --surface-soft: #151d2e;
+      --line: #273249;
+      --text: #edf2ff;
+      --muted: #91a0ba;
+      --accent: #8293ff;
+      --accent-soft: #1b2442;
+      --success: #45c995;
+      --danger: #ff7771;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    .app { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      display: flex;
+      height: 100vh;
+      flex-direction: column;
+      padding: 20px 14px;
+      color: #dbe4ff;
+      background: linear-gradient(180deg, #111a2e, #0e1628);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 24px; }
+    .brand-mark {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      width: 36px;
+      height: 36px;
+      flex: none;
+      place-items: center;
+      border-radius: 11px;
+      color: #fff;
+      background: linear-gradient(135deg, #6b7cff, #8b5cf6);
+      box-shadow: 0 8px 18px rgb(91 92 246 / 32%);
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .brand-mark .logo-icon { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .brand-title { font-size: 18px; font-weight: 800; }
+    .brand-title span { color: #91a3ff; font-size: 12px; font-weight: 500; }
+    .brand-sub { margin-top: 2px; color: #8796b5; font-size: 10px; }
+    .nav { display: grid; gap: 4px; }
+    .nav button {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border: 0;
+      border-radius: 9px;
+      color: #aebbd5;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 650;
+      text-align: left;
+    }
+    .nav button:hover { color: #fff; background: rgb(255 255 255 / 6%); }
+    .nav button.active { color: #fff; background: linear-gradient(90deg, #4256b9, #33478e); box-shadow: 0 8px 18px rgb(34 50 130 / 22%); }
+    .nav-icon { display: grid; width: 20px; height: 20px; flex: none; place-items: center; }
+    .divider { height: 1px; margin: 10px 6px; background: rgb(255 255 255 / 9%); }
+    .sidebar-bottom { display: grid; gap: 10px; margin-top: auto; }
+    .version { padding: 0 8px; color: #73809b; font: 10px var(--mono); }
+    .side-link { display: inline-flex; align-items: center; gap: 7px; padding: 8px; color: #aebbd5; font-size: 12px; text-decoration: none; }
+    .main { min-width: 0; }
+    header.topbar {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      display: flex;
+      height: 70px;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0;
+      padding: 0 28px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .top-copy { color: var(--muted); font-size: 13px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .icon-btn, .ghost-btn {
+      display: inline-flex;
+      height: 38px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--surface);
+      text-decoration: none;
+    }
+    .icon-btn { width: 38px; padding: 0; }
+    .icon-btn:hover, .ghost-btn:hover { background: var(--surface-soft); }
+    .content { width: 100%; max-width: 1500px; margin: 0 auto; padding: 26px 28px; }
+    .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+    .page-head .primary { width: auto; flex: none; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .eyebrow { color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+    .page-head h1 { margin: 5px 0 6px; color: var(--text); font-size: 28px; letter-spacing: 0; }
+    .page-head p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 18px; }
+    .stack { display: grid; min-width: 0; gap: 14px; }
+    .source-layout { display: grid; grid-template-columns: minmax(0, 1fr) 235px; align-items: start; gap: 14px; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 8px 28px rgb(33 48 80 / 6%); }
+    .source-main { min-width: 0; }
+    .source-tabs { display: flex; gap: 5px; margin-bottom: 10px; padding: 4px; border-radius: 10px; background: var(--surface-soft); }
+    .source-tab { flex: 1; padding: 9px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; font-size: 12px; font-weight: 650; }
+    .source-tab.active { color: var(--text); background: var(--surface); box-shadow: 0 2px 7px rgb(0 0 0 / 6%); }
+    .source-side { padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-soft); }
+    .source-side h3 { margin: 0 0 9px; font-size: 12px; }
+    .source-side ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .source-side li { display: flex; gap: 7px; color: var(--muted); font-size: 11px; }
+    .source-side li::before { color: var(--success); content: "✓"; font-weight: 900; }
+    .input-layout { min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+    .mode-panel { padding-top: 0; }
+    .controls-row { grid-template-columns: minmax(0, 1fr); }
+    .controls-row .controls-left { min-width: 0; }
+    .subscription-controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 0; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 8px 28px rgb(33 48 80 / 6%); }
+    .subscription-controls > .step-head { grid-column: 1; }
+    .filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .filter-grid .field { min-width: 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+    .chip { padding: 4px 7px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); background: var(--surface-soft); font: 10px var(--mono); }
+    .advanced { padding: 18px 20px; }
+    .advanced-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+    .adv-btn { padding: 12px; border: 1px solid var(--line); border-radius: 9px; color: var(--text); background: var(--surface); text-align: left; }
+    .adv-btn:hover, .adv-btn[aria-pressed="true"] { border-color: #b2bcff; background: var(--accent-soft); }
+    .adv-title { font-size: 12px; font-weight: 800; }
+    .adv-sub { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .bottom-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
+    .ready { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+    .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px #eaf9f2; }
+    .bottom-actions { display: flex; gap: 8px; }
+    .bottom-actions .primary { width: auto; }
+    html.dark .source-layout, html.dark .subscription-controls, html.dark .adv-btn { background: var(--surface); }
+    .preview { position: sticky; top: 88px; min-width: 0; }
+    .preview-card { padding: 17px; }
+    .preview-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; }
+    .preview-title h2 { margin: 0; font-size: 14px; }
+    .edit-link { border: 0; color: var(--accent); background: transparent; font-size: 11px; font-weight: 700; }
+    .summary { overflow: hidden; border: 1px solid var(--line); border-radius: 10px; }
+    .summary-head { display: flex; align-items: center; gap: 9px; padding: 12px; background: var(--surface-soft); }
+    .summary-head strong { font-size: 12px; }
+    .summary-head span { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .ok { display: grid; width: 24px; height: 24px; flex: none; place-items: center; border-radius: 50%; color: var(--success); background: #eaf9f2; }
+    html.dark .ok { background: #102d25; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+    .stat { padding: 9px; border-right: 1px solid var(--line); text-align: center; }
+    .stat:last-child { border: 0; }
+    .stat b { display: block; font-size: 16px; }
+    .stat span { color: var(--muted); font-size: 10px; }
+    .config-list { overflow: hidden; margin-top: 11px; border: 1px solid var(--line); border-radius: 10px; }
+    .config-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 11px; border-bottom: 1px solid var(--line); font-size: 11px; }
+    .config-row:last-child { border: 0; }
+    .config-row span:last-child { color: var(--muted); text-align: right; }
+    .json-wrap { overflow: hidden; margin-top: 11px; border: 1px solid #222b3e; border-radius: 10px; }
+    .json-head { display: flex; height: 38px; align-items: center; justify-content: space-between; padding: 0 11px; color: #52617a; background: #eef1f7; font-size: 10px; }
+    .json-head button { display: inline-flex; align-items: center; gap: 5px; border: 0; color: #52617a; background: transparent; font-size: 10px; }
+    .json { overflow: auto; max-height: 330px; min-height: 150px; margin: 0; padding: 12px; color: #34425e; background: #f8faff; font: 10px/1.65 var(--mono); white-space: pre; }
+    .json-key { color: #536dfe; }
+    .json-string { color: #13805c; }
+    .json-number { color: #a65317; }
+    .json-literal { color: #a44769; }
+    html.dark .json-head { color: #cbd5e1; background: #182236; }
+    html.dark .json-head button { color: #cbd5e1; }
+    html.dark .json { color: #cbd5e1; background: #0e1524; }
+    html.dark .json-key { color: #aab7ff; }
+    html.dark .json-string { color: #74d6ad; }
+    html.dark .json-number { color: #ffc27a; }
+    html.dark .json-literal { color: #ff9cc1; }
+    .preview-hint { font-size: 10px; }
+    .icon { display: inline-block; width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; vertical-align: middle; }
+    .icon.sm { width: 15px; height: 15px; }
+    .icon.xs { width: 13px; height: 13px; }
+    .icon-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+    html.dark body { background: var(--bg); }
+    html.dark .card, html.dark .compose-section, html.dark .profile-row, html.dark .added-item { background: var(--surface); }
+    html.dark .compose-panel, html.dark .choice-group, html.dark .rule-link-details, html.dark .match-builder { background: var(--surface-soft); }
+    html.dark input, html.dark textarea, html.dark select { color: var(--text); background: var(--surface); }
+    html.dark .tabs, html.dark .filter-mode-tabs { background: var(--surface-soft); }
+    html.dark .filter-mode-tab[aria-pressed="true"] { color: var(--text); background: var(--surface); }
+    @media (max-width: 1100px) { .workspace { grid-template-columns: 1fr; } .preview { position: static; } .source-layout { grid-template-columns: 1fr; } }
+    @media (max-width: 800px) {
+      .app { width: 100%; grid-template-columns: minmax(0, 1fr); }
+      .sidebar { position: sticky; z-index: 20; width: 100%; min-width: 0; height: auto; padding: 9px 12px; }
+      .brand { padding: 0 6px 9px; }
+      .brand-mark { width: 30px; height: 30px; }
+      .nav { display: flex; min-width: 0; max-width: 100%; gap: 3px; overflow-x: auto; scrollbar-width: none; }
+      .nav::-webkit-scrollbar { display: none; }
+      .nav button { flex: none; padding: 9px 10px; white-space: nowrap; }
+      .sidebar-bottom { display: none; }
+      header.topbar { height: 56px; padding: 0 14px; }
+      .main, .content { min-width: 0; }
+      .content { padding: 18px 12px; }
+    }
+    @media (max-width: 520px) {
+      .top-copy { display: none; }
+      .content { padding: 16px 10px; }
+      .page-head h1 { font-size: 24px; }
+      .preview-card { padding: 13px; }
+    }
+    section.card[aria-label="配置转换"] {
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    #convert-form { display: grid; gap: 12px; }
+    .input-layout, .controls-row {
+      min-width: 0;
+      margin: 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 8px 28px rgb(33 48 80 / 6%);
+    }
+    .input-layout { gap: 14px; }
+    .controls-row { align-items: start; }
+    .controls-step-head { grid-column: 1 / -1; }
+    .step-head { display: flex; align-items: center; gap: 11px; margin-bottom: 2px; }
+    .step-no { display: grid; width: 30px; height: 30px; flex: none; place-items: center; border-radius: 50%; color: var(--accent); background: var(--accent-soft); font-size: 12px; font-weight: 800; }
+    .step-title { color: var(--text); font-size: 13px; font-weight: 800; }
+    .step-desc { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .tabs { margin-bottom: -2px; }
+    .templates { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .template {
+      display: grid;
+      min-width: 0;
+      min-height: 104px;
+      align-content: start;
+      justify-items: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--surface);
+      text-align: left;
+    }
+    .template:hover { border-color: #aebaff; }
+    .template.active { border: 1.5px solid var(--accent); background: var(--accent-soft); }
+    .template .check { display: none; position: absolute; top: 8px; right: 9px; color: var(--accent); font-size: 12px; }
+    .template.active .check { display: block; }
+    .template-icon { display: flex; height: 22px; align-items: center; margin-bottom: 7px; color: var(--accent); }
+    .template-icon .icon { width: 20px; height: 20px; }
+    .template-title { font-size: 11px; font-weight: 800; }
+    .template-desc { margin-top: 4px; color: var(--muted); font-size: 9px; line-height: 1.4; }
+    .template-upload-row { display: flex; min-height: 32px; align-items: center; gap: 9px; margin-top: 9px; }
+    .template-upload { display: inline-flex; height: 32px; align-items: center; gap: 7px; padding: 0 10px; border: 1px dashed #aebaff; border-radius: 8px; color: var(--accent); background: var(--surface); font-size: 11px; font-weight: 700; }
+    .template-upload:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .template-upload-sub { color: var(--muted); font-size: 10px; }
+    .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; }
+    .subscription-controls { grid-auto-rows: auto; }
+    .subscription-controls > .step-head { grid-column: 1; }
+    .node-filter-panel, .certificate-policy-panel, .save-profile-panel, .profile-manager { min-height: 0; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+    .save-profile-panel, .profile-manager { grid-column: 1 / -1; }
+    .compose-panel { margin-top: 0; padding: 18px; border-radius: 12px; background: var(--surface); box-shadow: 0 8px 28px rgb(33 48 80 / 6%); }
+    .compose-panel > .step-head { margin-bottom: 14px; }
+    html.dark .template { border-color: var(--line); color: var(--text); background: var(--surface); }
+    html.dark .template.active { background: var(--accent-soft); }
+    html.dark .input-layout, html.dark .controls-row, html.dark .node-filter-panel,
+    html.dark .certificate-policy-panel, html.dark .save-profile-panel, html.dark .profile-manager,
+    html.dark .compose-panel { background: var(--surface); }
+    html.dark #api-key, html.dark #template, html.dark .subscription-controls textarea,
+    html.dark .profile-editor input, html.dark .profile-editor select { color: var(--text); background: var(--surface); }
+    @media (max-width: 800px) { .templates { grid-template-columns: repeat(2, minmax(0, 1fr)); } .advanced-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bottom-bar { align-items: stretch; flex-direction: column; } .bottom-actions { width: 100%; } .bottom-actions .primary { flex: 1; } }
+    @media (max-width: 620px) { .subscription-controls { grid-template-columns: 1fr; } .subscription-controls > .step-head, .save-profile-panel, .profile-manager { grid-column: auto; } }
+    @media (max-width: 520px) {
+      .templates { grid-template-columns: 1fr 1fr; }
+      .template { min-height: 96px; }
+      .template-desc { font-size: 9px; }
+      .source-layout, .subscription-controls { padding: 13px; }
+      .filter-grid { grid-template-columns: 1fr; }
+    }
+  
+    /* ---- UI refinement: yaml2sb 2.0 ---- */
+    :root {
+      --ui-bg: #f5f6f7;
+      --ui-panel: #ffffff;
+      --ui-panel-soft: #fafafa;
+      --ui-line: #e1e4e7;
+      --ui-line-strong: #cbd0d5;
+      --ui-text: #25282c;
+      --ui-muted: #747b83;
+      --ui-accent: #2f3439;
+      --ui-accent-soft: #eef0f2;
+      --ui-success: #3f7b5a;
+    }
+    body {
+      background:
+        radial-gradient(circle at 15% 0%, rgb(255 255 255 / 72%), transparent 34%),
+        var(--ui-bg);
+      color: var(--ui-text);
+    }
+    .app { min-height: calc(100vh - 0px); }
+    .sidebar {
+      background: rgba(255,255,255,.88);
+      border-right-color: var(--ui-line);
+      backdrop-filter: blur(14px);
+    }
+    .brand { padding: 2px 4px 22px; }
+    .brand-mark {
+      width: 48px;
+      height: 40px;      border: 1px solid var(--ui-line);
+      border-radius: 11px;
+      background: linear-gradient(145deg,#fff,#f0f2f3);
+      box-shadow: 0 3px 12px rgb(25 30 35 / 7%);
+    }
+    .logo-icon { width: 40px; height: 34px; }
+    .sb-logo { overflow: visible; }
+    .sb-logo .logo-s {
+      transform: skewX(-10deg) translateX(1px);
+      transform-origin: center;
+    }
+    .sb-logo .logo-b {
+      transform: translateX(1px);
+    }
+    .sb-logo rect { shape-rendering: geometricPrecision; }
+    .brand-title { letter-spacing: -.035em; }
+    .brand-sub { color: #8a9096; }
+    .nav { gap: 3px; }
+    .nav button {
+      min-height: 42px;
+      border-radius: 8px;
+      transition: background .16s ease, color .16s ease, transform .16s ease;
+    }
+    .nav button:hover { background: #f1f3f4; }
+    .nav button.active {
+      background: #eceeef;
+      color: #22262a;
+      box-shadow: inset 0 0 0 1px rgb(40 45 50 / 4%);
+    }
+    .topbar {
+      border-bottom-color: var(--ui-line);
+      background: rgba(245,246,247,.78);
+      backdrop-filter: blur(12px);
+    }
+    .content { padding-top: 30px; }
+    .page-head h1 { letter-spacing: -.045em; }
+    .page-head p { max-width: 720px; }
+    .card, .compose-panel, .compose-section {
+      border-color: var(--ui-line);
+      box-shadow: 0 8px 28px rgb(30 35 40 / 4%);
+    }
+    .card { border-radius: 10px; }
+    .compose-panel { border-radius: 10px; background: #f8f9fa; }
+    .compose-section { border-radius: 8px; }
+    .step-no {
+      border-radius: 9px;
+      background: #f0f2f3;
+      color: #3a4046;
+    }
+    .step-title { letter-spacing: -.015em; }
+    .source-tabs {
+      border: 1px solid var(--ui-line);
+      background: #f0f2f3;
+      padding: 3px;
+      border-radius: 9px;
+    }
+    .source-tab {
+      min-height: 40px;
+      border-radius: 7px;
+      transition: all .16s ease;
+    }
+    .source-tab[aria-selected="true"] {
+      box-shadow: 0 2px 5px rgb(20 25 30 / 9%);
+    }
+    textarea, input[type="url"], input[type="password"], select,
+    .form-row input, .form-row select, .save-profile-panel input,
+    .profile-editor input, .profile-editor select {
+      border-color: var(--ui-line-strong);
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    textarea:hover, input[type="url"]:hover, input[type="password"]:hover, select:hover {
+      border-color: #b8bec4;
+    }
+    textarea:focus, input[type="url"]:focus, input[type="password"]:focus, select:focus {
+      border-color: #8e969e;
+      box-shadow: 0 0 0 3px rgb(60 68 75 / 7%);
+    }
+    .templates { gap: 10px; }
+    .template {
+      min-height: 102px;
+      border-color: var(--ui-line);
+      border-radius: 9px;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+    .template:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgb(25 30 35 / 7%); }
+    .template.active {
+      border-color: #858d95;
+      box-shadow: 0 0 0 2px rgb(50 55 60 / 6%);
+    }
+    .template .check { border-radius: 999px; }
+    .filter-grid { gap: 10px; }
+    .filter-grid .field {
+      padding: 12px;
+      border: 1px solid var(--ui-line);
+      border-radius: 8px;
+      background: var(--ui-panel-soft);
+    }
+    .filter-grid input {
+      background: #fff;
+      border-color: var(--ui-line-strong);
+    }
+    .chips { min-height: 0; }
+    .chip {
+      border: 1px solid #d7dce0;
+      background: #f1f3f4;
+      color: #4d555d;
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .node-filter-header { margin-bottom: 9px; }
+    .certificate-policy-panel {
+      padding: 12px;
+      border: 1px solid var(--ui-line);
+      border-radius: 8px;
+      background: var(--ui-panel-soft);
+    }
+    .certificate-type-list .filter-mode-tab,
+    .certificate-policy-modes .filter-mode-tab {
+      border: 1px solid transparent;
+      transition: all .15s ease;
+    }
+    .certificate-type-list .filter-mode-tab {
+      background: #fff;
+      border-color: var(--ui-line);
+    }
+    .certificate-type-list .filter-mode-tab:hover,
+    .certificate-policy-modes .filter-mode-tab:hover:not(:disabled) {
+      border-color: #c2c8cd;
+      color: #3b4147;
+    }
+    .certificate-type-list .filter-mode-tab[aria-pressed="true"],
+    .certificate-policy-modes .filter-mode-tab[aria-pressed="true"] {
+      color: #fff;
+      background: #3b4147;
+      border-color: #3b4147;
+      box-shadow: 0 2px 5px rgb(30 35 40 / 12%);
+    }
+    .advanced-grid { gap: 9px; }
+    .adv-btn {
+      border-radius: 8px;
+      border-color: var(--ui-line);
+      background: #fff;
+      transition: all .16s ease;
+    }
+    .adv-btn:hover {
+      border-color: #b8bec4;
+      background: #fafafa;
+      transform: translateY(-1px);
+    }
+    .adv-btn[aria-pressed="true"] {
+      border-color: #8b9299;
+      background: #f0f2f3;
+    }
+    .match-builder, .rule-link-details {
+      border-color: var(--ui-line);
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .choice-group, .dns-option-list {
+      border-color: var(--ui-line);
+      border-radius: 8px;
+    }
+    .dns-option {
+      border-radius: 6px;
+    }
+    .dns-option:hover { background: #f2f4f5; }
+    .secondary, .primary {
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+    .secondary:hover { transform: translateY(-1px); }
+    .secondary:active, .primary:active { transform: translateY(0); }
+    .primary {
+      border-radius: 8px;
+      box-shadow: 0 3px 9px rgb(25 30 35 / 10%);
+    }
+    .preview-card, .json-preview-wrap {
+      border-color: var(--ui-line);
+      border-radius: 8px;
+    }
+    .status.success { color: var(--ui-success); }
+    .profile-row {
+      border-color: var(--ui-line);
+      border-radius: 8px;
+      background: #fff;
+      transition: box-shadow .16s ease, border-color .16s ease;
+    }
+    .profile-row:hover {
+      border-color: #c7ccd1;
+      box-shadow: 0 5px 16px rgb(25 30 35 / 5%);
+    }
+    .profile-editor {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 14px;
+      border: 1px solid var(--ui-line);
+    }
+    .profile-editor .certificate-policy-panel { background: #fff; }
+    @media (max-width: 900px) {
+      .sidebar { width: 220px; }
+      .content { padding-left: 22px; padding-right: 22px; }
+    }
+    @media (max-width: 720px) {
+      .sidebar { display: none; }
+      .content { padding: 22px 16px; }
+      .filter-grid { grid-template-columns: 1fr; }
+      .certificate-policy-panel { min-height: auto; }
+    }
+
   </style>
 </head>
 <body>
-  <main>
-    <header>
-      <div class="header-copy">
-        <h1>yaml2sb · sing-box</h1>
-        <p class="intro">YAML 配置与订阅链接，轻松转换为 sing-box JSON</p>
-        <ul class="deploy-options" aria-label="支持的部署方式">
-          <li>本地</li>
-          <li>Docker</li>
-          <li>Vercel</li>
-          <li>Cloudflare Workers</li>
-        </ul>
+  <svg class="icon-defs" aria-hidden="true">
+    <symbol id="i-convert" viewBox="0 0 24 24"><path d="M4 7h10m-3-3 3 3-3 3M20 17H10m3-3-3 3 3 3"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 4 8 4-8 4-8-4 8-4Zm-8 8 8 4 8-4m-16 4 8 4 8-4"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h6m4 0h6M4 17h3m4 0h9"/><circle cx="12" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="m9 15 6-6M7 18H6a4 4 0 0 1 0-8h4m7-4h1a4 4 0 0 1 0 8h-4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.2 1-1.4 2.4-1.5-.6a8 8 0 0 1-1.8 1l-.3 1.6h-2.8l-.3-1.6a8 8 0 0 1-1.8-1l-1.5.6-1.4-2.4 1.2-1a8 8 0 0 1 0-2l-1.2-1 1.4-2.4 1.5.6a8 8 0 0 1 1.8-1l.3-1.6h2.8l.3 1.6a8 8 0 0 1 1.8 1l1.5-.6 1.4 2.4-1.2 1a8 8 0 0 1-.1 1.9Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-3.2c0-1.1-.4-1.8-1-2.2 3.3-.4 6.8-1.6 6.8-7.2 0-1.6-.6-2.9-1.6-3.9.2-.4.7-1.9-.2-3.8 0 0-1.3-.4-4.1 1.5a14 14 0 0 0-7.5 0C4.6 1.5 3.3 1.9 3.3 1.9c-.9 1.9-.4 3.4-.2 3.8-1 1-1.6 2.3-1.6 3.9 0 5.6 3.5 6.8 6.8 7.2-.6.4-1 1.1-1 2.2V22"/><path d="M7.5 18c-2 .6-2.4-1-3.2-1.3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M10 18h4"/></symbol>
+    <symbol id="i-router" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="9" rx="2"/><path d="M8 8V5m8 3V5M6 13h.01M10 13h.01M14 13h.01M18 13h.01"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="m12 3 8 4v10l-8 4-8-4V7l8-4Z"/><path d="m4 7 8 4 8-4M12 11v10"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></symbol>
+    <symbol id="i-source" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></symbol>
+    <symbol id="i-template" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM15 3v5h4M9 12h6M9 16h6"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/><circle cx="8" cy="6" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="12" cy="18" r="1.7"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+    <symbol id="i-rules" viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"/></symbol>
+    <symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 5v14M4 8l3-3 3 3M17 19V5m-3 11 3 3 3-3"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v6c0 5-3.3 8-8 9-4.7-1-8-4-8-9V6l8-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h3a4 4 0 0 0 4-4v-4a4 4 0 0 1 4-4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.8-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14.8 4L20 15m0 5v-5h-5"/></symbol>
+    <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  </svg>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-label="yaml2sb logo">
+  <svg class="logo-icon sb-logo" viewBox="0 0 44 36" aria-hidden="true">
+    <g class="logo-s">
+      <path d="M3 7.5 18 2.5v4.7L8.5 10.4 18 13.7v5.1L8.5 22l9.5 3.1v5.1L3 25.1v-6.4l9.8-3.1L3 12.9Z"/>
+    </g>
+    <g class="logo-b">
+      <rect x="25" y="4" width="5" height="5" rx=".5"/>
+      <rect x="30" y="4" width="5" height="5" rx=".5"/>
+      <rect x="35" y="4" width="5" height="5" rx=".5"/>
+      <rect x="25" y="9" width="5" height="5" rx=".5"/>
+      <rect x="35" y="9" width="5" height="5" rx=".5"/>
+      <rect x="25" y="14" width="5" height="5" rx=".5"/>
+      <rect x="30" y="14" width="5" height="5" rx=".5"/>
+      <rect x="35" y="14" width="5" height="5" rx=".5"/>
+      <rect x="25" y="19" width="5" height="5" rx=".5"/>
+      <rect x="35" y="19" width="5" height="5" rx=".5"/>
+      <rect x="25" y="24" width="5" height="5" rx=".5"/>
+      <rect x="30" y="24" width="5" height="5" rx=".5"/>
+      <rect x="35" y="24" width="5" height="5" rx=".5"/>
+      <rect x="25" y="29" width="5" height="5" rx=".5"/>
+    </g>
+  </svg>
+</div>
+        <div><div class="brand-title">yaml2sb</div><div class="brand-sub">YAML → sing-box</div></div>
       </div>
-      <a class="github-link" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener noreferrer" aria-label="访问 yaml2sb 项目主页（原作者：bacdown）" title="yaml2sb 项目主页 · 原作者 bacdown">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2.1c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.8 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.9 4.2 19 4.5 19 4.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.5-2.8 5.5-5.4 5.8.4.3.8 1 .8 2v3c0 .3.2.7.8.6A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
-        </svg>
-        <span>bacdown</span>
-      </a>
-    </header>
+      <nav class="nav" aria-label="主导航">
+        <button class="active" type="button" data-page="convert" data-ui-action="convert"><span class="nav-icon"><svg class="icon"><use href="#i-convert"/></svg></span>转换</button>
+        <button type="button" data-page="subscriptions" data-ui-action="subscriptions"><span class="nav-icon"><svg class="icon"><use href="#i-layers"/></svg></span>订阅管理</button>
+        <button type="button" data-page="profiles" data-ui-action="profiles"><span class="nav-icon"><svg class="icon"><use href="#i-sliders"/></svg></span>配置方案</button>
+        <button type="button" data-page="shortlinks" data-ui-action="shortlinks"><span class="nav-icon"><svg class="icon"><use href="#i-link"/></svg></span>短链接</button>
+        <div class="divider"></div>
+        <button type="button" data-page="settings" data-ui-action="settings"><span class="nav-icon"><svg class="icon"><use href="#i-settings"/></svg></span>设置</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="version">v1.1.0</div>
+        <a class="side-link" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener noreferrer"><svg class="icon sm"><use href="#i-github"/></svg> 项目主页</a>
+      </div>
+    </aside>
 
+    <section class="main">
+      <header class="topbar">
+        <div class="top-copy">更简单的订阅转换，更强大的配置管理</div>
+        <div class="top-actions">
+          <button class="icon-btn" id="theme" type="button" title="切换深色模式" aria-label="切换深色模式"><svg class="icon"><use href="#i-sun"/></svg></button>
+          <a class="ghost-btn" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener noreferrer" aria-label="GitHub bacdown"><svg class="icon sm"><use href="#i-github"/></svg><span>bacdown</span></a>
+        </div>
+      </header>
+      <main class="content">
+        <section class="page active" id="page-convert">
+        <div class="page-head">
+          <div><div class="eyebrow">yaml2sb 2.0</div><h1 id="page-title">订阅转换</h1><p>将 Clash / YAML / 订阅内容转换为 sing-box 配置，支持多订阅合并、节点筛选和高级规则。</p></div>
+        </div>
+        <div class="workspace">
+          <div class="stack">
     <section class="card" aria-label="配置转换">
-      <div class="tabs" role="tablist" aria-label="工作区">
-        <button class="tab" id="paste-tab" data-mode="paste" type="button" role="tab" aria-selected="true" aria-controls="paste-panel">粘贴 / 上传文件</button>
-        <button class="tab" id="url-tab" data-mode="url" type="button" role="tab" aria-selected="false" aria-controls="url-panel">远程订阅链接</button>
-        <button class="tab" id="manage-tab" data-mode="manage" type="button" role="tab" aria-selected="false" aria-controls="profile-manager">订阅管理</button>
-      </div>
-
+      <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-source"/></svg></div><div><div class="step-title">来源</div><div class="step-desc">添加订阅链接、上传文件或直接粘贴配置。</div></div></div>
       <form id="convert-form">
-        <div class="input-layout">
+        <div class="source-layout">
+          <div class="source-main">
+            <div class="source-tabs" role="tablist" aria-label="订阅来源">
+              <button class="source-tab active" id="url-tab" data-source="url" type="button" role="tab" aria-selected="false" aria-controls="url-panel">订阅 URL</button>
+              <button class="source-tab" id="file-tab" data-source="file" type="button" role="tab" aria-selected="false" aria-controls="file-panel">上传文件</button>
+              <button class="source-tab" id="paste-tab" data-source="paste" type="button" role="tab" aria-selected="true" aria-controls="paste-panel">粘贴配置</button>
+            </div>
+            <div class="input-layout">
           <div class="mode-panel" id="paste-panel" role="tabpanel" aria-labelledby="paste-tab">
             <label for="content">订阅内容</label>
             <textarea id="content" name="content" placeholder="粘贴 Clash YAML、Base64 订阅或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
@@ -556,55 +1314,44 @@
             <textarea id="url" name="url" rows="4" placeholder="每行一个订阅链接&#10;https://example.com/subscribe"></textarea>
             <p class="hint">支持粘贴多条订阅链接，每行一个；服务端会逐条下载订阅内容，只允许访问公网 HTTP / HTTPS 地址，且每条下载上限为 2 MiB。</p>
           </div>
-
-          <div class="manage-input-layout" id="manage-input-panel" aria-label="添加和选择机场订阅" hidden>
-            <section class="manage-add-panel" aria-label="添加订阅">
-              <h2 class="manage-input-title">添加订阅</h2>
-              <div class="manage-add-fields">
-                <div>
-                  <label for="airport-name">订阅名称</label>
-                  <input id="airport-name" type="text" maxlength="80" placeholder="例如：日本机场" autocomplete="off">
-                </div>
-                <div>
-                  <label for="airport-url">订阅地址</label>
-                  <input id="airport-url" type="url" placeholder="https://example.com/subscribe" autocomplete="url">
-                </div>
-                <button id="add-airport-subscription" class="primary" type="button">添加订阅</button>
-              </div>
-            </section>
-            <section class="airport-selection-panel" aria-label="选择已添加订阅">
-              <h2 class="manage-input-title">已添加订阅</h2>
-              <div id="airport-selection-list" class="airport-selection-list" aria-live="polite"></div>
-              <div class="profile-selection-toolbar">
-                <p id="profile-selection-count" class="profile-selection-count" aria-live="polite">已选择 0 项</p>
-                <div class="profile-selection-actions">
-                  <button id="fill-selected-urls" class="secondary" type="button" disabled>带入远程订阅链接</button>
-                  <div class="profile-combo-action">
-                    <input id="selected-combo-name" type="text" maxlength="80" placeholder="组合名称" aria-label="组合名称">
-                    <button id="save-selected-combo" class="primary" type="button" disabled>生成组合订阅链接</button>
-                  </div>
-                </div>
-              </div>
-            </section>
+          <div class="mode-panel" id="file-panel" role="tabpanel" aria-labelledby="file-tab" hidden>
+            <label for="file">YAML / TXT / JSON 文件</label>
+            <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
+            <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择，合并内容总大小不超过 2 MiB。</p>
           </div>
+            </div>
+          </div>
+          <aside class="source-side">
+          <h3>支持的来源</h3>
+          <ul><li>HTTP / HTTPS 订阅 URL</li><li>YAML / TXT / JSON 文件</li><li>Base64 订阅内容</li><li>Clash 代理 URI</li></ul>
+          <div class="field" style="margin-top:14px"><label for="api-key">API 访问密钥</label><input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint"></div>
+          <div id="api-key-hint" class="hint" style="margin-top:7px">仅随请求发送，不写入 localStorage。</div>
+          </aside>
         </div>
 
         <div class="controls-row">
+          <div class="step-head controls-step-head"><span class="step-no">2</span><div><div class="step-title">转换方案</div><div class="step-desc">选择客户端模板，或使用自定义配置。</div></div></div>
           <div class="controls-left">
-            <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择 YAML / TXT 文件，内容会合并提交；总大小上限为 2 MiB。</p>
-            <div class="file-row">
-              <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
-            </div>
             <div class="options">
               <div>
-                <label for="template">sing-box 模板</label>
-                <select id="template" name="template">
+                <div class="templates" id="template-cards" role="group" aria-label="选择 sing-box 模板">
+                  <button class="template active" type="button" data-template-card="config_phone.json"><span class="check">✓</span><span class="template-icon"><svg class="icon"><use href="#i-phone"/></svg></span><span class="template-title">手机客户端</span><span class="template-desc">SFA / SFI / Hiddify / NekoBox</span></button>
+                  <button class="template" type="button" data-template-card="config_openwrt.json"><span class="check">✓</span><span class="template-icon"><svg class="icon"><use href="#i-router"/></svg></span><span class="template-title">OpenWrt</span><span class="template-desc">sing-box / 旁路由 / 路由器</span></button>
+                  <button class="template" type="button" data-template-card="momo.json"><span class="check">✓</span><span class="template-icon"><svg class="icon"><use href="#i-box"/></svg></span><span class="template-title">Momo</span><span class="template-desc">Momo 客户端配置</span></button>
+                  <button class="template" type="button" data-template-card="compose"><span class="check">✓</span><span class="template-icon"><svg class="icon"><use href="#i-sliders"/></svg></span><span class="template-title">自定义</span><span class="template-desc">基于内置模板自由组合</span></button>
+                </div>
+                <label class="visually-hidden" for="template">sing-box 模板</label>
+                <select id="template" name="template" class="visually-hidden" tabindex="-1" aria-hidden="true">
                   <option value="config_phone.json">iPhone 配置</option>
                   <option value="config_openwrt.json">OpenWrt 配置</option>
                   <option value="momo.json">Momo 配置</option>
                   <option value="compose">自定义制作配置</option>
                   <option value="custom">上传自定义模板</option>
                 </select>
+                <div class="template-upload-row">
+                  <button id="upload-template-trigger" type="button" class="template-upload"><svg class="icon sm"><use href="#i-upload"/></svg><span>上传 JSON 模板</span></button>
+                  <span class="template-upload-sub">验证后用于本次转换</span>
+                </div>
                 <div id="custom-template-panel" class="custom-template-panel" hidden>
                   <label for="custom-template-file">自定义 JSON 模板文件</label>
                   <input id="custom-template-file" type="file" accept=".json,application/json">
@@ -614,19 +1361,6 @@
               </div>
             </div>
           </div>
-          <div class="shared-controls">
-            <div id="input-api-key-slot">
-              <div id="api-key-panel" class="api-key-field">
-                <label for="api-key">API 访问密钥（可选）</label>
-                <div class="api-key-input-wrap">
-                  <input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint">
-                  <p id="api-key-hint" class="hint api-key-hint">保存和管理订阅短链接必须先在服务端设置 YAML2SB_API_KEY，并在此填写；普通转换仅在服务端启用了密钥时需要填写。密钥只随本次请求发送，不会保存在浏览器中。</p>
-                </div>
-              </div>
-            </div>
-            <button id="submit" class="primary" type="submit">转换并下载 JSON</button>
-            <button id="generate-subscription-link" class="secondary" type="button">生成远程订阅链接</button>
-          </div>
         </div>
         <div id="remote-link-result" class="remote-link-result" hidden>
           <a id="remote-subscription-link" target="_blank" rel="noopener noreferrer"></a>
@@ -635,16 +1369,13 @@
         <p id="remote-link-status" class="status" role="status" aria-live="polite"></p>
       </form>
       <div class="subscription-controls">
-          <section class="node-filter-panel" aria-label="节点名称关键词筛选">
-            <div class="node-filter-header">
-              <label id="node-filter-label" class="node-filter-title" for="node-name-keywords">保留节点名称关键词</label>
-              <div class="filter-mode-tabs" role="group" aria-label="关键词筛选方式">
-                <button class="filter-mode-tab" type="button" data-filter-mode="include" aria-pressed="true">保留</button>
-                <button class="filter-mode-tab" type="button" data-filter-mode="exclude" aria-pressed="false">排除</button>
-              </div>
-            </div>
-            <textarea id="node-name-keywords" rows="2" placeholder="每行一个关键词；留空表示不限制"></textarea>
-          </section>
+          <div class="step-head controls-step-head"><span class="step-no">3</span><div><div class="step-title">节点处理</div><div class="step-desc">筛选节点并配置证书验证策略。</div></div></div>
+          <div class="filter-grid" aria-label="节点名称关键词筛选">
+            <div class="field"><label for="include">包含关键词</label><input id="include" placeholder="例如：JP, SG, HK"><div id="include-chips" class="chips"></div></div>
+            <div class="field"><label for="exclude">排除关键词</label><input id="exclude" placeholder="例如：流量, 到期, 剩余"><div id="exclude-chips" class="chips"></div></div>
+          </div>
+          <label id="node-filter-label" class="visually-hidden" for="node-name-keywords">节点筛选关键词</label>
+          <textarea id="node-name-keywords" hidden></textarea>
           <section id="certificate-policy-control" class="certificate-policy-panel" aria-label="证书验证">
             <div class="node-filter-header">
               <span class="node-filter-title">证书验证</span>
@@ -652,26 +1383,17 @@
             </div>
             <div class="certificate-type-list" data-certificate-types role="group" aria-label="选择节点类型"></div>
           </section>
-          <section id="save-profile-panel" class="save-profile-panel" aria-label="保存当前订阅组合">
-            <div class="profile-name-header">
-              <label id="profile-name-label" for="profile-name">保存当前输入为订阅组合</label>
-            </div>
-            <p id="profile-save-hint" class="hint profile-save-hint">使用最近选择的输入页，以及当前模板和筛选设置。</p>
-            <p id="profile-create-status" class="status" role="status" aria-live="polite"></p>
-            <div class="profile-save-fields">
-              <input id="profile-name" type="text" maxlength="80" placeholder="例如：手机日常线路">
-              <button id="save-profile" class="secondary" type="button">保存并生成短链接</button>
-            </div>
-          </section>
-          <section id="profile-manager" class="profile-manager" role="tabpanel" aria-labelledby="manage-tab" aria-label="订阅管理" hidden>
-            <div class="profile-manager-header">
-              <h2>订阅管理</h2>
-              <button id="refresh-profiles" class="secondary" type="button">刷新列表</button>
-            </div>
-            <div id="profile-list" class="profile-list" aria-live="polite"></div>
-            <p id="profile-manager-status" class="status" role="status" aria-live="polite"></p>
-          </section>
       </div>
+      <section class="card advanced">
+        <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-settings"/></svg></div><div><div class="step-title">高级配置</div><div class="step-desc">DNS、分流组、规则集和匹配顺序按需展开。</div></div></div>
+        <div class="advanced-grid">
+          <button class="adv-btn" type="button" data-adv="dns"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-globe"/></svg>DNS</div><div class="adv-sub">国内 / 国际 DNS</div></button>
+          <button class="adv-btn" type="button" data-adv="groups"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-layers"/></svg>分流组</div><div class="adv-sub">应用分流与出站</div></button>
+          <button class="adv-btn" type="button" data-adv="rules"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-rules"/></svg>规则集</div><div class="adv-sub">内置 / 自定义规则</div></button>
+          <button class="adv-btn" type="button" data-adv="order"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-sort"/></svg>规则顺序</div><div class="adv-sub">调整匹配优先级</div></button>
+          <button class="adv-btn" type="button" data-adv="more"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-sliders"/></svg>更多</div><div class="adv-sub">自定义模板选项</div></button>
+        </div>
+      </section>
       <section id="compose-panel" class="compose-panel" aria-label="自定义配置制作" hidden>
           <p class="hint">以所选内置配置为底稿。未开放的配置项保持原样；DNS、分流组和规则集的未选择项会从配置中移除。</p>
           <label for="base-template">基础配置</label>
@@ -802,14 +1524,102 @@
           </div>
           <p id="compose-status" class="status" role="status" aria-live="polite"></p>
       </section>
+      <section class="card bottom-bar">
+        <div class="ready"><span class="dot"></span><span id="ready-text">已选择手机客户端 · 等待转换</span></div>
+        <div class="bottom-actions"><button id="generate-subscription-link" class="secondary" type="button">生成远程订阅链接</button><button id="submit" class="primary" type="submit" form="convert-form">开始转换 <svg class="icon sm"><use href="#i-arrow-right"/></svg></button></div>
+      </section>
       <p id="status" class="status" role="status" aria-live="polite"></p>
     </section>
+          </div>
+          <aside class="preview">
+            <section class="card preview-card" aria-label="配置预览">
+              <div class="preview-title"><h2>配置预览</h2><button class="edit-link" id="edit-preview" type="button">编辑选项</button></div>
+              <div class="summary">
+                <div class="summary-head"><span class="ok"><svg class="icon"><use href="#i-check"/></svg></span><div><strong id="preview-template">iPhone 配置</strong><span id="preview-source">等待添加订阅来源</span></div></div>
+                <div class="stats"><div class="stat"><b id="source-count">0</b><span>订阅源</span></div><div class="stat"><b id="preview-node-count">—</b><span>节点</span></div><div class="stat"><b id="preview-rule-count">—</b><span>规则集</span></div></div>
+              </div>
+              <div class="config-list">
+                <div class="config-row"><span>输入来源</span><span id="preview-input-kind">粘贴 / 文件</span></div>
+                <div class="config-row"><span>节点筛选</span><span id="preview-filter-state">未设置</span></div>
+                <div class="config-row"><span>DNS</span><span id="dns-summary">默认</span></div>
+                <div class="config-row"><span>分流组</span><span id="group-summary">默认</span></div>
+                <div class="config-row"><span>规则集</span><span id="rules-summary">默认</span></div>
+                <div class="config-row"><span>证书策略</span><span id="cert-summary">按节点类型</span></div>
+                <div class="config-row"><span>出站配置</span><span id="outbound-summary">模板</span></div>
+              </div>
+              <div class="json-wrap">
+                <div class="json-head"><span>JSON PREVIEW</span><button id="copy-json" type="button"><svg class="icon xs"><use href="#i-copy"/></svg>复制</button></div>
+                <pre class="json" id="json-preview">转换成功后将在此显示 sing-box 配置。</pre>
+              </div>
+              <p class="hint preview-hint">预览取自项目转换接口的真实响应；完整配置会同时下载为 JSON 文件。</p>
+            </section>
+          </aside>
+        </div>
+        </section>
+
+        <section class="page" id="page-subscriptions">
+          <div class="page-head"><div><div class="eyebrow">SUBSCRIPTION MANAGER</div><h1>订阅管理</h1><p>保存机场订阅、组合多个来源，并管理远程配置入口。</p></div></div>
+          <section class="card manager-card">
+            <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-layers"/></svg></div><div><div class="step-title">订阅来源</div><div class="step-desc">添加机场地址，或选择已保存的订阅生成组合。</div></div></div>
+            <div class="manage-input-layout" id="manage-input-panel" aria-label="添加和选择机场订阅">
+              <section class="manage-add-panel" aria-label="添加订阅">
+                <h2 class="manage-input-title">添加订阅</h2>
+                <div class="manage-add-fields">
+                  <div><label for="airport-name">订阅名称</label><input id="airport-name" type="text" maxlength="80" placeholder="例如：日本机场" autocomplete="off"></div>
+                  <div><label for="airport-url">订阅地址</label><input id="airport-url" type="url" placeholder="https://example.com/subscribe" autocomplete="url"></div>
+                  <button id="add-airport-subscription" class="primary" type="button">添加订阅</button>
+                </div>
+              </section>
+              <section class="airport-selection-panel" aria-label="选择已添加订阅">
+                <h2 class="manage-input-title">已添加订阅</h2>
+                <div id="airport-selection-list" class="airport-selection-list" aria-live="polite"></div>
+                <div class="profile-selection-toolbar">
+                  <p id="profile-selection-count" class="profile-selection-count" aria-live="polite">已选择 0 项</p>
+                  <div class="profile-selection-actions">
+                    <button id="fill-selected-urls" class="secondary" type="button" disabled>带入远程订阅链接</button>
+                    <div class="profile-combo-action"><input id="selected-combo-name" type="text" maxlength="80" placeholder="组合名称" aria-label="组合名称"><button id="save-selected-combo" class="primary" type="button" disabled>生成组合订阅链接</button></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+          <section id="profile-manager" class="card manager-card" aria-label="已保存订阅">
+            <div class="manager-head"><h2>已保存订阅</h2><button id="refresh-profiles" class="secondary" type="button">刷新列表</button></div>
+            <div id="profile-list" class="profile-list" aria-live="polite"></div>
+            <p id="profile-manager-status" class="status" role="status" aria-live="polite"></p>
+          </section>
+        </section>
+
+        <section class="page" id="page-profiles">
+          <div class="page-head"><div><div class="eyebrow">CONFIGURATION PROFILES</div><h1>配置方案</h1><p>将当前订阅、模板与筛选选项保存为可复用的远程配置。</p></div></div>
+          <section id="save-profile-panel" class="card manager-card" aria-label="保存当前订阅组合">
+            <div class="profile-name-header"><label id="profile-name-label" for="profile-name">保存当前输入为订阅组合</label></div>
+            <p id="profile-save-hint" class="hint profile-save-hint">使用当前来源、模板和筛选设置。</p>
+            <div class="profile-save-fields"><input id="profile-name" type="text" maxlength="80" placeholder="例如：手机日常线路"><button id="save-profile" class="primary" type="button">保存并生成短链接</button></div>
+            <p id="profile-create-status" class="status" role="status" aria-live="polite"></p>
+          </section>
+        </section>
+
+        <section class="page" id="page-shortlinks">
+          <div class="page-head"><div><div class="eyebrow">REMOTE LINKS</div><h1>短链接</h1><p>查看、编辑和删除已保存的远程 sing-box 配置入口。</p></div><button id="refresh-shortlinks" class="primary" type="button">刷新</button></div>
+          <section class="card manager-card"><div id="shortlinks-list" class="profile-list" aria-live="polite"></div><p id="shortlinks-status" class="status" role="status" aria-live="polite"></p></section>
+        </section>
+
+        <section class="page" id="page-settings">
+          <div class="page-head"><div><div class="eyebrow">SETTINGS</div><h1>设置</h1><p>管理本地界面偏好与本次会话的 API 访问密钥。</p></div></div>
+          <section class="card manager-card">
+            <div class="field"><label>主题</label><div class="theme-options"><button class="secondary" id="light-setting" type="button">浅色</button><button class="secondary" id="dark-setting" type="button">深色</button><button class="secondary" id="system-setting" type="button">跟随系统</button></div></div>
+            <div class="hint" style="margin-top:14px">API Key 在转换页“来源”卡片中填写，只随请求发送，不会写入本地存储。</div>
+          </section>
+        </section>
 
     <footer>
       项目作者：<a href="https://github.com/bacdown" target="_blank" rel="noopener noreferrer">bacdown</a> ·
       订阅链接可能包含私密凭据。请仅在可信环境中部署；公网开放服务前应配置身份验证与访问控制。
     </footer>
   </main>
+    </section>
+  </div>
 
   <script>
     const form = document.querySelector("#convert-form");
@@ -851,10 +1661,14 @@
     const button = document.querySelector("#submit");
     const status = document.querySelector("#status");
     const nodeNameKeywords = document.querySelector("#node-name-keywords");
-    const nodeFilterLabel = document.querySelector("#node-filter-label");
-    const filterModeButtons = [...document.querySelectorAll("[data-filter-mode]")];
+    const filterControls = {
+      include: document.querySelector("#include"),
+      exclude: document.querySelector("#exclude"),
+    };
     const profileName = document.querySelector("#profile-name");
     const profileList = document.querySelector("#profile-list");
+    const shortlinksList = document.querySelector("#shortlinks-list");
+    const shortlinksStatus = document.querySelector("#shortlinks-status");
     const saveProfilePanel = document.querySelector("#save-profile-panel");
     const profileSelectionCount = document.querySelector("#profile-selection-count");
     const fillSelectedUrlsButton = document.querySelector("#fill-selected-urls");
@@ -868,7 +1682,7 @@
     const remoteLinkResult = document.querySelector("#remote-link-result");
     const remoteSubscriptionLink = document.querySelector("#remote-subscription-link");
     const remoteLinkStatus = document.querySelector("#remote-link-status");
-    const tabs = [...document.querySelectorAll(".tab")];
+    const tabs = [...document.querySelectorAll(".source-tab")];
     const selectedProfileIds = new Set();
     let activeMode = "paste";
     let activeFilterMode = "include";
@@ -1182,8 +1996,7 @@
       }
 
       const selectedOutbound = matchOutbound.value;
-      renderRuleOutboundOptions(matchOutbound, selectedOutbound);
-      renderRuleOutboundOptions(newRuleOutbound, newRuleOutbound.value || "默认代理");
+      renderRuleOutboundOptions(matchOutbound, selectedOutbound);      renderRuleOutboundOptions(newRuleOutbound, newRuleOutbound.value || "默认代理");
       syncCustomMatchNameFields();
     }
 
@@ -1583,6 +2396,42 @@
       templateStatus.className = "status";
       if (template.value === "compose") loadConfigurationOptions(true);
     });
+    const templateCards = [...document.querySelectorAll("[data-template-card]")];
+    function syncTemplateCards() {
+      templateCards.forEach((card) => {
+        const selected = card.dataset.templateCard === template.value;
+        card.classList.toggle("active", selected);
+        card.setAttribute("aria-pressed", String(selected));
+      });
+    }
+    templateCards.forEach((card) => card.addEventListener("click", () => {
+      template.value = card.dataset.templateCard;
+      template.dispatchEvent(new Event("change", { bubbles: true }));
+    }));
+    template.addEventListener("change", syncTemplateCards);
+    syncTemplateCards();
+    document.querySelector("#upload-template-trigger").addEventListener("click", () => {
+      template.value = "custom";
+      template.dispatchEvent(new Event("change", { bubbles: true }));
+      customTemplateFile.click();
+    });
+    const advancedTargets = {
+      dns: ".dns-grid",
+      groups: ".match-builder",
+      rules: ".rule-link-details",
+      order: "#matching-rule-list",
+      more: ".base-template-controls",
+    };
+    document.querySelectorAll("[data-adv]").forEach((control) => control.addEventListener("click", () => {
+      if (template.value !== "compose") {
+        template.value = "compose";
+        template.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      document.querySelectorAll("[data-adv]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button === control));
+      });
+      document.querySelector(advancedTargets[control.dataset.adv])?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }));
 
     baseTemplate.addEventListener("change", () => loadConfigurationOptions(true));
     document.querySelector("#reload-options").addEventListener("click", () => loadConfigurationOptions());
@@ -1796,49 +2645,117 @@
     });
 
     function selectMode(mode) {
-      activeMode = mode === "manage" ? "url" : mode;
+      activeMode = mode === "url" ? "url" : "paste";
       for (const tab of tabs) {
-        const selected = tab.dataset.mode === mode;
+        const selected = tab.dataset.source === mode;
+        tab.classList.toggle("active", selected);
         tab.setAttribute("aria-selected", String(selected));
       }
-      const managingProfiles = mode === "manage";
-      profileNameLabel.textContent = managingProfiles ? "添加机场订阅或保存组合" : "保存当前输入为订阅组合";
-      profileSaveHint.textContent = managingProfiles
-        ? "输入一条机场链接可保存为单项，多条链接会保存为组合。"
-        : "使用最近选择的输入页，以及当前模板和筛选设置。";
-      saveProfileButton.textContent = managingProfiles ? "保存订阅并生成短链接" : "保存并生成短链接";
-      convertForm.hidden = false;
-      convertForm.classList.toggle("manage-mode", managingProfiles);
-      profileManager.hidden = !managingProfiles;
-      document.querySelector("#paste-panel").hidden = activeMode !== "paste";
-      document.querySelector("#url-panel").hidden = managingProfiles || activeMode !== "url";
-      manageInputPanel.hidden = !managingProfiles;
-      saveProfilePanel.hidden = managingProfiles;
+      document.querySelector("#paste-panel").hidden = mode !== "paste";
+      document.querySelector("#url-panel").hidden = mode !== "url";
+      document.querySelector("#file-panel").hidden = mode !== "file";
       status.textContent = "";
       status.className = "status";
-      if (managingProfiles) refreshProfiles();
+      updateWorkspacePreview();
     }
 
-    tabs.forEach((tab) => tab.addEventListener("click", () => selectMode(tab.dataset.mode)));
-    selectMode("paste");
+    function updateWorkspacePreview() {
+      const names = {
+        "config_phone.json": "iPhone 配置",
+        "config_openwrt.json": "OpenWrt 配置",
+        "momo.json": "Momo 配置",
+        compose: "自定义配置",
+        custom: "自定义模板",
+      };
+      document.querySelector("#preview-template").textContent = names[template.value] || "sing-box 配置";
+      const sourceCount = activeMode === "url"
+        ? linesFrom(url).length
+        : uploadedFiles.length || (content.value.trim() ? 1 : 0);
+      document.querySelector("#source-count").textContent = sourceCount;
+      document.querySelector("#preview-source").textContent = sourceCount
+        ? `${sourceCount} 个输入来源`
+        : "等待添加订阅来源";
+      document.querySelector("#preview-input-kind").textContent = activeMode === "url"
+        ? "远程订阅 URL"
+        : uploadedFiles.length ? "本地文件" : "粘贴配置";
+      document.querySelector("#preview-filter-state").textContent = Object.values(filterControls).some((control) => control.value.trim())
+        ? "已设置关键词"
+        : "未设置";
+      document.querySelector("#ready-text").textContent = `已选择 ${names[template.value] || "sing-box 配置"} · ${sourceCount ? "准备就绪" : "等待转换"}`;
+      const dnsCount = document.querySelectorAll("#dns-domestic-options input:checked, #dns-international-options input:checked").length;
+      document.querySelector("#dns-summary").textContent = dnsCount ? `${dnsCount} 项` : "默认";
+      document.querySelector("#outbound-summary").textContent = template.value === "config_openwrt.json" ? "OpenWrt" : "模板默认";
+    }
 
-    nodeNameKeywords.addEventListener("input", () => {
-      filterValues[activeFilterMode] = nodeNameKeywords.value;
-      clearRemoteLink();
-    });
+    function activatePage(name) {
+      document.querySelectorAll(".page").forEach((page) => {
+        page.classList.toggle("active", page.id === `page-${name}`);
+      });
+      document.querySelectorAll("[data-ui-action]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.uiAction === name);
+      });
+      if (name === "subscriptions" || name === "shortlinks") refreshProfiles();
+    }
 
-    filterModeButtons.forEach((control) => control.addEventListener("click", () => {
-      filterValues[activeFilterMode] = nodeNameKeywords.value;
-      activeFilterMode = control.dataset.filterMode;
-      nodeNameKeywords.value = filterValues[activeFilterMode];
-      nodeFilterLabel.textContent = activeFilterMode === "include"
-        ? "保留节点名称关键词"
-        : "排除节点名称关键词";
-      for (const button of filterModeButtons) {
-        button.setAttribute("aria-pressed", String(button === control));
-      }
-      clearRemoteLink();
+    tabs.forEach((tab) => tab.addEventListener("click", () => {
+      selectMode(tab.dataset.source);
+      activatePage("convert");
     }));
+    selectMode("paste");
+    document.querySelectorAll("[data-ui-action]").forEach((control) => control.addEventListener("click", () => {
+      activatePage(control.dataset.uiAction);
+    }));
+
+    const themeButton = document.querySelector("#theme");
+    const applyTheme = (theme) => {
+      const dark = theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", dark);
+      themeButton.setAttribute("aria-pressed", String(dark));
+      localStorage.setItem("yaml2sb-theme", theme);
+    };
+    applyTheme(localStorage.getItem("yaml2sb-theme") || "light");
+    themeButton.addEventListener("click", () => {
+      applyTheme(document.documentElement.classList.contains("dark") ? "light" : "dark");
+    });
+    document.querySelector("#light-setting").addEventListener("click", () => applyTheme("light"));
+    document.querySelector("#dark-setting").addEventListener("click", () => applyTheme("dark"));
+    document.querySelector("#system-setting").addEventListener("click", () => applyTheme("system"));
+    [content, url, template, nodeNameKeywords, ...Object.values(filterControls)].forEach((control) => {
+      control.addEventListener("input", updateWorkspacePreview);
+      control.addEventListener("change", updateWorkspacePreview);
+    });
+    document.querySelector("#copy-json").addEventListener("click", async () => {
+      const json = document.querySelector("#json-preview").textContent;
+      try {
+        await navigator.clipboard.writeText(json);
+        status.textContent = "JSON 预览已复制。";
+        status.className = "status success";
+      } catch {
+        window.prompt("复制 sing-box JSON", json);
+      }
+    });
+    document.querySelector("#edit-preview").addEventListener("click", () => {
+      document.querySelector('[data-ui-action="profiles"]').click();
+    });
+    updateWorkspacePreview();
+
+    for (const [mode, control] of Object.entries(filterControls)) {
+      control.addEventListener("input", () => {
+        activeFilterMode = mode;
+        filterValues[mode] = control.value;
+        nodeNameKeywords.value = control.value;
+        const chips = document.querySelector(`#${mode}-chips`);
+        const values = linesFromText(control.value.replace(/,/g, "\n"));
+        chips.replaceChildren(...values.map((value) => {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.textContent = value;
+          return chip;
+        }));
+        clearRemoteLink();
+        updateWorkspacePreview();
+      });
+    }
 
     file.addEventListener("change", async () => {
       const newlySelected = [...file.files];
@@ -1867,6 +2784,8 @@
     function profileStatus(message, kind = "") {
       profileManagerStatus.textContent = message;
       profileManagerStatus.className = `status ${kind}`.trim();
+      shortlinksStatus.textContent = message;
+      shortlinksStatus.className = `status ${kind}`.trim();
     }
 
     function makeButton(label, onClick, extraClass = "") {
@@ -1979,7 +2898,13 @@
             <div class="certificate-type-list" data-certificate-types role="group" aria-label="选择节点类型"></div>
           </div>
           <div class="profile-editor-grid">
-            <div><label>sing-box 模板</label><select data-template><option value="phone">iPhone</option><option value="openwrt">OpenWrt</option><option value="momo">Momo</option><option value="__compose">自定义制作配置（已保存）</option><option value="__custom">上传自定义模板（已保存）</option></select></div>
+            <div><label>sing-box 模板</label><select data-template>
+              <option value="phone">iPhone</option>
+              <option value="openwrt">OpenWrt</option>
+              <option value="momo">Momo</option>
+              <option value="__compose">自定义制作配置（已保存）</option>
+              <option value="__custom">上传自定义模板（已保存）</option>
+            </select></div>
             <div class="profile-actions"><button class="secondary" type="button" data-cancel>取消</button><button class="primary" type="submit">保存修改</button></div>
           </div>`;
         const sourceType = editor.querySelector("[data-source-type]");
@@ -2042,17 +2967,22 @@
         source.value = (profile.contents || []).join("\n\n---\n\n");
         for (const subscriptionUrl of profile.urls || []) addUrlRow(subscriptionUrl);
         if (sourceType.value === "urls" && !profile.urls?.length) addUrlRow();
-        const selectedTemplate = String(profile.template || "phone");
         const templateSelect = editor.querySelector("[data-template]");
-        templateSelect.value = selectedTemplate.includes("openwrt")
-          ? "openwrt"
-          : selectedTemplate.includes("momo")
-            ? "momo"
-            : profile.template_json != null
-              ? "__custom"
-              : profile.template_options != null
-                ? "__compose"
-                : "phone";
+        const selectedTemplate = String(profile.template || "phone");
+        if (profile.template_json != null) {
+          templateSelect.value = "__custom";
+        } else if (profile.template_options != null) {
+          templateSelect.value = "__compose";
+        } else {
+          templateSelect.value = selectedTemplate.includes("openwrt")
+            ? "openwrt"
+            : selectedTemplate.includes("momo") ? "momo" : "phone";
+        }
+        if (profile.template_json != null || profile.template_options != null) {
+          templateSelect.title = profile.template_json != null
+            ? "此方案使用上传的自定义模板；编辑其他项目时将保留该模板。"
+            : "此方案包含自定义 DNS / 分流 / 规则选项；编辑其他项目时将保留这些设置。";
+        }
         sourceType.addEventListener("change", renderSource);
         editor.querySelector("[data-add-url]").addEventListener("click", () => addUrlRow());
         renderSource();
@@ -2065,8 +2995,7 @@
             : source.value.split(/\r?\n\s*---\s*\r?\n/).map((item) => item.trim()).filter(Boolean);
           keywordValues[keywordMode] = keywordInput.value;
           try {
-            const updated = {
-              name: editor.querySelector("[data-name]").value.trim(),
+            const updated = {              name: editor.querySelector("[data-name]").value.trim(),
               urls: remote ? sourceItems : null,
               contents: remote ? null : sourceItems,
               template: ["__compose", "__custom"].includes(editor.querySelector("[data-template]").value)
@@ -2143,6 +3072,46 @@
       updateProfileSelectionControls();
     }
 
+    function createProfileRow(profile) {
+      const row = document.createElement("article");
+      row.className = "profile-row";
+      const title = document.createElement("div");
+      title.className = "profile-row-title";
+      const sourceType = profile.source_type === "urls" ? "机场订阅" : "文本订阅";
+      title.textContent = `${profile.name} · ${sourceType} · ${profile.source_count} 个来源`;
+      const link = document.createElement("a");
+      link.className = "profile-row-link";
+      link.href = profile.short_path;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = `${location.origin}${profile.short_path}`;
+      const actions = document.createElement("div");
+      actions.className = "profile-actions";
+      actions.append(
+        makeButton("复制短链接", async () => {
+          try {
+            await navigator.clipboard.writeText(link.href);
+            profileStatus("短链接已复制。", "success");
+          } catch {
+            window.prompt("复制远程 JSON 链接", link.href);
+          }
+        }),
+        makeButton("编辑", () => editProfile(profile.id, row)),
+        makeButton("删除", async () => {
+          if (!window.confirm(`删除“${profile.name}”？现有短链接将立即失效。`)) return;
+          try {
+            await profileRequest(`/api/subscriptions/${encodeURIComponent(profile.id)}`, { method: "DELETE" });
+            await refreshProfiles();
+            profileStatus("订阅配置已删除。", "success");
+          } catch (error) {
+            profileStatus(error.message, "error");
+          }
+        }, "danger"),
+      );
+      row.append(title, link, actions);
+      return row;
+    }
+
     function renderProfiles(profiles) {
       const visibleProfileIds = new Set(
         profiles.filter((profile) => profile.source_type === "urls").map((profile) => profile.id),
@@ -2151,52 +3120,19 @@
         if (!visibleProfileIds.has(profileId)) selectedProfileIds.delete(profileId);
       }
       profileList.replaceChildren();
+      shortlinksList.replaceChildren();
       if (!profiles.length) {
         const empty = document.createElement("div");
         empty.className = "profile-empty";
         empty.textContent = "还没有保存的订阅配置。";
         profileList.append(empty);
+        shortlinksList.append(empty.cloneNode(true));
         updateProfileSelectionControls();
         return;
       }
       for (const profile of profiles) {
-        const row = document.createElement("article");
-        row.className = "profile-row";
-        const title = document.createElement("div");
-        title.className = "profile-row-title";
-        const sourceType = profile.source_type === "urls" ? "机场订阅" : "文本订阅";
-        title.textContent = `${profile.name} · ${sourceType} · ${profile.source_count} 个来源`;
-        const link = document.createElement("a");
-        link.className = "profile-row-link";
-        link.href = profile.short_path;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = `${location.origin}${profile.short_path}`;
-        const actions = document.createElement("div");
-        actions.className = "profile-actions";
-        actions.append(
-          makeButton("复制短链接", async () => {
-            try {
-              await navigator.clipboard.writeText(link.href);
-              profileStatus("短链接已复制。", "success");
-            } catch {
-              window.prompt("复制远程 JSON 链接", link.href);
-            }
-          }),
-          makeButton("编辑", () => editProfile(profile.id, row)),
-          makeButton("删除", async () => {
-            if (!window.confirm(`删除“${profile.name}”？现有短链接将立即失效。`)) return;
-            try {
-              await profileRequest(`/api/subscriptions/${encodeURIComponent(profile.id)}`, { method: "DELETE" });
-              await refreshProfiles();
-              profileStatus("订阅配置已删除。", "success");
-            } catch (error) {
-              profileStatus(error.message, "error");
-            }
-          }, "danger"),
-        );
-        row.append(title, link, actions);
-        profileList.append(row);
+        profileList.append(createProfileRow(profile));
+        shortlinksList.append(createProfileRow(profile));
       }
       updateProfileSelectionControls();
     }
@@ -2218,6 +3154,7 @@
     }
 
     document.querySelector("#refresh-profiles").addEventListener("click", refreshProfiles);
+    document.querySelector("#refresh-shortlinks").addEventListener("click", refreshProfiles);
     document.querySelector("#add-airport-subscription").addEventListener("click", async () => {
       const name = airportName.value.trim();
       const address = airportUrl.value.trim();
@@ -2297,6 +3234,34 @@
 
     function linesFromText(value) {
       return value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+    }
+
+    function escapeJsonHtml(value) {
+      return value.replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character]);
+    }
+
+    function highlightJson(value) {
+      const source = JSON.stringify(value, null, 2);
+      const tokenPattern = /"(?:\\.|[^"\\])*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b/g;
+      let html = "";
+      let cursor = 0;
+      for (const match of source.matchAll(tokenPattern)) {
+        const token = match[0];
+        const index = match.index;
+        const kind = token.startsWith('"')
+          ? /^\s*:/.test(source.slice(index + token.length)) ? "key" : "string"
+          : /^(true|false|null)$/.test(token) ? "literal" : "number";
+        html += escapeJsonHtml(source.slice(cursor, index));
+        html += `<span class="json-${kind}">${escapeJsonHtml(token)}</span>`;
+        cursor = index + token.length;
+      }
+      return html + escapeJsonHtml(source.slice(cursor));
     }
 
     function linesFrom(textarea) {
@@ -2465,6 +3430,9 @@
       try {
         const result = await requestConversion(currentConversionPayload());
         downloadConvertedConfig(result);
+        document.querySelector("#json-preview").innerHTML = highlightJson(result.config);
+        document.querySelector("#preview-node-count").textContent = result.node_count ?? "—";
+        document.querySelector("#preview-rule-count").textContent = result.rule_count ?? "—";
         status.textContent = `转换成功：${result.node_count} 个节点，配置已下载。`;
         status.className = "status success";
       } catch (error) {
