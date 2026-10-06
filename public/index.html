@@ -1328,6 +1328,33 @@
       .certificate-policy-panel { min-height: auto; }
     }
 
+  
+/* Final UI polish */
+.sb-logo { overflow: visible; }
+.sb-logo path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.sb-logo .logo-slash { stroke-width: 1.9; opacity: .72; }
+html:not(.dark) .sb-logo { color: #30363d; }
+html.dark .sb-logo { color: #e8edf4; }
+input::placeholder, textarea::placeholder { color: var(--ui-muted, #69717a); opacity: .82; font-size: 12px; font-weight: 400; }
+.hint, .profile-save-hint, .dns-select-hint, .preview-hint, .file-row, .airport-selection-empty, .profile-selection-count { font-size: 12px; line-height: 1.55; }
+input, textarea, select { font-size: 13px; }
+#save-profile-panel { padding: 18px 20px; }
+#save-profile-panel .profile-name-header { margin-bottom: 2px; }
+#save-profile-panel .profile-save-fields { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; margin-top:4px; }
+#save-profile-panel #profile-name { min-height:40px; height:40px; }
+#save-profile-panel #save-profile { width:auto; min-width:152px; height:40px; min-height:40px; padding:0 16px; font-size:13px; border-radius:7px; }
+#profile-create-status { min-height:20px; margin-top:2px; }
+.profile-selection-actions { gap:10px; }
+.profile-combo-action { display:grid; grid-template-columns:minmax(150px,190px) auto; align-items:center; gap:7px; }
+.profile-combo-action input { width:100%; height:36px; min-height:36px; }
+#save-selected-combo { width:auto; min-width:132px; padding:0 13px; white-space:nowrap; }
+@media (max-width:620px) {
+  #save-profile-panel .profile-save-fields { grid-template-columns:1fr; }
+  #save-profile-panel #save-profile { width:100%; }
+  .profile-combo-action { grid-template-columns:1fr; }
+  #save-selected-combo { width:100%; }
+}
+
   </style>
 </head>
 <body>
@@ -1362,9 +1389,10 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark" aria-label="yaml2sb logo">
-  <svg class="logo-icon sb-logo" viewBox="0 0 44 36" aria-hidden="true">
-    <path d="M17 5.5C14 3.7 9.5 4 7 6.2c-2.8 2.5-1.7 5.1 1.8 6.5l6.2 2.5c3.8 1.5 4.5 4.6 1.5 7.1-2.9 2.4-8.3 2.2-11.4-.2"/>
-    <path d="M27 5v26M27 5h6.5c4.2 0 6.5 2.1 6.5 5s-2.3 5-6.5 5H27m0 0h7.5c4.5 0 7 2.2 7 5.5S39 26 34.5 26H27"/>
+  <svg class="logo-icon sb-logo" viewBox="0 0 52 36" aria-hidden="true">
+    <path d="M18 6.5C15.2 4.3 10.2 4.1 7.1 6.5c-3.2 2.5-2.1 5.8 1.7 7.3l6.1 2.4c3.8 1.5 4.6 4.9 1.3 7.5-3.1 2.5-8.7 2.2-11.8-.4"/>
+    <path d="M29 5v26M29 5h7.2c4.3 0 6.8 2.1 6.8 5.1s-2.5 5.1-6.8 5.1H29m0 0h8c4.7 0 7.4 2.2 7.4 5.6S41.7 26 37 26h-8"/>
+    <path class="logo-slash" d="M24 3.5 20.5 32.5"/>
   </svg>
 </div>
         <div><div class="brand-title">yaml2sb</div><div class="brand-sub">YAML → sing-box</div></div>
