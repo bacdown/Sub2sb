@@ -1416,8 +1416,12 @@ html.dark .dns-category-tab[aria-selected="true"] {
   width: 100%;
   max-width: 100%;
 }
+.rule-link-details {
+  background: #fff;
+}
 .rule-link-fields {
-  grid-template-columns: minmax(110px, .9fr) minmax(180px, 1.9fr) minmax(110px, .8fr) minmax(110px, .85fr) minmax(92px, .65fr);
+  grid-template-columns: minmax(110px, 1fr) minmax(180px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(104px, 112px);
+  align-items: end;
 }
 .rule-link-fields > div {
   min-width: 0;
@@ -1434,6 +1438,14 @@ html.dark .dns-category-tab[aria-selected="true"] {
 }
 .rule-link-action {
   min-width: 0;
+  width: 100%;
+}
+#add-rule-set {
+  padding: 0 10px;
+  white-space: nowrap;
+}
+html.dark .rule-link-details {
+  background: var(--ui-panel);
 }
 .json-head {
   font-size: 11px;
@@ -1653,6 +1665,7 @@ html.dark .dns-category-tab[aria-selected="true"] {
   .advanced-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .custom-dns-fields .form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rule-link-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rule-link-action { grid-column: span 1; }
 }
 @media (max-width: 700px) {
   .advanced-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
