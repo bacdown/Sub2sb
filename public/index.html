@@ -449,7 +449,7 @@
     .profile-save-hint { margin: 0; font-size: 11px; line-height: 1.35; }
     #profile-create-status { min-height: 24px; margin: 0; }
     .save-profile-panel input, .profile-editor input, .profile-editor select { width: 100%; min-width: 0; min-height: 38px; padding: 0 10px; border: 1px solid #c9cdd1; border-radius: 4px; background: #fff; color: #37352f; font-size: 13px; }
-    #save-profile, #refresh-profiles { width: 134px; height: 36px; min-height: 36px; padding: 0 14px; border: 1px solid #c9cdd1; border-radius: 4px; background: #e6e8eb; color: #37352f; font-size: 13px; font-weight: 400; line-height: 1.2; white-space: nowrap; }
+    #save-profile, #refresh-profiles { width: 134px; height: 34px; min-height: 34px; padding: 0 14px; border: 1px solid #c9cdd1; border-radius: 4px; background: #e6e8eb; color: #37352f; font-size: 13px; font-weight: 400; line-height: 1.2; white-space: nowrap; }
     .profile-actions .secondary { width: 134px; height: 36px; min-height: 36px; padding: 0 14px; font-size: 13px; font-weight: 400; line-height: 1.2; white-space: nowrap; }
     #save-profile { width: 100%; margin: 0; }
     #save-profile:hover, #refresh-profiles:hover { background: #d9dce0; }
@@ -470,13 +470,18 @@
     .profile-row-title { min-width: 0; overflow-wrap: anywhere; font-weight: 650; }
     .profile-row-link { display: block; margin-top: 4px; color: #286b65; overflow-wrap: anywhere; font-size: 13px; }
     .profile-actions { justify-content: flex-start; margin-top: 10px; }
+    .profile-row .profile-actions { flex-wrap: nowrap; }
+    .profile-row .profile-actions button { flex: 0 1 auto; width: auto; height: 32px; min-height: 32px; padding: 0 10px; font-size: 12px; white-space: nowrap; }
     .profile-actions .danger { color: #a33f38; }
     .profile-editor { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e3e2de; }
     .profile-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .profile-editor .profile-actions { flex-wrap: nowrap; }
+    .profile-editor .profile-actions button { flex: 0 0 134px; width: 134px; height: 36px; min-height: 36px; }
     .profile-url-list { display: grid; gap: 8px; }
     .profile-url-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
-    .profile-url-row .secondary { min-height: 38px; }
-    .profile-url-add { justify-self: start; }
+    .profile-url-row input { width: 100%; min-width: 0; height: 38px; min-height: 38px; padding: 0 10px; border: 1px solid #c9cdd1; border-radius: 4px; font-size: 13px; }
+    .profile-url-row .secondary { height: 32px; min-height: 32px; padding: 0 10px; font-size: 12px; white-space: nowrap; }
+    .profile-url-add { justify-self: start; height: 34px; min-height: 34px; padding: 0 12px; }
     .profile-empty { padding: 14px 0; color: #787774; font-size: 14px; }
     @media (max-width: 620px) { .subscription-controls, .profile-editor-grid, .profile-manager-tools { grid-template-columns: 1fr; } .profile-save-fields { grid-template-columns: 1fr; } }
     footer { margin: 18px 3px 0; color: #787774; font-size: 12px; line-height: 1.7; }
