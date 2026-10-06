@@ -1379,6 +1379,74 @@ input, textarea, select { font-size: 13px; }
   #save-selected-combo { width:100%; }
 }
 
+/* Advanced configuration refinement */
+html.dark .dns-category-tabs,
+html.dark .dns-category-tab,
+html.dark .choice-group,
+html.dark .dns-option-list,
+html.dark .dns-option {
+  background: var(--ui-panel-soft);
+  color: var(--ui-text);
+  border-color: var(--ui-line);
+}
+html.dark .dns-category-tabs { background: var(--ui-panel); }
+html.dark .dns-category-tab[aria-selected="true"] {
+  background: var(--ui-accent);
+  color: #111827;
+}
+.dns-option {
+  background: var(--ui-panel) !important;
+  color: var(--ui-text) !important;
+  border-color: var(--ui-line) !important;
+}
+.dns-option[aria-checked="true"],
+.dns-option.selected {
+  background: var(--ui-accent-soft) !important;
+  border-color: var(--ui-accent) !important;
+  color: var(--ui-text) !important;
+}
+.match-builder {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr) minmax(104px, .7fr);
+}
+.match-builder > div:last-child {
+  min-width: 0;
+}
+.match-builder .match-add-btn,
+#add-match-rule {
+  width: 100%;
+  max-width: 100%;
+}
+.rule-link-fields {
+  grid-template-columns: minmax(110px, .9fr) minmax(180px, 1.9fr) minmax(110px, .8fr) minmax(110px, .85fr) minmax(92px, .65fr);
+}
+.rule-link-fields > div {
+  min-width: 0;
+}
+.rule-link-fields input,
+.rule-link-fields select,
+.rule-link-fields button,
+#add-rule-set {
+  width: 100%;
+  max-width: 100%;
+  height: 40px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+.rule-link-action {
+  min-width: 0;
+}
+.json-head {
+  font-size: 11px;
+}
+.json-head button {
+  font-size: 11px;
+}
+.preview-hint {
+  font-size: 11px !important;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
 /* Advanced configuration redesign */
 #include, #exclude, #selected-combo-name, #profile-name {
   width: 100%;
