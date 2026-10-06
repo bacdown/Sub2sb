@@ -1379,6 +1379,229 @@ input, textarea, select { font-size: 13px; }
   #save-selected-combo { width:100%; }
 }
 
+/* Advanced configuration redesign */
+#include, #exclude, #selected-combo-name, #profile-name {
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  background: var(--ui-input);
+  color: var(--ui-text);
+  outline: none;
+  box-shadow: none;
+}
+#include:focus, #exclude:focus, #selected-combo-name:focus, #profile-name:focus {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-accent) 12%, transparent);
+}
+.subscription-controls .field {
+  min-width: 0;
+}
+.advanced {
+  padding: 18px 20px;
+}
+.advanced .step-head {
+  margin-bottom: 14px;
+}
+.advanced-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.adv-btn {
+  min-width: 0;
+  min-height: 68px;
+  padding: 11px 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  color: var(--ui-text);
+}
+.adv-btn .adv-title {
+  white-space: nowrap;
+}
+.adv-btn .adv-sub {
+  margin-top: 5px;
+  line-height: 1.35;
+}
+.adv-btn[aria-pressed="true"] {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-soft);
+}
+.compose-panel {
+  margin-top: 10px;
+  padding: 18px 20px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  box-shadow: none;
+}
+.compose-panel > .hint:first-child {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  background: var(--ui-panel-soft);
+}
+.base-template-controls {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 8px;
+}
+#base-template {
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  background: var(--ui-input);
+  color: var(--ui-text);
+}
+#reload-options {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 14px;
+  background: var(--ui-panel-soft);
+  color: var(--ui-text);
+  border-color: var(--ui-line-strong);
+}
+#reload-options:hover {
+  background: var(--ui-hover);
+}
+.compose-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+.compose-section {
+  padding: 16px;
+  border: 1px solid var(--ui-line);
+  border-radius: 9px;
+  background: var(--ui-panel-soft);
+}
+.compose-section h3 {
+  margin-bottom: 6px;
+}
+.dns-category-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 4px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+.dns-category-tab {
+  min-width: 96px;
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ui-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dns-category-tab[aria-selected="true"] {
+  background: var(--ui-accent);
+  color: #fff;
+  box-shadow: 0 1px 3px rgb(20 25 30 / 12%);
+}
+.dns-grid {
+  display: block;
+  margin-top: 10px;
+}
+.dns-grid .choice-group {
+  margin-top: 0;
+}
+.dns-option-list {
+  min-height: 92px;
+  max-height: 210px;
+}
+.custom-dns-fields {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ui-line);
+}
+.custom-dns-fields .form-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.custom-dns-fields .form-row input,
+.custom-dns-fields .form-row select {
+  height: 40px;
+  min-height: 40px;
+}
+.custom-dns-fields .form-row button {
+  height: 40px;
+  min-height: 40px;
+}
+.match-builder {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+  margin-top: 10px;
+  background: var(--ui-panel);
+}
+.match-builder > div {
+  min-width: 0;
+}
+.match-builder select,
+.match-builder input {
+  height: 40px;
+  min-height: 40px;
+}
+.match-add-btn {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-color: var(--ui-line-strong);
+  background: var(--ui-panel-soft);
+  color: var(--ui-text);
+}
+.rule-link-details {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--ui-panel);
+}
+.rule-link-fields {
+  grid-template-columns: minmax(120px, 1fr) minmax(180px, 1.5fr) minmax(110px, .8fr) minmax(120px, 1fr) minmax(110px, .8fr);
+}
+.rule-link-fields input,
+.rule-link-fields select,
+#add-rule-set {
+  height: 40px;
+  min-height: 40px;
+}
+.rule-order-item.rule-header {
+  margin-top: 12px;
+  background: var(--ui-panel);
+}
+.rule-order-item {
+  background: var(--ui-panel);
+}
+@media (max-width: 900px) {
+  .advanced-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .custom-dns-fields .form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rule-link-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .advanced-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .base-template-controls,
+  .match-builder { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) {
+  .advanced-grid,
+  .base-template-controls,
+  .match-builder,
+  .custom-dns-fields .form-row,
+  .rule-link-fields { grid-template-columns: 1fr; }
+  #reload-options { width: 100%; }
+  .dns-category-tabs { width: 100%; }
+  .dns-category-tab { flex: 1; }
+}
+
   </style>
 </head>
 <body>
@@ -1572,13 +1795,17 @@ input, textarea, select { font-size: 13px; }
             <section class="compose-section">
               <h3>DNS</h3>
               <p class="hint">分别在国内和国际 DNS 下拉框中多选要保留的服务器，每类最多选择两项。模板所需的本地、Hosts 和 FakeIP DNS 会保留在配置中，不在此处显示。</p>
+              <div class="dns-category-tabs" role="tablist" aria-label="DNS 分类">
+                <button class="dns-category-tab" type="button" data-dns-category="domestic" role="tab" aria-selected="true">国内 DNS</button>
+                <button class="dns-category-tab" type="button" data-dns-category="international" role="tab" aria-selected="false">国际 DNS</button>
+              </div>
               <div class="dns-grid">
-                <fieldset class="choice-group">
+                <fieldset class="choice-group" data-dns-panel="domestic">
                   <legend>国内 DNS</legend>
                   <div id="dns-domestic-options" class="dns-option-list" role="group" aria-label="国内 DNS 多选"></div>
                   <p class="hint dns-select-hint">点击 DNS 项即可选中或取消，每类最多选择两项。</p>
                 </fieldset>
-                <fieldset class="choice-group">
+                <fieldset class="choice-group" data-dns-panel="international" hidden>
                   <legend>国际 DNS</legend>
                   <div id="dns-international-options" class="dns-option-list" role="group" aria-label="国际 DNS 多选"></div>
                   <p class="hint dns-select-hint">点击 DNS 项即可选中或取消，每类最多选择两项。</p>
@@ -2593,6 +2820,20 @@ input, textarea, select { font-size: 13px; }
 
     baseTemplate.addEventListener("change", () => loadConfigurationOptions(true));
     document.querySelector("#reload-options").addEventListener("click", () => loadConfigurationOptions());
+    const dnsCategoryTabs = [...document.querySelectorAll("[data-dns-category]")];
+    const dnsCategoryPanels = [...document.querySelectorAll("[data-dns-panel]")];
+    function selectDnsCategory(category) {
+      dnsCategoryTabs.forEach((tab) => {
+        const selected = tab.dataset.dnsCategory === category;
+        tab.setAttribute("aria-selected", String(selected));
+      });
+      dnsCategoryPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.dnsPanel !== category;
+      });
+    }
+    dnsCategoryTabs.forEach((tab) => tab.addEventListener("click", () => selectDnsCategory(tab.dataset.dnsCategory)));
+    selectDnsCategory("domestic");
+
     dnsOptionLists.forEach((list) => {
       list.addEventListener("change", (event) => {
         const changedOption = event.target;
