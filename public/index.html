@@ -1194,6 +1194,129 @@
       border: 1px solid var(--ui-line);
     }
     .profile-editor .certificate-policy-panel { background: #fff; }
+    /* ---- Theme normalization: keep light/dark surfaces and controls readable ---- */
+    :root {
+      --ui-bg: #f5f6f7;
+      --ui-panel: #ffffff;
+      --ui-panel-soft: #f7f8f9;
+      --ui-line: #dfe3e7;
+      --ui-line-strong: #c4cad0;
+      --ui-text: #25282c;
+      --ui-muted: #69717a;
+      --ui-accent: #30363d;
+      --ui-accent-soft: #eceff2;
+      --ui-success: #327654;
+      --ui-danger: #b44842;
+      --ui-hover: #f0f2f4;
+      --ui-input: #ffffff;
+    }
+    html.dark {
+      --ui-bg: #0b1018;
+      --ui-panel: #121923;
+      --ui-panel-soft: #18212d;
+      --ui-line: #2a3544;
+      --ui-line-strong: #3a4859;
+      --ui-text: #e8edf4;
+      --ui-muted: #9aa8ba;
+      --ui-accent: #aebcff;
+      --ui-accent-soft: #202b49;
+      --ui-success: #57c996;
+      --ui-danger: #ff8179;
+      --ui-hover: #202a37;
+      --ui-input: #151e29;
+      color-scheme: dark;
+    }
+    body {
+      background: var(--ui-bg);
+      color: var(--ui-text);
+    }
+    .sidebar,
+    .topbar { background: color-mix(in srgb, var(--ui-panel) 94%, transparent); }
+    .sidebar { border-right-color: var(--ui-line); }
+    .topbar { border-bottom-color: var(--ui-line); }
+    .brand-mark {
+      border-color: var(--ui-line);
+      background: var(--ui-panel);
+      box-shadow: 0 3px 12px rgb(0 0 0 / 5%);
+    }
+    .logo-icon { stroke: var(--ui-accent); }
+    .brand-title, .page-head h1, .step-title, label { color: var(--ui-text); }
+    .brand-sub, .page-head p, .hint, .top-copy, .status, .profile-selection-count,
+    .rule-column-label, footer { color: var(--ui-muted); }
+    .nav button { color: var(--ui-muted); }
+    .nav button:hover { color: var(--ui-text); background: var(--ui-hover); }
+    .nav button.active { color: var(--ui-text); background: var(--ui-accent-soft); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 4%); }
+    .card, .compose-panel, .compose-section, .source-layout, .subscription-controls,
+    .preview-card, .manager-card, .profile-row, .profile-editor, .node-filter-panel,
+    .certificate-policy-panel, .save-profile-panel { border-color: var(--ui-line); background: var(--ui-panel); color: var(--ui-text); }
+    .compose-panel, .match-builder, .rule-link-details, .choice-group, .filter-grid .field,
+    .source-side, .profile-editor, .tabs, .source-tabs, .filter-mode-tabs { background: var(--ui-panel-soft); }
+    .source-tab, .filter-mode-tab { color: var(--ui-muted); }
+    .source-tab[aria-selected="true"], .filter-mode-tab[aria-pressed="true"] {
+      color: var(--ui-text);
+      background: var(--ui-panel);
+    }
+    textarea, input[type="url"], input[type="password"], input[type="text"], select,
+    .form-row input, .form-row select, .save-profile-panel input,
+    .profile-editor input, .profile-editor select {
+      color: var(--ui-text);
+      background: var(--ui-input);
+      border-color: var(--ui-line-strong);
+    }
+    textarea::placeholder, input::placeholder { color: var(--ui-muted); }
+    textarea:hover, input:hover, select:hover { border-color: var(--ui-line-strong); }
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--ui-accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 14%, transparent);
+    }
+    .template, .adv-btn, .secondary, .profile-row, .certificate-type-list .filter-mode-tab {
+      color: var(--ui-text);
+      background: var(--ui-panel);
+      border-color: var(--ui-line);
+    }
+    .template:hover, .adv-btn:hover, .secondary:hover { background: var(--ui-hover); }
+    .template.active, .adv-btn[aria-pressed="true"] {
+      color: var(--ui-text);
+      border-color: var(--ui-accent);
+      background: var(--ui-accent-soft);
+    }
+    .filter-grid input, .chip, .dns-option, .template-upload {
+      color: var(--ui-text);
+      background: var(--ui-panel);
+      border-color: var(--ui-line);
+    }
+    .chip { color: var(--ui-muted); }
+    .dns-option:hover { background: var(--ui-hover); }
+    .certificate-type-list .filter-mode-tab[aria-pressed="true"],
+    .certificate-policy-modes .filter-mode-tab[aria-pressed="true"] {
+      color: #fff;
+      background: var(--ui-accent);
+      border-color: var(--ui-accent);
+    }
+    .primary {
+      color: #fff;
+      background: var(--ui-accent);
+      border-color: var(--ui-accent);
+    }
+    .secondary { border-color: var(--ui-line-strong); }
+    .profile-row { background: var(--ui-panel); }
+    .profile-editor .certificate-policy-panel { background: var(--ui-panel-soft); }
+    .step-no { color: var(--ui-accent); background: var(--ui-accent-soft); }
+    .step-desc, .template-desc, .template-upload-sub, .adv-sub { color: var(--ui-muted); }
+    .json-head { color: var(--ui-muted); background: var(--ui-panel-soft); }
+    .json-head button { color: var(--ui-muted); }
+    .json { color: var(--ui-text); background: var(--ui-panel-soft); }
+    .ok { background: color-mix(in srgb, var(--ui-success) 12%, var(--ui-panel)); color: var(--ui-success); }
+    .dot { background: var(--ui-success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ui-success) 12%, var(--ui-panel)); }
+    html.dark .json-head,
+    html.dark .json,
+    html.dark .profile-editor .certificate-policy-panel { background: var(--ui-panel-soft); }
+    html.dark .json { color: var(--ui-text); }
+    html.dark .json-key { color: #aebcff; }
+    html.dark .json-string { color: #6ed6ad; }
+    html.dark .json-number { color: #ffc477; }
+    html.dark .json-literal { color: #ff9fc2; }
+
     @media (max-width: 900px) {
       .sidebar { width: 220px; }
       .content { padding-left: 22px; padding-right: 22px; }
@@ -1240,25 +1363,8 @@
       <div class="brand">
         <div class="brand-mark" aria-label="yaml2sb logo">
   <svg class="logo-icon sb-logo" viewBox="0 0 44 36" aria-hidden="true">
-    <g class="logo-s">
-      <path d="M3 7.5 18 2.5v4.7L8.5 10.4 18 13.7v5.1L8.5 22l9.5 3.1v5.1L3 25.1v-6.4l9.8-3.1L3 12.9Z"/>
-    </g>
-    <g class="logo-b">
-      <rect x="25" y="4" width="5" height="5" rx=".5"/>
-      <rect x="30" y="4" width="5" height="5" rx=".5"/>
-      <rect x="35" y="4" width="5" height="5" rx=".5"/>
-      <rect x="25" y="9" width="5" height="5" rx=".5"/>
-      <rect x="35" y="9" width="5" height="5" rx=".5"/>
-      <rect x="25" y="14" width="5" height="5" rx=".5"/>
-      <rect x="30" y="14" width="5" height="5" rx=".5"/>
-      <rect x="35" y="14" width="5" height="5" rx=".5"/>
-      <rect x="25" y="19" width="5" height="5" rx=".5"/>
-      <rect x="35" y="19" width="5" height="5" rx=".5"/>
-      <rect x="25" y="24" width="5" height="5" rx=".5"/>
-      <rect x="30" y="24" width="5" height="5" rx=".5"/>
-      <rect x="35" y="24" width="5" height="5" rx=".5"/>
-      <rect x="25" y="29" width="5" height="5" rx=".5"/>
-    </g>
+    <path d="M17 5.5C14 3.7 9.5 4 7 6.2c-2.8 2.5-1.7 5.1 1.8 6.5l6.2 2.5c3.8 1.5 4.5 4.6 1.5 7.1-2.9 2.4-8.3 2.2-11.4-.2"/>
+    <path d="M27 5v26M27 5h6.5c4.2 0 6.5 2.1 6.5 5s-2.3 5-6.5 5H27m0 0h7.5c4.5 0 7 2.2 7 5.5S39 26 34.5 26H27"/>
   </svg>
 </div>
         <div><div class="brand-title">yaml2sb</div><div class="brand-sub">YAML → sing-box</div></div>
