@@ -1979,7 +1979,7 @@
             <div class="certificate-type-list" data-certificate-types role="group" aria-label="选择节点类型"></div>
           </div>
           <div class="profile-editor-grid">
-            <div><label>sing-box 模板</label><select data-template><option value="phone">iPhone</option><option value="openwrt">OpenWrt</option><option value="momo">Momo</option></select></div>
+            <div><label>sing-box 模板</label><select data-template><option value="phone">iPhone</option><option value="openwrt">OpenWrt</option><option value="momo">Momo</option><option value="__compose">自定义制作配置（已保存）</option><option value="__custom">上传自定义模板（已保存）</option></select></div>
             <div class="profile-actions"><button class="secondary" type="button" data-cancel>取消</button><button class="primary" type="submit">保存修改</button></div>
           </div>`;
         const sourceType = editor.querySelector("[data-source-type]");
@@ -2043,9 +2043,16 @@
         for (const subscriptionUrl of profile.urls || []) addUrlRow(subscriptionUrl);
         if (sourceType.value === "urls" && !profile.urls?.length) addUrlRow();
         const selectedTemplate = String(profile.template || "phone");
-        editor.querySelector("[data-template]").value = selectedTemplate.includes("openwrt")
+        const templateSelect = editor.querySelector("[data-template]");
+        templateSelect.value = selectedTemplate.includes("openwrt")
           ? "openwrt"
-          : selectedTemplate.includes("momo") ? "momo" : "phone";
+          : selectedTemplate.includes("momo")
+            ? "momo"
+            : profile.template_json != null
+              ? "__custom"
+              : profile.template_options != null
+                ? "__compose"
+                : "phone";
         sourceType.addEventListener("change", renderSource);
         editor.querySelector("[data-add-url]").addEventListener("click", () => addUrlRow());
         renderSource();
@@ -2062,9 +2069,11 @@
               name: editor.querySelector("[data-name]").value.trim(),
               urls: remote ? sourceItems : null,
               contents: remote ? null : sourceItems,
-              template: editor.querySelector("[data-template]").value,
-              template_json: null,
-              template_options: null,
+              template: ["__compose", "__custom"].includes(editor.querySelector("[data-template]").value)
+                ? profile.template
+                : editor.querySelector("[data-template]").value,
+              ...(profile.template_json != null ? { template_json: profile.template_json } : {}),
+              ...(profile.template_options != null ? { template_options: profile.template_options } : {}),
               node_filter: {
                 include_names: linesFromText(keywordValues.include),
                 exclude_names: linesFromText(keywordValues.exclude),
