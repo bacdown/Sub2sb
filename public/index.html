@@ -1649,6 +1649,136 @@ html.dark .rule-link-details summary {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Final node / DNS layout polish */
+.subscription-controls {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.subscription-controls > .controls-step-head,
+.subscription-controls > .step-head { grid-column: 1 / -1; }
+.subscription-controls .filter-grid {
+  grid-column: 1;
+  grid-template-columns: 1fr;
+}
+.filter-keyword-panel {
+  background: var(--ui-panel) !important;
+  border-color: var(--ui-line) !important;
+}
+.filter-keyword-tabs {
+  width: 42%;
+  min-width: 190px;
+  max-width: 250px;
+}
+.filter-keyword-tab {
+  min-height: 28px;
+  font-weight: 600;
+}
+.filter-keyword-field label {
+  font-weight: 400;
+}
+.certificate-policy-panel {
+  grid-column: 2;
+  background: var(--ui-panel) !important;
+}
+.certificate-policy-modes .filter-mode-tab[aria-pressed="true"],
+.certificate-type-list .filter-mode-tab[aria-pressed="true"] {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.certificate-policy-modes .filter-mode-tab,
+.certificate-type-list .filter-mode-tab {
+  outline: none !important;
+}
+.dns-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 9px;
+  background: var(--ui-panel) !important;
+}
+.dns-main,
+.dns-selected-panel { min-width: 0; }
+.dns-category-tabs {
+  width: 50%;
+  min-width: 220px;
+  margin-top: 0;
+  background: var(--ui-panel-soft);
+}
+.dns-grid {
+  margin-top: 10px;
+}
+.dns-grid .choice-group,
+html.dark .dns-grid .choice-group {
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+}
+.dns-grid .choice-group legend {
+  display: none;
+}
+.dns-option-list,
+html.dark .dns-option-list {
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  padding: 2px 0;
+}
+.dns-option,
+html.dark .dns-option {
+  border: 0 !important;
+  border-bottom: 1px solid var(--ui-line) !important;
+  border-radius: 0;
+  background: transparent !important;
+}
+.dns-option:last-child { border-bottom: 0 !important; }
+.dns-option[aria-checked="true"],
+.dns-option.selected {
+  border-color: var(--ui-line) !important;
+  background: var(--ui-accent-soft) !important;
+}
+.dns-selected-panel {
+  min-height: 100%;
+  padding: 0 0 0 16px;
+  border: 0 !important;
+  border-left: 1px solid var(--ui-line) !important;
+  border-radius: 0;
+  background: transparent !important;
+}
+.dns-selected-panel h3 {
+  margin: 0 0 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.dns-selected-panel .added-list {
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+}
+.dns-selected-panel .added-list > * {
+  border: 0 !important;
+  border-bottom: 1px solid var(--ui-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.dns-selected-panel .added-list > *:last-child { border-bottom: 0 !important; }
+@media (max-width: 720px) {
+  .subscription-controls { grid-template-columns: 1fr; }
+  .certificate-policy-panel,
+  .subscription-controls .filter-grid { grid-column: 1; }
+  .dns-layout { grid-template-columns: 1fr; }
+  .dns-selected-panel {
+    padding: 12px 0 0;
+    border-left: 0 !important;
+    border-top: 1px solid var(--ui-line) !important;
+  }
+  .dns-category-tabs { width: 100%; min-width: 0; }
+}
+
 /* Advanced configuration refinement */
 html.dark .dns-category-tabs,
 html.dark .dns-category-tab,
