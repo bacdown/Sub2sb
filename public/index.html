@@ -386,6 +386,7 @@
       border-color: #a5a4a0;
       box-shadow: 0 0 0 2px rgb(55 53 47 / 8%);
     }
+    .api-key-security-hint { white-space: nowrap; }
     .api-key-hint {
       position: absolute;
       inset: 0;
@@ -1295,9 +1296,10 @@
     .dns-option:hover { background: var(--ui-hover); }
     .certificate-type-list .filter-mode-tab[aria-pressed="true"],
     .certificate-policy-modes .filter-mode-tab[aria-pressed="true"] {
-      color: #fff;
-      background: var(--ui-accent);
+      color: var(--ui-text);
+      background: var(--ui-accent-soft);
       border-color: var(--ui-accent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-accent) 12%, transparent);
     }
     .primary {
       color: #fff;
@@ -2016,7 +2018,7 @@ html:not(.dark) .divider {
                   <h3>支持的来源</h3>
                   <ul><li>HTTP / HTTPS 订阅 URL</li><li>YAML / TXT / JSON 文件</li><li>Base64 订阅内容</li><li>Clash 代理 URI</li></ul>
                   <div style="margin-top:14px" class="field"><label>API 访问密钥</label><input id="api-key" type="password" placeholder="留空表示无需鉴权"></div>
-                  <div class="hint" style="margin-top:7px">仅随请求发送，不写入 localStorage。</div>
+                  <div class="hint api-key-security-hint" style="margin-top:7px">仅随请求发送，不写入 localStorage。</div>
                 </aside>
               </div>
 
