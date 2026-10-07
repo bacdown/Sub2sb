@@ -2284,6 +2284,8 @@ html:not(.dark) .divider {
 .selection-tools label { display:inline-flex; align-items:center; gap:4px; margin:0; font-size:11px; font-weight:400; }
 .selection-tools .text-button { margin:0; padding:0; border:0; background:transparent; color:var(--ui-muted); font:inherit; line-height:1; cursor:pointer; }
 .choice-select { width:100%; min-width:0; height:25px; min-height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:11px; }
+.group-rule-set-select { height:100px; min-height:100px; padding:2px 4px; overflow-y:auto; }
+.group-rule-set-select option { padding:3px 5px; }
 .dns-option > span,
 #custom-dns-list .added-item { font-size:11px !important; font-weight:400; line-height:1.45; }
 .compose-add-title { margin-bottom:8px; font-size:13px; font-weight:700; }
@@ -3133,40 +3135,19 @@ html:not(.dark) .divider {
       if (!container) return;
       const selected = new Set(selectedValues);
       container.replaceChildren();
-      const details = document.createElement("details");
-      details.className = "multi-select-dropdown";
-      const summary = document.createElement("summary");
-      const label = document.createElement("span");
-      label.className = "multi-select-label";
-      const panel = document.createElement("div");
-      panel.className = "multi-select-options";
-      const updateLabel = () => {
-        const values = [...panel.querySelectorAll(".multi-select-option[data-selected=\"true\"]")]
-          .map((option) => option.dataset.value);
-        label.textContent = values.length
-          ? (values.length > 2 ? `已选择 ${values.length} 项` : values.join("、"))
-          : placeholder;
-      };
-      summary.append(label);
+      const select = document.createElement("select");
+      select.multiple = true;
+      select.size = Math.min(Math.max(items.length, 1), 4);
+      select.className = "choice-select group-rule-set-select";
+      select.setAttribute("aria-label", placeholder);
       for (const item of items) {
-        const option = document.createElement("button");
-        option.type = "button";
-        option.className = "multi-select-option";
-        option.dataset.value = item.tag;
-        option.dataset.selected = String(selected.has(item.tag));
-        const text = document.createElement("span");
-        text.textContent = item.tag;
-        option.append(text);
-        option.addEventListener("click", (event) => {
-          event.preventDefault();
-          option.dataset.selected = String(option.dataset.selected !== "true");
-          updateLabel();
-        });
-        panel.append(option);
+        const option = document.createElement("option");
+        option.value = item.tag;
+        option.textContent = item.tag;
+        option.selected = selected.has(item.tag);
+        select.append(option);
       }
-      details.append(summary, panel);
-      container.append(details);
-      updateLabel();
+      container.append(select);
     }
 
     function addSelectionTools(container, key) {
