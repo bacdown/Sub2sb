@@ -2280,8 +2280,8 @@ html:not(.dark) .divider {
 .compose-add-row { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(0,1.5fr) auto; align-items:start; gap:8px; }
 .compose-add-row input { width:100%; min-height:25px; height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:13px; }
 .compose-add-row .secondary { min-height:25px; height:25px; padding:0 10px; font-size:13px; white-space:nowrap; }
-.compose-add-choices { display:flex; flex-wrap:wrap; gap:5px 10px; min-height:25px; max-height:90px; overflow:auto; padding:3px 2px; }
-.compose-add-choices .choice { font-size:12px; }
+.compose-add-choices { min-width:0; min-height:25px; padding:0; }
+.compose-add-choices .choice-select { width:100%; }
 #advanced-groups-content > .choice-list,
 #advanced-rules-content > .choice-list {
   max-height: 260px;
@@ -3455,20 +3455,12 @@ html:not(.dark) .divider {
     function renderGroupRuleSetChoices() {
       const container = document.querySelector("#new-group-rule-sets");
       if (!container) return;
-      const selected = new Set([...container.querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value));
-      container.replaceChildren();
-      allRuleSetTags().forEach((tag) => {
-        const label = document.createElement("label");
-        label.className = "choice";
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.value = tag;
-        input.checked = selected.has(tag);
-        const caption = document.createElement("span");
-        caption.textContent = tag;
-        label.append(input, caption);
-        container.append(label);
-      });
+      const selected = checkedValues(container);
+      renderRuleSetSelect(
+        container,
+        allRuleSetTags().map((tag) => ({ tag })),
+        selected,
+      );
     }
 
     function renderCustomItems() {
@@ -3997,7 +3989,7 @@ html:not(.dark) .divider {
     document.querySelector("#add-group").addEventListener("click", () => {
       const input = document.querySelector("#new-group-tag");
       const name = input.value.trim();
-      const ruleSets = [...document.querySelectorAll("#new-group-rule-sets input[type=\"checkbox\"]:checked")].map((item) => item.value);
+      const ruleSets = checkedValues(document.querySelector("#new-group-rule-sets"));
       if (!name) {
         setComposeStatus("请填写分流组名称。", "error");
         return;
