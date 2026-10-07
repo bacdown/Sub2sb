@@ -186,7 +186,7 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status, 200)
         self.assertIn("text/html", response.headers["Content-Type"])
-        self.assertIn("yaml2sb", response.body)
+        self.assertIn("Sub2sb", response.body)
 
     async def test_fetch_subscription_passes_fetch_options_as_keywords(self):
         call = {}
@@ -206,7 +206,7 @@ class WorkerSubscriptionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             call["options"],
             {
-                "headers": {"User-Agent": "yaml2sb/1.0"},
+                "headers": {"User-Agent": "Sub2sb/1.0"},
                 "redirect": "manual",
             },
         )
