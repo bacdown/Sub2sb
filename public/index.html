@@ -3694,17 +3694,12 @@ html:not(.dark) .divider {
     apiKeyReloadButton.addEventListener("click", () => reloadOptionsFromApiKey());
     const dnsCategoryTabs = [...document.querySelectorAll("[data-dns-category]")];
     const dnsCategoryPanels = [...document.querySelectorAll("[data-dns-panel]")];
-    function selectDnsCategory(category) {
-      dnsCategoryTabs.forEach((tab) => {
-        const selected = tab.dataset.dnsCategory === category;
-        tab.setAttribute("aria-selected", String(selected));
-      });
+    function selectDnsCategory() {
       dnsCategoryPanels.forEach((panel) => {
-        panel.hidden = panel.dataset.dnsPanel !== category;
+        panel.hidden = false;
       });
     }
-    dnsCategoryTabs.forEach((tab) => tab.addEventListener("click", () => selectDnsCategory(tab.dataset.dnsCategory)));
-    selectDnsCategory("domestic");
+    selectDnsCategory();
 
     dnsOptionLists.forEach((list) => {
       list.addEventListener("change", (event) => {
