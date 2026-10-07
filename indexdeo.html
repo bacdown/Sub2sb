@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="description" content="yaml2sb 2.0 · Clash / Subscription → sing-box">
-  <title>yaml2sb 2.0 · Subscription → sing-box</title>
+  <meta name="description" content="Sub2sb 2.0 · Clash / Subscription → sing-box">
+  <title>Sub2sb 2.0 · Subscription → sing-box</title>
   <style>
     :root {
       --bg:#f6f8fc; --surface:#fff; --surface-2:#f8faff; --line:#e5e9f2;
@@ -99,7 +99,7 @@
     .page{display:none}.page.active{display:block}.manager{display:grid;gap:12px}.manager-card{padding:18px}.manager-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.manager-head h2{font-size:15px;margin:0}.profile{border:1px solid var(--line);border-radius:11px;padding:14px;display:grid;gap:8px}.profile-name{font-size:13px;font-weight:800}.profile-link{font:10px var(--mono);color:var(--accent);overflow-wrap:anywhere}.profile-meta{font-size:10px;color:var(--muted)}.profile-actions{display:flex;gap:7px}
     .modal-backdrop{position:fixed;inset:0;background:rgba(5,10,22,.48);display:grid;place-items:center;padding:18px;z-index:30}.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.25);padding:20px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.modal-head h2{font-size:16px;margin:0}.close{border:0;background:var(--surface-2);color:var(--text);width:32px;height:32px;border-radius:8px}
 
-    /* yaml2sb 2.0 unified SVG icon system */
+    /* Sub2sb 2.0 unified SVG icon system */
     .icon{width:18px;height:18px;display:inline-block;flex:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;vertical-align:middle}
     .icon.sm{width:15px;height:15px}.icon.xs{width:13px;height:13px}
     .brand-mark{position:relative;overflow:hidden}
@@ -171,7 +171,7 @@
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark" aria-label="yaml2sb logo">
+      <div class="brand-mark" aria-label="Sub2sb logo">
         <svg class="logo-icon" viewBox="0 0 32 32" aria-hidden="true">
           <path d="M8 8.5 16 5l8 3.5-8 3.5L8 8.5Z" fill="rgba(255,255,255,.16)" stroke="none"/>
           <path d="M8 8.5 16 5l8 3.5-8 3.5L8 8.5Z"/>
@@ -180,7 +180,7 @@
           <path d="M12.5 25.5 16 28l3.5-2.5"/>
         </svg>
       </div>
-      <div><div class="brand-title">yaml2sb <span>2.0</span></div><div class="brand-sub">Clash / Subscription → sing-box</div></div>
+      <div><div class="brand-title">Sub2sb <span>2.0</span></div><div class="brand-sub">Clash / Subscription → sing-box</div></div>
     </div>
     <nav class="nav">
       <button class="active" data-page="convert"><span class="nav-icon"><svg class="icon"><use href="#i-convert"/></svg></span>转换</button>
@@ -208,7 +208,7 @@
     <main class="content">
       <section class="page active" id="page-convert">
         <div class="page-head">
-          <div><div class="eyebrow">yaml2sb 2.0</div><h1>订阅转换</h1><p>将 Clash / YAML / 订阅内容转换为 sing-box 配置，支持多订阅合并、节点筛选和高级规则。</p></div>
+          <div><div class="eyebrow">Sub2sb 2.0</div><h1>订阅转换</h1><p>将 Clash / YAML / 订阅内容转换为 sing-box 配置，支持多订阅合并、节点筛选和高级规则。</p></div>
         </div>
 
         <div class="workspace">
@@ -237,7 +237,7 @@
                 </div>
                 <aside class="source-side">
                   <h3>支持的来源</h3>
-                  <ul><li>HTTP / HTTPS 订阅 URL</li><li>YAML / TXT / JSON 文件</li><li>Base64 订阅内容</li><li>Clash 代理 URI</li></ul>
+                  <ul><li>HTTP / HTTPS 订阅 URL</li><li>YAML / TXT / JSON 文件</li><li>Base64 订阅内容</li><li>Sub URL</li></ul>
                   <div style="margin-top:14px" class="field"><label>API 访问密钥</label><input id="api-key" type="password" placeholder="留空表示无需鉴权"></div>
                   <div class="hint" style="margin-top:7px">仅随请求发送，不写入 localStorage。</div>
                 </aside>
@@ -439,11 +439,11 @@
   function applyTheme(mode) {
     const dark = mode==="dark" || (mode==="system" && matchMedia("(prefers-color-scheme: dark)").matches);
     document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("yaml2sb-theme", mode);
+    localStorage.setItem("Sub2sb-theme", mode);
   }
   $("#theme").onclick=()=>applyTheme(document.documentElement.classList.contains("dark")?"light":"dark");
   $("#light-setting").onclick=()=>applyTheme("light"); $("#dark-setting").onclick=()=>applyTheme("dark"); $("#system-setting").onclick=()=>applyTheme("system");
-  applyTheme(localStorage.getItem("yaml2sb-theme")||"light");
+  applyTheme(localStorage.getItem("Sub2sb-theme")||"light");
 
   // Source tabs
   function selectSource(mode) {
