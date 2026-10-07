@@ -2284,8 +2284,42 @@ html:not(.dark) .divider {
 .selection-tools label { display:inline-flex; align-items:center; gap:4px; margin:0; font-size:11px; font-weight:400; }
 .selection-tools .text-button { margin:0; padding:0; border:0; background:transparent; color:var(--ui-muted); font:inherit; line-height:1; cursor:pointer; }
 .choice-select { width:100%; min-width:0; height:25px; min-height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:11px; }
-.group-rule-set-select { height:100px; min-height:100px; padding:2px 4px; overflow-y:auto; }
+.group-rule-set-select { width:100%; height:25px; min-height:25px; padding:0 8px; }
 .group-rule-set-select option { padding:3px 5px; }
+.compose-add-align {
+  align-items: start !important;
+}
+.compose-add-align > .compose-field,
+.compose-add-align > .compose-add-action {
+  display: grid !important;
+  grid-template-rows: 18px 25px !important;
+  gap: 6px !important;
+  min-height: 0 !important;
+  align-content: start !important;
+}
+.compose-add-align .compose-field-label {
+  height: 18px !important;
+  margin: 0 !important;
+  line-height: 18px !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+.compose-add-align .compose-field input,
+.compose-add-align .compose-field select,
+.compose-add-align .compose-add-choices,
+.compose-add-align .compose-add-choices select,
+.compose-add-align .compose-add-action .secondary {
+  width: 100% !important;
+  height: 25px !important;
+  min-height: 25px !important;
+  box-sizing: border-box !important;
+}
+.compose-add-fields.compose-add-align:not(.compose-add-rule-fields) {
+  grid-template-columns: minmax(150px, .9fr) minmax(0, 1.6fr) minmax(108px, auto) !important;
+}
+.compose-add-rule-fields.compose-add-align {
+  grid-template-columns: minmax(110px, .9fr) minmax(160px, 1.6fr) minmax(100px, .8fr) minmax(110px, .9fr) minmax(108px, auto) !important;
+}
 .dns-option > span,
 #custom-dns-list .added-item { font-size:11px !important; font-weight:400; line-height:1.45; }
 .compose-add-title { margin-bottom:8px; font-size:13px; font-weight:700; }
@@ -2786,10 +2820,11 @@ html:not(.dark) .divider {
             <div id="group-choices" class="choice-list"></div>
             <div id="group-add-panel" class="compose-add-panel">
               <div class="compose-add-title">添加分流组</div>
-              <div class="compose-add-fields">
-                <label class="compose-field">名称
+              <div class="compose-add-fields compose-add-align">
+                <div class="compose-field">
+                  <span class="compose-field-label">名称</span>
                   <input id="new-group-tag" type="text" placeholder="分流组名称" aria-label="分流组名称">
-                </label>
+                </div>
                 <div class="compose-field">
                   <span class="compose-field-label">规则集</span>
                   <div id="new-group-rule-sets" class="compose-add-choices"></div>
@@ -2804,12 +2839,27 @@ html:not(.dark) .divider {
             <div id="rule-set-choices" class="choice-list"></div>
             <div id="rule-set-add-panel" class="compose-add-panel">
               <div class="compose-add-title">添加规则集</div>
-              <div class="rule-link-fields compose-add-rule-fields">
-                <label>名称<input id="new-rule-tag-inline" type="text" placeholder="规则集名称"></label>
-                <label>链接<input id="new-rule-url-inline" type="url" placeholder="规则集链接"></label>
-                <label>格式<select id="new-rule-format-inline"><option value="source">Source</option><option value="binary">Binary</option></select></label>
-                <label>出站<select id="new-rule-outbound-inline"></select></label>
-                <div class="rule-link-action"><span class="compose-field-label" aria-hidden="true">添加</span><button id="add-rule-set-inline" class="secondary" type="button">添加规则集</button></div>
+              <div class="compose-add-fields compose-add-rule-fields compose-add-align">
+                <div class="compose-field">
+                  <span class="compose-field-label">名称</span>
+                  <input id="new-rule-tag-inline" type="text" placeholder="规则集名称" aria-label="规则集名称">
+                </div>
+                <div class="compose-field">
+                  <span class="compose-field-label">链接</span>
+                  <input id="new-rule-url-inline" type="url" placeholder="规则集链接" aria-label="规则集链接">
+                </div>
+                <div class="compose-field">
+                  <span class="compose-field-label">格式</span>
+                  <select id="new-rule-format-inline" aria-label="规则集格式"><option value="source">Source</option><option value="binary">Binary</option></select>
+                </div>
+                <div class="compose-field">
+                  <span class="compose-field-label">出站</span>
+                  <select id="new-rule-outbound-inline" aria-label="规则集出站"></select>
+                </div>
+                <div class="compose-field compose-add-action">
+                  <span class="compose-field-label" aria-hidden="true">添加</span>
+                  <button id="add-rule-set-inline" class="secondary" type="button">添加规则集</button>
+                </div>
               </div>
               <ul id="custom-rule-list-inline" class="added-list"></ul>
             </div>
@@ -3096,11 +3146,13 @@ html:not(.dark) .divider {
     }
 
     function checkedValues(container) {
-      const select = container.querySelector("select[multiple]");
-      if (select) return [...select.selectedOptions].map((option) => option.value);
+      const multi = container.querySelector("select[multiple]");
+      if (multi) return [...multi.selectedOptions].map((option) => option.value);
+      const single = container.querySelector("select:not([multiple])");
+      if (single) return single.value ? [single.value] : [];
       const dropdown = container.querySelector(".multi-select-dropdown");
       if (dropdown) {
-        return [...dropdown.querySelectorAll(".multi-select-option[data-selected=\"true\"]")]
+        return [...dropdown.querySelectorAll('.multi-select-option[data-selected="true"]')]
           .map((option) => option.dataset.value);
       }
       return [...container.querySelectorAll('input[type="checkbox"]:checked')]
@@ -3133,19 +3185,25 @@ html:not(.dark) .divider {
 
     function renderRuleSetDropdown(container, items, selectedValues = [], placeholder = "选择规则集") {
       if (!container) return;
-      const selected = new Set(selectedValues);
+      const preferred = Array.isArray(selectedValues) ? selectedValues.find(Boolean) : selectedValues;
       container.replaceChildren();
       const select = document.createElement("select");
-      select.multiple = true;
-      select.size = Math.min(Math.max(items.length, 1), 4);
       select.className = "choice-select group-rule-set-select";
       select.setAttribute("aria-label", placeholder);
+      const empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = placeholder;
+      select.append(empty);
       for (const item of items) {
         const option = document.createElement("option");
         option.value = item.tag;
         option.textContent = item.tag;
-        option.selected = selected.has(item.tag);
         select.append(option);
+      }
+      if (preferred && [...select.options].some((option) => option.value === preferred)) {
+        select.value = preferred;
+      } else {
+        select.value = "";
       }
       container.append(select);
     }
@@ -4115,9 +4173,8 @@ html:not(.dark) .divider {
       }
       customGroups.push({ tag: name, rule_sets: ruleSets });
       input.value = "";
-      document.querySelectorAll("#new-group-rule-sets input[type=\"checkbox\"]").forEach((item) => { item.checked = false; });
-      const groupRuleSetDetails = document.querySelector("#new-group-rule-sets .multi-select-dropdown");
-      if (groupRuleSetDetails) groupRuleSetDetails.removeAttribute("open");
+      const groupRuleSetSelect = document.querySelector("#new-group-rule-sets select");
+      if (groupRuleSetSelect) groupRuleSetSelect.value = "";
       renderCustomItems();
       renderMatchBuilderOptions();
       renderMatchingRules();
