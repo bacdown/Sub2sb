@@ -235,7 +235,7 @@
     .dns-option input { flex: none; margin: 0; }
     .dns-option.is-disabled { color: #9b9a97; cursor: not-allowed; }
     .dns-option.is-disabled:hover { background: transparent; }
-    .dns-option-add { width: 100%; min-height: 38px; border: 0; background: transparent; text-align: left; font: inherit; cursor: pointer; }
+    .dns-option-add { width: 100%; min-height: 38px; border: 0; background: transparent; text-align: left; font: inherit; font-size: 13px; line-height: 1.4; cursor: pointer; }
     .dns-option-add:hover { background: #f1f1ef; }
     .dns-select-hint { margin-top: 5px; }
     .match-builder { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(190px, 1.2fr) minmax(190px, 1.2fr) minmax(150px, .8fr); align-items: end; gap: 10px; padding: 14px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
@@ -852,6 +852,7 @@
     .json-head { display: flex; height: 38px; align-items: center; justify-content: space-between; padding: 0 11px; color: #52617a; background: #eef1f7; font-size: 10px; }
     .json-head button { display: inline-flex; align-items: center; gap: 5px; border: 0; color: #52617a; background: transparent; font-size: 10px; }
     .json { overflow: auto; max-height: 330px; min-height: 150px; margin: 0; padding: 12px; color: #34425e; background: #f8faff; font: 10px/1.65 var(--mono); white-space: pre; }
+    .json-placeholder { font: 11px/1.6 var(--ui-font); }
     .json-key { color: #536dfe; }
     .json-string { color: #13805c; }
     .json-number { color: #a65317; }
@@ -863,7 +864,7 @@
     html.dark .json-string { color: #74d6ad; }
     html.dark .json-number { color: #ffc27a; }
     html.dark .json-literal { color: #ff9cc1; }
-    .preview-hint { font-size: 10px; }
+    .preview-hint { font-size: 11px; }
     .icon { display: inline-block; width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; vertical-align: middle; }
     .icon.sm { width: 15px; height: 15px; }
     .icon.xs { width: 13px; height: 13px; }
@@ -914,7 +915,7 @@
       box-shadow: 0 8px 28px rgb(33 48 80 / 6%);
     }
     .input-layout { gap: 14px; }
-    .controls-row { align-items: start; }
+    .controls-row { align-items: start; padding: 20px; }
     .controls-step-head { grid-column: 1 / -1; }
     .step-head { display: flex; align-items: center; gap: 11px; margin-bottom: 2px; }
     .step-no { display: grid; width: 30px; height: 30px; flex: none; place-items: center; border-radius: 50%; color: var(--accent); background: var(--accent-soft); font-size: 12px; font-weight: 800; }
@@ -1659,30 +1660,30 @@ html.dark .rule-link-details {
   margin-bottom: 6px;
 }
 .dns-category-tabs {
-  display: inline-flex;
-  gap: 4px;
+  display: flex;
+  gap: 5px;
   margin-top: 10px;
   padding: 4px;
-  border: 1px solid var(--ui-line);
-  border-radius: 8px;
-  background: var(--ui-panel);
+  border-radius: 10px;
+  background: var(--surface-soft);
 }
 .dns-category-tab {
-  min-width: 96px;
-  height: 34px;
-  padding: 0 14px;
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  padding: 9px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 7px;
+  color: var(--muted);
   background: transparent;
-  color: var(--ui-muted);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 650;
   cursor: pointer;
 }
 .dns-category-tab[aria-selected="true"] {
-  background: var(--ui-accent);
-  color: #fff;
-  box-shadow: 0 1px 3px rgb(20 25 30 / 12%);
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 2px 7px rgb(0 0 0 / 6%);
 }
 .dns-grid {
   display: block;
@@ -2124,7 +2125,7 @@ html.dark .rule-link-details {
               </div>
               <div class="json-wrap">
                 <div class="json-head"><span>JSON PREVIEW</span><button id="copy-json" type="button"><svg class="icon xs"><use href="#i-copy"/></svg>复制</button></div>
-                <pre class="json" id="json-preview">转换成功后将在此显示 sing-box 配置。</pre>
+                <pre class="json json-placeholder" id="json-preview">转换成功后将在此显示 sing-box 配置。</pre>
               </div>
               <p class="hint preview-hint">预览取自项目转换接口的真实响应；完整配置会同时下载为 JSON 文件。</p>
             </section>
@@ -4059,7 +4060,9 @@ html.dark .rule-link-details {
       try {
         const result = await requestConversion(currentConversionPayload());
         downloadConvertedConfig(result);
-        document.querySelector("#json-preview").innerHTML = highlightJson(result.config);
+        const jsonPreview = document.querySelector("#json-preview");
+        jsonPreview.classList.remove("json-placeholder");
+        jsonPreview.innerHTML = highlightJson(result.config);
         document.querySelector("#preview-node-count").textContent = result.node_count ?? "—";
         document.querySelector("#preview-rule-count").textContent = result.rule_count ?? "—";
         status.textContent = `转换成功：${result.node_count} 个节点，配置已下载。`;
