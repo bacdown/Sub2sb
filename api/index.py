@@ -46,7 +46,7 @@ TEMPLATE_ALIASES = {
 
 # When set, the Vercel serverless function requires requests to present this
 # key. Leave unset to keep the API public (backwards compatible behaviour).
-API_KEY = os.environ.get("YAML2SB_API_KEY")
+API_KEY = os.environ.get("SUB2SB_API_KEY")
 
 
 def _resolve_template_name(name):
@@ -782,7 +782,7 @@ class handler(BaseHTTPRequestHandler):
           url / urls   原订阅链接（至少一个，可重复或逗号分隔）
           template     模板：phone | openwrt | momo
                        或 config_phone.json | config_openwrt.json | momo.json
-          api_key      若服务端配置了 YAML2SB_API_KEY 则必填（也可用 Header）
+          api_key      若服务端配置了 SUB2SB_API_KEY 则必填（也可用 Header）
         """
         if not self._is_authorized():
             self._send_unauthorized()
@@ -833,7 +833,7 @@ class handler(BaseHTTPRequestHandler):
     def _management_enabled(self):
         if API_KEY:
             return True
-        self._send_json(503, {"error": "订阅管理需要先配置 YAML2SB_API_KEY"})
+        self._send_json(503, {"error": "订阅管理需要先配置 SUB2SB_API_KEY"})
         return False
 
     def _profile_summary(self, profile):
@@ -1011,7 +1011,7 @@ class handler(BaseHTTPRequestHandler):
                         "url": "原订阅链接（必填，可重复或与 urls 同用）",
                         "urls": "多个订阅链接，逗号分隔（可选）",
                         "template": "phone | openwrt | momo（默认 phone）",
-                        "api_key": "若启用了 YAML2SB_API_KEY 则必填",
+                        "api_key": "若启用了 SUB2SB_API_KEY 则必填",
                     },
                     "example": (
                         "/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe"
