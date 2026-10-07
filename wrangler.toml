@@ -3,9 +3,9 @@
 #
 # 本地：uv sync --group dev && uv run pywrangler dev
 # 部署：uv run pywrangler deploy
-# 密钥：uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
+# 密钥：uv run --python 3.11 pywrangler secret put SUB2SB_API_KEY
 
-name = "yaml2sb"
+name = "Sub2sb"
 main = "worker.py"
 compatibility_date = "2026-09-30"
 compatibility_flags = ["python_workers"]
