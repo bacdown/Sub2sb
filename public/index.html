@@ -2261,7 +2261,15 @@ html:not(.dark) .divider {
 #advanced-rules-content .choice-list { border:0 !important; background:transparent !important; }
 .dns-selected-panel h3 { margin-top:0; }
 .compose-add-panel { margin-top:10px; padding-top:10px; border-top:1px solid var(--ui-line); }
-.compose-add-fields { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(0,1.5fr) auto; align-items:start; gap:8px; }
+.compose-add-fields { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(0,1.5fr) auto; align-items:end; gap:8px; }
+.compose-add-fields > .compose-field,
+.compose-add-fields > .compose-add-action { min-height:58px; }
+.compose-add-fields > .compose-field > .compose-field-label,
+.compose-add-fields > .compose-add-action > .compose-field-label { height:18px; margin-bottom:6px; }
+.compose-add-fields > .compose-field input,
+.compose-add-fields > .compose-field select,
+.compose-add-fields > .compose-field .multi-select-dropdown > summary,
+.compose-add-fields > .compose-add-action .secondary { height:25px; min-height:25px; box-sizing:border-box; }
 .compose-field { min-width:0; margin:0; font-size:13px; font-weight:400; line-height:1.35; }
 .compose-field-label, .compose-field > label, .compose-add-fields label { display:block; margin:0 0 6px; font-size:13px; font-weight:400; line-height:1.35; }
 .compose-field input { width:100%; min-height:25px; height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:13px; }
@@ -2350,6 +2358,8 @@ html:not(.dark) .divider {
 }
 .rule-set-choice-list .choice:last-child { border-bottom:0; }
 .rule-set-choice-list .choice input { margin:0 5px 0 0; }
+#advanced-rules-content .choice-selection-panel { margin-top:0; }
+#advanced-rules-content .selection-tools { margin-bottom:6px; }
 #advanced-groups-content > .choice-list,
 #advanced-rules-content > .choice-list {
   max-height:none;
@@ -3107,7 +3117,7 @@ html:not(.dark) .divider {
       });
     }
 
-    function renderMultiSelectDropdown(container, items, selectedValues = [], placeholder = "选择规则集") {
+    function renderRuleSetDropdown(container, items, selectedValues = [], placeholder = "选择规则集") {
       if (!container) return;
       const selected = new Set(selectedValues);
       container.replaceChildren();
@@ -3550,7 +3560,7 @@ html:not(.dark) .divider {
       const container = document.querySelector("#new-group-rule-sets");
       if (!container) return;
       const selected = checkedValues(container);
-      renderMultiSelectDropdown(
+      renderRuleSetDropdown(
         container,
         allRuleSetTags().map((tag) => ({ tag })),
         selected,
@@ -3869,6 +3879,9 @@ html:not(.dark) .divider {
     function ensureSelectionTools() {
       if (groupChoices && !groupChoices.parentElement?.querySelector('[data-selection-tools="groups"]')) {
         addSelectionTools(groupChoices, "groups");
+      }
+      if (ruleSetChoices && !ruleSetChoices.parentElement?.querySelector('[data-selection-tools="rulesets"]')) {
+        addSelectionTools(ruleSetChoices, "rulesets");
       }
     }
     ensureSelectionTools();
