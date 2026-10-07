@@ -1845,6 +1845,80 @@ html:not(.dark) .divider {
   }
 }
 </style>
+<style>
+    /* 来源区域与 indexdeo.html 保持一致 */
+    .source-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 235px;
+      align-items: start;
+      gap: 14px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 8px 28px rgb(33 48 80 / 6%);
+    }
+    .source-main { min-width: 0; }
+    .source-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+      padding: 4px;
+      border-radius: 10px;
+      background: var(--surface-soft);
+    }
+    .source-tab {
+      flex: 1;
+      padding: 9px;
+      border: 0;
+      border-radius: 7px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .source-tab.active {
+      color: var(--text);
+      background: var(--surface);
+      box-shadow: 0 2px 7px rgb(0 0 0 / 6%);
+    }
+    .source-side {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface-soft);
+    }
+    .source-side h3 { margin: 0 0 9px; font-size: 13px; font-weight: 700; }
+    .source-side ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .source-side li { display: flex; gap: 7px; color: var(--muted); font-size: 11px; }
+    .source-side li::before { color: var(--success); content: "✓"; font-weight: 900; }
+    .url-box {
+      min-height: 45px;
+      padding: 11px 12px;
+      line-height: 1.65;
+    }
+    .source-text {
+      min-height: 126px;
+      padding: 11px 12px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+    .file-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 9px;
+      padding: 9px 11px;
+      border: 1px dashed var(--line);
+      border-radius: 9px;
+      color: var(--muted);
+      background: var(--surface-soft);
+      font-size: 12px;
+    }
+    .file-btn input { display: none; }
+</style>
 </head>
 <body>
   <svg class="icon-defs" aria-hidden="true">
@@ -1918,39 +1992,33 @@ html:not(.dark) .divider {
     <section class="card" aria-label="配置转换">
       <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-source"/></svg></div><div><div class="step-title">来源</div><div class="step-desc">添加订阅链接、上传文件或直接粘贴配置。</div></div></div>
       <form id="convert-form">
-        <div class="source-layout">
-          <div class="source-main">
-            <div class="source-tabs" role="tablist" aria-label="订阅来源">
-              <button class="source-tab active" id="url-tab" data-source="url" type="button" role="tab" aria-selected="false" aria-controls="url-panel">订阅 URL</button>
-              <button class="source-tab" id="file-tab" data-source="file" type="button" role="tab" aria-selected="false" aria-controls="file-panel">上传文件</button>
-              <button class="source-tab" id="paste-tab" data-source="paste" type="button" role="tab" aria-selected="true" aria-controls="paste-panel">粘贴配置</button>
-            </div>
-            <div class="input-layout">
-          <div class="mode-panel" id="paste-panel" role="tabpanel" aria-labelledby="paste-tab">
-            <label for="content">订阅内容</label>
-            <textarea id="content" name="content" placeholder="粘贴 Clash YAML、Base64 订阅或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
-            <p class="hint">默认配置文件均支持 sing-box 1.14.x。</p>
-          </div>
-
-          <div class="mode-panel" id="url-panel" role="tabpanel" aria-labelledby="url-tab" hidden>
-            <label for="url">订阅链接</label>
-            <textarea id="url" name="url" rows="4" placeholder="每行一个订阅链接&#10;https://example.com/subscribe"></textarea>
-            <p class="hint">支持粘贴多条订阅链接，每行一个；服务端会逐条下载订阅内容，只允许访问公网 HTTP / HTTPS 地址，且每条下载上限为 2 MiB。</p>
-          </div>
-          <div class="mode-panel" id="file-panel" role="tabpanel" aria-labelledby="file-tab" hidden>
-            <label for="file">YAML / TXT / JSON 文件</label>
-            <input id="file" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml" aria-label="添加 YAML 或 TXT 文件">
-            <p id="file-name" class="hint" aria-live="polite">尚未添加文件。可分多次选择，合并内容总大小不超过 2 MiB。</p>
-          </div>
-            </div>
-          </div>
-          <aside class="source-side">
-          <h3>支持的来源</h3>
-          <ul><li>HTTP / HTTPS 订阅 URL</li><li>YAML / TXT / JSON 文件</li><li>Base64 订阅内容</li><li>Clash 代理 URI</li></ul>
-          <div class="field" style="margin-top:14px"><label for="api-key">API 访问密钥</label><input id="api-key" type="password" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint"></div>
-          <div id="api-key-hint" class="hint" style="margin-top:7px">仅随请求发送，不写入 localStorage。</div>
-          </aside>
-        </div>
+              <div class="source-layout">
+                <div>
+                  <div class="source-tabs">
+                    <button class="source-tab active" data-source="url">订阅 URL</button>
+                    <button class="source-tab" data-source="file">上传文件</button>
+                    <button class="source-tab" data-source="paste">粘贴配置</button>
+                  </div>
+                  <div id="source-url">
+                    <textarea id="urls" class="url-box" rows="3" placeholder="每行一个订阅地址&#10;https://example.com/subscribe"></textarea>
+                    <div class="hint" style="margin-top:7px">支持多个来源；转换接口沿用现有 <code>/api</code>。</div>
+                  </div>
+                  <div id="source-file" hidden>
+                    <label class="file-btn"><svg class="icon sm"><use href="#i-upload"/></svg>选择 YAML / TXT / JSON 文件<input id="files" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml"></label>
+                    <div id="file-info" class="hint" style="margin-top:8px">可多次选择，内容会合并提交；总大小不超过 2 MiB。</div>
+                    <textarea id="file-preview" class="source-text" style="margin-top:8px" hidden></textarea>
+                  </div>
+                  <div id="source-paste" hidden>
+                    <textarea id="content" class="source-text" placeholder="粘贴 Clash YAML、Base64 订阅，或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
+                  </div>
+                </div>
+                <aside class="source-side">
+                  <h3>支持的来源</h3>
+                  <ul><li>HTTP / HTTPS 订阅 URL</li><li>YAML / TXT / JSON 文件</li><li>Base64 订阅内容</li><li>Clash 代理 URI</li></ul>
+                  <div style="margin-top:14px" class="field"><label>API 访问密钥</label><input id="api-key" type="password" placeholder="留空表示无需鉴权"></div>
+                  <div class="hint" style="margin-top:7px">仅随请求发送，不写入 localStorage。</div>
+                </aside>
+              </div>
 
         <div class="controls-row">
           <div class="step-head controls-step-head"><span class="step-no">2</span><div><div class="step-title">转换方案</div><div class="step-desc">选择客户端模板，或使用自定义配置。</div></div></div>
@@ -2265,9 +2333,9 @@ html:not(.dark) .divider {
   <script>
     const form = document.querySelector("#convert-form");
     const content = document.querySelector("#content");
-    const file = document.querySelector("#file");
-    const fileName = document.querySelector("#file-name");
-    const url = document.querySelector("#url");
+    const file = document.querySelector("#files");
+    const fileName = document.querySelector("#file-info");
+    const url = document.querySelector("#urls");
     const manageInputPanel = document.querySelector("#manage-input-panel");
     const airportName = document.querySelector("#airport-name");
     const airportUrl = document.querySelector("#airport-url");
@@ -2325,7 +2393,7 @@ html:not(.dark) .divider {
     const remoteLinkStatus = document.querySelector("#remote-link-status");
     const tabs = [...document.querySelectorAll(".source-tab")];
     const selectedProfileIds = new Set();
-    let activeMode = "paste";
+    let activeMode = "url";
     let activeFilterMode = "include";
     const filterValues = { include: "", exclude: "" };
     const CERTIFICATE_NODE_TYPES = [
@@ -3346,9 +3414,9 @@ html:not(.dark) .divider {
         tab.classList.toggle("active", selected);
         tab.setAttribute("aria-selected", String(selected));
       }
-      document.querySelector("#paste-panel").hidden = mode !== "paste";
-      document.querySelector("#url-panel").hidden = mode !== "url";
-      document.querySelector("#file-panel").hidden = mode !== "file";
+      document.querySelector("#source-paste").hidden = mode !== "paste";
+      document.querySelector("#source-url").hidden = mode !== "url";
+      document.querySelector("#source-file").hidden = mode !== "file";
       status.textContent = "";
       status.className = "status";
       updateWorkspacePreview();
@@ -3396,7 +3464,7 @@ html:not(.dark) .divider {
       selectMode(tab.dataset.source);
       activatePage("convert");
     }));
-    selectMode("paste");
+    selectMode("url");
     document.querySelectorAll("[data-ui-action]").forEach((control) => control.addEventListener("click", () => {
       activatePage(control.dataset.uiAction);
     }));
