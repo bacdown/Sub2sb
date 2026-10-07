@@ -125,7 +125,7 @@ class WebServerTests(unittest.TestCase):
         self.assertNotIn("linesFrom(includeNames)", page)
         self.assertIn("iPhone 配置", page)
         self.assertIn('href="https://github.com/bacdown"', page)
-        self.assertIn("<h1>yaml2sb · sing-box</h1>", page)
+        self.assertIn("<h1>Sub2sb · sing-box</h1>", page)
         self.assertIn("YAML 配置与订阅链接，轻松转换为 sing-box JSON", page)
         self.assertIn('aria-label="支持的部署方式"', page)
         self.assertIn("Cloudflare Workers", page)
