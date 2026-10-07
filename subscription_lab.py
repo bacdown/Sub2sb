@@ -13,8 +13,8 @@ from subscription_utils import collect_subscription_urls, validate_public_url_sy
 from sub2singbox import normalize_certificate_policies
 
 MAX_PROFILE_BYTES = 2 * 1024 * 1024
-PROFILE_PREFIX = "yaml2sb:profile:"
-PROFILE_INDEX = "yaml2sb:profiles"
+PROFILE_PREFIX = "Sub2sb:profile:"
+PROFILE_INDEX = "Sub2sb:profiles"
 
 
 class SubscriptionStoreUnavailable(RuntimeError):
@@ -111,7 +111,7 @@ def validate_profile(payload):
 class SQLiteSubscriptionStore:
     def __init__(self, path=None):
         self.path = Path(path or os.environ.get(
-            "YAML2SB_DB_PATH", "data/subscriptions.sqlite3"
+            "SUB2SB_DB_PATH", "data/subscriptions.sqlite3"
         ))
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as connection:
@@ -252,7 +252,7 @@ class UpstashSubscriptionStore:
 
 
 def get_subscription_store():
-    store_name = os.environ.get("YAML2SB_STORE", "").lower()
+    store_name = os.environ.get("SUB2SB_STORE", "").lower()
     if store_name == "upstash" or os.environ.get("VERCEL"):
         url = os.environ.get("UPSTASH_REDIS_REST_URL")
         token = os.environ.get("UPSTASH_REDIS_REST_TOKEN")
@@ -262,5 +262,5 @@ def get_subscription_store():
             )
         return UpstashSubscriptionStore(url, token)
     if store_name not in ("", "sqlite"):
-        raise SubscriptionStoreUnavailable("YAML2SB_STORE 仅支持 sqlite 或 upstash")
+        raise SubscriptionStoreUnavailable("SUB2SB_STORE 仅支持 sqlite 或 upstash")
     return SQLiteSubscriptionStore()
