@@ -2249,10 +2249,14 @@ html:not(.dark) .divider {
 .dns-heading { display:flex; align-items:baseline; gap:8px; margin:0 0 8px; }
 .dns-heading strong { font-size:15px; font-weight:800; }
 .dns-heading span { color:var(--ui-muted); font-size:11px; line-height:1.4; }
-.dns-category-tabs { display:none !important; }
-.dns-grid { grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:0 !important; gap:12px; }
-.dns-grid .choice-group { margin:0; padding:0; border:0; }
+.dns-category-tabs { display:flex !important; width:50%; min-width:220px; margin:0 0 8px !important; }
+.dns-grid { margin-top:0 !important; }
+.dns-grid .choice-group { margin:0; padding:0; border:0; background:transparent !important; }
 .dns-selected-panel { padding:0 0 0 16px !important; border:0 !important; border-left:0 !important; background:transparent !important; }
+.dns-layout { border:0 !important; background:transparent !important; padding:0 !important; }
+.dns-main { border:0 !important; background:transparent !important; }
+#advanced-groups-content .choice-list,
+#advanced-rules-content .choice-list { border:0 !important; background:transparent !important; }
 .dns-selected-panel h3 { margin-top:0; }
 .compose-add-panel { margin-top:10px; padding-top:10px; border-top:1px solid var(--ui-line); }
 .compose-add-title { margin-bottom:8px; font-size:13px; font-weight:700; }
@@ -2569,12 +2573,16 @@ html:not(.dark) .divider {
               <div class="dns-heading"><strong>DNS</strong><span>可以多选要保留的服务器，每类最多选择两项。</span></div>
               <div class="dns-layout">
                 <div class="dns-main">
+                  <div class="dns-category-tabs" role="tablist" aria-label="DNS 分类">
+                    <button class="dns-category-tab" type="button" data-dns-category="domestic" role="tab" aria-selected="true">国内 DNS</button>
+                    <button class="dns-category-tab" type="button" data-dns-category="international" role="tab" aria-selected="false">国际 DNS</button>
+                  </div>
                   <div class="dns-grid">
                     <fieldset class="choice-group" data-dns-panel="domestic">
-                      <div id="dns-domestic-options" class="dns-option-list" role="group" aria-label="DNS 多选"></div>
+                      <div id="dns-domestic-options" class="dns-option-list" role="group" aria-label="国内 DNS 多选"></div>
                     </fieldset>
-                    <fieldset class="choice-group" data-dns-panel="international">
-                      <div id="dns-international-options" class="dns-option-list" role="group" aria-label="DNS 多选"></div>
+                    <fieldset class="choice-group" data-dns-panel="international" hidden>
+                      <div id="dns-international-options" class="dns-option-list" role="group" aria-label="国际 DNS 多选"></div>
                     </fieldset>
                   </div>
                 </div>
@@ -2671,8 +2679,7 @@ html:not(.dark) .divider {
               </div>
               <ol id="matching-rule-list" class="rule-order-list"></ol>
             </section>
-          <div hidden aria-hidden="true">
-            <div id="group-choices"></div>
+            <div id="group-choices" class="choice-list"></div>
             <div id="group-add-panel" class="compose-add-panel">
               <div class="compose-add-title">添加分流组</div>
               <div class="compose-add-row">
@@ -2682,8 +2689,17 @@ html:not(.dark) .divider {
               </div>
               <ul id="custom-group-list" class="added-list"></ul>
             </div>
-            <div id="rule-set-choices"></div>
-          </div>
+            <div id="rule-set-choices" class="choice-list"></div>            <div id="rule-set-add-panel" class="compose-add-panel">
+              <div class="compose-add-title">添加规则集</div>
+              <div class="rule-link-fields">
+                <label>名称<input id="new-rule-tag-inline" type="text" placeholder="规则集名称"></label>
+                <label>链接<input id="new-rule-url-inline" type="url" placeholder="规则集链接"></label>
+                <label>格式<select id="new-rule-format-inline"><option value="source">Source</option><option value="binary">Binary</option></select></label>
+                <label>出站<select id="new-rule-outbound-inline"></select></label>
+                <div class="rule-link-action"><label>添加</label><button id="add-rule-set-inline" class="secondary" type="button">添加规则集</button></div>
+              </div>
+              <ul id="custom-rule-list-inline" class="added-list"></ul>
+            </div>
           <p id="compose-status" class="status" role="status" aria-live="polite"></p>
       </section>
       <section class="card bottom-bar">
@@ -2983,6 +2999,21 @@ html:not(.dark) .divider {
       caption.textContent = text;
       label.append(input, caption);
       container.append(label);
+    }
+
+    function addSelectionTools(container, key) {
+      const tools = document.createElement("div");
+      tools.className = "selection-tools";
+      tools.innerHTML = '<label><input type="checkbox" data-select-all="'+key+'"> 全选</label><button type="button" class="text-button" data-invert-selection="'+key+'">反选</button>';
+      tools.querySelector('[data-select-all="'+key+'"]').addEventListener("change", (event) => {
+        container.querySelectorAll('input[type="checkbox"]').forEach((input) => { if (!input.disabled) input.checked = event.target.checked; });
+        container.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      tools.querySelector('[data-invert-selection="'+key+'"]').addEventListener("click", () => {
+        container.querySelectorAll('input[type="checkbox"]').forEach((input) => { if (!input.disabled) input.checked = !input.checked; });
+        container.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      container.parentElement.insertBefore(tools, container);
     }
 
     function selectedDnsValues() {
@@ -3358,6 +3389,18 @@ html:not(.dark) .divider {
       });
     }
 
+    function renderInlineRuleSetOutbound() {
+      const target = document.querySelector("#new-rule-outbound-inline");
+      if (!target) return;
+      target.replaceChildren();
+      availableMatchingTargets().forEach((tag) => {
+        const option = document.createElement("option");
+        option.value = tag;
+        option.textContent = tag;
+        target.append(option);
+      });
+    }
+
     function renderGroupRuleSetChoices() {
       const container = document.querySelector("#new-group-rule-sets");
       if (!container) return;
@@ -3379,6 +3422,7 @@ html:not(.dark) .divider {
 
     function renderCustomItems() {
       renderGroupRuleSetChoices();
+      renderInlineRuleSetOutbound();
       renderAddedItems(
         customDnsList,
         selectedDnsValues().map((value) => {
@@ -3633,7 +3677,7 @@ html:not(.dark) .divider {
       groups: document.querySelector("#group-choices"),
       groupAdd: document.querySelector("#group-add-panel"),
       rules: document.querySelector("#rule-set-choices"),
-      ruleAdd: document.querySelector(".rule-link-details"),
+      ruleAdd: document.querySelector("#rule-set-add-panel"),
       moreLabel: document.querySelector('label[for="base-template"]'),
       more: document.querySelector(".base-template-controls"),
       orderHeader: document.querySelector(".rule-header"),
@@ -3670,6 +3714,15 @@ html:not(.dark) .divider {
       moreWrap.appendChild(advancedSources.more);
       advancedHost.more?.appendChild(moreWrap);
     }
+    function ensureSelectionTools() {
+      for (const [container, key] of [[groupChoices, "groups"], [ruleSetChoices, "rules"]]) {
+        if (container && !container.previousElementSibling?.classList.contains("selection-tools")) {
+          addSelectionTools(container, key);
+        }
+      }
+    }
+    ensureSelectionTools();
+
     const activateAdvanced = (key) => {
       document.querySelectorAll("[data-adv]").forEach((button) => {
         const selected = button.dataset.adv === key;
@@ -3694,12 +3747,17 @@ html:not(.dark) .divider {
     apiKeyReloadButton.addEventListener("click", () => reloadOptionsFromApiKey());
     const dnsCategoryTabs = [...document.querySelectorAll("[data-dns-category]")];
     const dnsCategoryPanels = [...document.querySelectorAll("[data-dns-panel]")];
-    function selectDnsCategory() {
+    function selectDnsCategory(category) {
+      dnsCategoryTabs.forEach((tab) => {
+        const selected = tab.dataset.dnsCategory === category;
+        tab.setAttribute("aria-selected", String(selected));
+      });
       dnsCategoryPanels.forEach((panel) => {
-        panel.hidden = false;
+        panel.hidden = panel.dataset.dnsPanel !== category;
       });
     }
-    selectDnsCategory();
+    dnsCategoryTabs.forEach((tab) => tab.addEventListener("click", () => selectDnsCategory(tab.dataset.dnsCategory)));
+    selectDnsCategory("domestic");
 
     dnsOptionLists.forEach((list) => {
       list.addEventListener("change", (event) => {
@@ -3847,6 +3905,18 @@ html:not(.dark) .divider {
           : `已添加 DNS：${item.tag}`,
         "success",
       );
+    });
+
+    document.querySelector("#add-rule-set-inline").addEventListener("click", () => {
+      document.querySelector("#new-rule-tag").value = document.querySelector("#new-rule-tag-inline").value;
+      document.querySelector("#new-rule-url").value = document.querySelector("#new-rule-url-inline").value;
+      document.querySelector("#new-rule-format").value = document.querySelector("#new-rule-format-inline").value;
+      const inlineOutbound = document.querySelector("#new-rule-outbound-inline");
+      const canonicalOutbound = document.querySelector("#new-rule-outbound");
+      canonicalOutbound.value = inlineOutbound.value;
+      document.querySelector("#add-rule-set").click();
+      document.querySelector("#new-rule-tag-inline").value = "";
+      document.querySelector("#new-rule-url-inline").value = "";
     });
 
     document.querySelector("#add-group").addEventListener("click", () => {
