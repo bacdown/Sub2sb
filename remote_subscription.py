@@ -60,7 +60,7 @@ def fetch_remote_subscription(url):
         urllib.request.ProxyHandler({}),
         PublicRedirectHandler(),
     )
-    request = urllib.request.Request(url, headers={"User-Agent": "yaml2sb/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Sub2sb/1.0"})
 
     try:
         with opener.open(request, timeout=FETCH_TIMEOUT_SECONDS) as response:
