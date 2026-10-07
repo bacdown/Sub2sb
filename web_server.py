@@ -92,17 +92,17 @@ class WebHandler(ApiHandler):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="启动 yaml2sb 网页版")
+    parser = argparse.ArgumentParser(description="启动 Sub2sb 网页版")
     parser.add_argument("--host", default="127.0.0.1", help="监听地址（默认 127.0.0.1）")
     parser.add_argument("--port", type=int, default=8080, help="监听端口（默认 8080）")
     args = parser.parse_args()
 
     server = ThreadingHTTPServer((args.host, args.port), WebHandler)
-    logging.info("yaml2sb 网页版已启动：http://%s:%s", args.host, args.port)
+    logging.info("Sub2sb 网页版已启动：http://%s:%s", args.host, args.port)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        logging.info("正在关闭 yaml2sb 网页版")
+        logging.info("正在关闭 Sub2sb 网页版")
     finally:
         server.server_close()
 
