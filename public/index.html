@@ -230,7 +230,9 @@
     .dns-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .dns-grid .choice-group { margin-top: 10px; }
     .dns-option-list { display: grid; gap: 4px; max-height: 220px; overflow-y: auto; padding: 5px; border: 1px solid #e3e2de; border-radius: 6px; background: #fff; }
-    .dns-option { display: flex; align-items: center; gap: 8px; min-height: 38px; margin: 0; padding: 6px 8px; border-radius: 4px; color: #37352f; font-size: 13px; font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; cursor: pointer; }
+    .dns-option { display: flex; align-items: center; gap: 8px; min-height: 38px; margin: 0; padding: 6px 8px; border-radius: 4px; color: #37352f; font-size: 13px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; cursor: pointer; }
+.dns-option > span,
+#custom-dns-list .added-item { font-size:13px; font-weight:400; line-height:1.45; }
     .dns-option:hover { background: #f1f1ef; }
     .dns-option input { flex: none; margin: 0; }
     .dns-option.is-disabled { color: #9b9a97; cursor: not-allowed; }
@@ -2259,6 +2261,15 @@ html:not(.dark) .divider {
 #advanced-rules-content .choice-list { border:0 !important; background:transparent !important; }
 .dns-selected-panel h3 { margin-top:0; }
 .compose-add-panel { margin-top:10px; padding-top:10px; border-top:1px solid var(--ui-line); }
+.compose-add-fields { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(0,1.5fr) auto; align-items:start; gap:8px; }
+.compose-field { min-width:0; margin:0; font-size:13px; font-weight:400; line-height:1.35; }
+.compose-field-label, .compose-field > label, .compose-add-fields label { display:block; margin:0 0 6px; font-size:13px; font-weight:400; line-height:1.35; }
+.compose-field input { width:100%; min-height:25px; height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:13px; }
+.compose-add-action { display:flex; flex-direction:column; }
+.compose-add-action .secondary { width:100%; }
+.compose-add-rule-fields label { font-weight:400; }
+.choice-selection-panel { min-width:0; }
+.choice-selection-panel .selection-tools { margin:0 0 6px; }
 .compose-add-title { margin-bottom:8px; font-size:13px; font-weight:700; }
 .compose-add-row { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(0,1.5fr) auto; align-items:start; gap:8px; }
 .compose-add-row input { width:100%; min-height:25px; height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:13px; }
@@ -2682,21 +2693,30 @@ html:not(.dark) .divider {
             <div id="group-choices" class="choice-list"></div>
             <div id="group-add-panel" class="compose-add-panel">
               <div class="compose-add-title">添加分流组</div>
-              <div class="compose-add-row">
-                <input id="new-group-tag" type="text" placeholder="分流组名称" aria-label="分流组名称">
-                <div id="new-group-rule-sets" class="compose-add-choices"></div>
-                <button id="add-group" class="secondary" type="button">添加分流组</button>
+              <div class="compose-add-fields">
+                <label class="compose-field">名称
+                  <input id="new-group-tag" type="text" placeholder="分流组名称" aria-label="分流组名称">
+                </label>
+                <div class="compose-field">
+                  <span class="compose-field-label">规则集</span>
+                  <div id="new-group-rule-sets" class="compose-add-choices"></div>
+                </div>
+                <div class="compose-field compose-add-action">
+                  <span class="compose-field-label" aria-hidden="true">添加</span>
+                  <button id="add-group" class="secondary" type="button">添加分流组</button>
+                </div>
               </div>
               <ul id="custom-group-list" class="added-list"></ul>
             </div>
-            <div id="rule-set-choices" class="choice-list"></div>            <div id="rule-set-add-panel" class="compose-add-panel">
+            <div id="rule-set-choices" class="choice-list"></div>
+            <div id="rule-set-add-panel" class="compose-add-panel">
               <div class="compose-add-title">添加规则集</div>
-              <div class="rule-link-fields">
+              <div class="rule-link-fields compose-add-rule-fields">
                 <label>名称<input id="new-rule-tag-inline" type="text" placeholder="规则集名称"></label>
                 <label>链接<input id="new-rule-url-inline" type="url" placeholder="规则集链接"></label>
                 <label>格式<select id="new-rule-format-inline"><option value="source">Source</option><option value="binary">Binary</option></select></label>
                 <label>出站<select id="new-rule-outbound-inline"></select></label>
-                <div class="rule-link-action"><label>添加</label><button id="add-rule-set-inline" class="secondary" type="button">添加规则集</button></div>
+                <div class="rule-link-action"><span class="compose-field-label" aria-hidden="true">添加</span><button id="add-rule-set-inline" class="secondary" type="button">添加规则集</button></div>
               </div>
               <ul id="custom-rule-list-inline" class="added-list"></ul>
             </div>
@@ -3013,7 +3033,11 @@ html:not(.dark) .divider {
         container.querySelectorAll('input[type="checkbox"]').forEach((input) => { if (!input.disabled) input.checked = !input.checked; });
         container.dispatchEvent(new Event("change", { bubbles: true }));
       });
-      container.parentElement.insertBefore(tools, container);
+      const wrapper = document.createElement("div");
+      wrapper.className = "choice-selection-panel";
+      wrapper.dataset.selectionPanel = key;
+      container.parentElement.insertBefore(wrapper, container);
+      wrapper.append(tools, container);
     }
 
     function selectedDnsValues() {
@@ -3674,17 +3698,21 @@ html:not(.dark) .divider {
     );
     const advancedSources = {
       dns: document.querySelector(".compose-section:first-child"),
-      groups: document.querySelector("#group-choices"),
+      groups: document.querySelector("#group-choices")?.parentElement?.dataset.selectionPanel
+        ? document.querySelector("#group-choices").parentElement
+        : document.querySelector("#group-choices"),
       groupAdd: document.querySelector("#group-add-panel"),
-      rules: document.querySelector("#rule-set-choices"),
+      rules: document.querySelector("#rule-set-choices")?.parentElement?.dataset.selectionPanel
+        ? document.querySelector("#rule-set-choices").parentElement
+        : document.querySelector("#rule-set-choices"),
       ruleAdd: document.querySelector("#rule-set-add-panel"),
       moreLabel: document.querySelector('label[for="base-template"]'),
       more: document.querySelector(".base-template-controls"),
       orderHeader: document.querySelector(".rule-header"),
       orderList: document.querySelector("#matching-rule-list"),
     };
-    if (advancedSources.groups) advancedSources.groups.className = "choice-list";
-    if (advancedSources.rules) advancedSources.rules.className = "choice-list";
+    if (advancedSources.groups?.querySelector("#group-choices")) advancedSources.groups.querySelector("#group-choices").className = "choice-list";
+    if (advancedSources.rules?.querySelector("#rule-set-choices")) advancedSources.rules.querySelector("#rule-set-choices").className = "choice-list";
     const orderWrapper = document.createElement("div");
     orderWrapper.className = "rule-order-wrap";
     if (advancedSources.orderHeader) orderWrapper.appendChild(advancedSources.orderHeader);
@@ -3908,15 +3936,27 @@ html:not(.dark) .divider {
     });
 
     document.querySelector("#add-rule-set-inline").addEventListener("click", () => {
-      document.querySelector("#new-rule-tag").value = document.querySelector("#new-rule-tag-inline").value;
-      document.querySelector("#new-rule-url").value = document.querySelector("#new-rule-url-inline").value;
-      document.querySelector("#new-rule-format").value = document.querySelector("#new-rule-format-inline").value;
-      const inlineOutbound = document.querySelector("#new-rule-outbound-inline");
-      const canonicalOutbound = document.querySelector("#new-rule-outbound");
-      canonicalOutbound.value = inlineOutbound.value;
-      document.querySelector("#add-rule-set").click();
+      const item = {
+        tag: document.querySelector("#new-rule-tag-inline").value.trim(),
+        url: document.querySelector("#new-rule-url-inline").value.trim(),
+        format: document.querySelector("#new-rule-format-inline").value,
+        outbound: document.querySelector("#new-rule-outbound-inline").value,
+      };
+      if (!item.tag || !item.url) {
+        setComposeStatus("请填写规则集名称和链接。", "error");
+        return;
+      }
+      if (allRuleSetTags().includes(item.tag)) {
+        setComposeStatus(`规则集名称已存在：${item.tag}`, "error");
+        return;
+      }
+      customRuleSets.push(item);
       document.querySelector("#new-rule-tag-inline").value = "";
       document.querySelector("#new-rule-url-inline").value = "";
+      renderCustomItems();
+      renderMatchBuilderOptions();
+      renderMatchingRules();
+      setComposeStatus(`已添加规则集：${item.tag}`, "success");
     });
 
     document.querySelector("#add-group").addEventListener("click", () => {
