@@ -250,6 +250,11 @@
     .match-name-fields.is-custom {
       grid-template-columns: minmax(0, 1fr) 36px;
     }
+    .match-name-fields input,
+    .match-name-fields select {
+      min-width: 0;
+      width: 100%;
+    }
     .match-name-fields .secondary {
       width: 36px;
       min-width: 36px;
@@ -269,6 +274,14 @@
       box-sizing: border-box;
     }
     .match-name-fields .secondary:hover { background: #f1f1ef; }
+    html.dark .match-name-fields .secondary {
+      border-color: var(--ui-line-strong);
+      background: var(--ui-panel);
+      color: var(--ui-text);
+    }
+    html.dark .match-name-fields .secondary:hover {
+      background: var(--ui-hover);
+    }
     .rule-link-details {
       margin-top: 12px;
       padding: 12px;
