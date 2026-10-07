@@ -1782,7 +1782,63 @@ html.dark .rule-link-details {
   .dns-category-tab { flex: 1; }
 }
 
-  </style>
+  
+
+/* ---- Final layout fixes: sidebar separator, section rhythm, tablet subscription actions ---- */
+html:not(.dark) .divider {
+  background: var(--ui-line-strong);
+  opacity: .72;
+}
+
+/* Keep the visual breathing room above step 3 equal to the step-2 card padding. */
+.subscription-controls > .controls-step-head {
+  margin-top: 8px;
+}
+
+/* Prevent the combination controls from forcing a tablet-width overflow. */
+.profile-selection-actions,
+.profile-combo-action {
+  min-width: 0;
+  max-width: 100%;
+}
+.profile-combo-action {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.profile-combo-action input {
+  width: 100%;
+  min-width: 0;
+}
+#save-selected-combo {
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .profile-selection-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .profile-combo-action {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .manage-input-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .profile-combo-action {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #save-selected-combo {
+    width: 100%;
+  }
+}
+</style>
 </head>
 <body>
   <svg class="icon-defs" aria-hidden="true">
