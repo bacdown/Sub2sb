@@ -1503,14 +1503,20 @@ html.dark .dns-category-tab,
 html.dark .choice-group,
 html.dark .dns-option-list,
 html.dark .dns-option {
-  background: var(--ui-panel-soft);
   color: var(--ui-text);
   border-color: var(--ui-line);
 }
-html.dark .dns-category-tabs { background: var(--ui-panel); }
+html.dark .dns-category-tabs {
+  background: var(--ui-panel-soft);
+}
+html.dark .dns-category-tab {
+  background: transparent;
+  color: var(--ui-muted);
+}
 html.dark .dns-category-tab[aria-selected="true"] {
-  background: var(--ui-accent);
-  color: #111827;
+  background: var(--ui-panel);
+  color: var(--ui-text);
+  box-shadow: 0 2px 7px rgb(0 0 0 / 6%);
 }
 .dns-option {
   background: var(--ui-panel) !important;
@@ -1702,9 +1708,15 @@ html.dark .rule-link-details {
   font-weight: 650;
   cursor: pointer;
 }
+.dns-category-tabs {
+  background: var(--ui-panel-soft);
+}
+.dns-category-tab {
+  color: var(--ui-muted);
+}
 .dns-category-tab[aria-selected="true"] {
-  color: var(--text);
-  background: var(--surface);
+  color: var(--ui-text);
+  background: var(--ui-panel);
   box-shadow: 0 2px 7px rgb(0 0 0 / 6%);
 }
 .dns-grid {
