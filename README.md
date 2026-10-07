@@ -23,7 +23,7 @@
 
 ## 项目 Wiki
 
-请前往 [GitHub Wiki](https://github.com/bacdown/yaml2sb/wiki) 查看使用说明。
+请前往 [GitHub Wiki](https://github.com/bacdown/Sub2sb/wiki) 查看使用说明。
 
 ## 支持范围
 
