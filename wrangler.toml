@@ -5,7 +5,7 @@
 # 部署：uv run pywrangler deploy
 # 密钥：uv run --python 3.11 pywrangler secret put SUB2SB_API_KEY
 
-name = "Sub2sb"
+name = "sub2sb"
 main = "worker.py"
 compatibility_date = "2026-09-30"
 compatibility_flags = ["python_workers"]
