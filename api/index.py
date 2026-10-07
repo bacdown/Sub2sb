@@ -990,7 +990,7 @@ class handler(BaseHTTPRequestHandler):
         self._send_json(
             200,
             {
-                "name": "yaml2sb",
+                "name": "Sub2sb",
                 "methods": [
                     "GET /sub",
                     "GET /s/{id}",
