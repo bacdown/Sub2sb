@@ -1791,8 +1791,12 @@ html:not(.dark) .divider {
 }
 
 /* Keep the visual breathing room above step 3 equal to the step-2 card padding. */
+/* Keep Step 2 → Step 3 spacing at the section level, not on the heading. */
+.subscription-controls {
+  margin-top: 12px;
+}
 .subscription-controls > .controls-step-head {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 /* Prevent the combination controls from forcing a tablet-width overflow. */
