@@ -1,4 +1,4 @@
-# yaml2sb
+# Sub2sb
 
 **Language:** [中文](README.md) · [English](README.en.md)
 
@@ -58,7 +58,7 @@ Unsupported nodes are skipped. Conversion fails if no usable nodes can be parsed
 
 ## Deploy to Vercel
 
-![yaml2sb web UI](./docs/images/web-ui.png)
+![Sub2sb web UI](./docs/images/web-ui.png)
 
 ### Deploy from the Vercel website
 
@@ -82,7 +82,7 @@ vercel --prod
 
 In **Settings → Environment Variables**, add:
 
-- **Key:** `YAML2SB_API_KEY`
+- **Key:** `SUB2SB_API_KEY`
 - **Value:** a strong random secret, for example `openssl rand -hex 32`
 - **Environment:** Production, Preview and/or Development as required
 
@@ -90,13 +90,13 @@ Redeploy after changing environment variables.
 
 ### Enable subscription management and short links
 
-Vercel functions do not provide persistent local storage for this feature. Short-link management requires Upstash Redis plus `YAML2SB_API_KEY`.
+Vercel functions do not provide persistent local storage for this feature. Short-link management requires Upstash Redis plus `SUB2SB_API_KEY`.
 
 Configure:
 
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
-- `YAML2SB_API_KEY`
+- `SUB2SB_API_KEY`
 
 The public `/s/<id>` endpoint does not require an API key.
 
@@ -114,13 +114,13 @@ uv run --python 3.11 pywrangler deploy
 After deployment:
 
 ```text
-https://yaml2sb.<your-subdomain>.workers.dev
+https://Sub2sb.<your-subdomain>.workers.dev
 ```
 
 ### Verify the deployment
 
 ```sh
-WORKER_URL='https://yaml2sb.<your-subdomain>.workers.dev'
+WORKER_URL='https://Sub2sb.<your-subdomain>.workers.dev'
 curl -fsS "$WORKER_URL/api" | python3 -m json.tool
 ```
 
@@ -137,14 +137,14 @@ python3 -m json.tool sing-box.json > /dev/null
 ### Enable API Key
 
 ```sh
-uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
+uv run --python 3.11 pywrangler secret put SUB2SB_API_KEY
 ```
 
-You can also configure the secret in **Workers & Pages → yaml2sb → Settings → Variables and Secrets**.
+You can also configure the secret in **Workers & Pages → Sub2sb → Settings → Variables and Secrets**.
 
 ### Enable subscription management and short links
 
-Create a Workers KV namespace and bind it as `SUBSCRIPTIONS` in `wrangler.toml`. Configure `YAML2SB_API_KEY` and redeploy.
+Create a Workers KV namespace and bind it as `SUBSCRIPTIONS` in `wrangler.toml`. Configure `SUB2SB_API_KEY` and redeploy.
 
 For production and preview environments, use separate KV namespaces when possible.
 
@@ -159,12 +159,12 @@ For production and preview environments, use separate KV namespaces when possibl
 Example:
 
 ```text
-https://yaml2sb.<your-subdomain>.workers.dev/sub?url=<encoded-subscription>&template=phone
+https://Sub2sb.<your-subdomain>.workers.dev/sub?url=<encoded-subscription>&template=phone
 ```
 
 ## API Key usage
 
-Vercel, Cloudflare Workers, the local web service, and Docker Compose use `YAML2SB_API_KEY`.
+Vercel, Cloudflare Workers, the local web service, and Docker Compose use `SUB2SB_API_KEY`.
 
 When the variable is unset or empty, authentication is not required. When configured, protected endpoints require a valid key.
 
@@ -190,10 +190,10 @@ Enter the API key in the **Source** card on the conversion page. It is sent only
 
 ```sh
 BASE_URL='https://<project>.vercel.app'
-export YAML2SB_API_KEY='<your-secret>'
+export SUB2SB_API_KEY='<your-secret>'
 
-curl -H "Authorization: Bearer $YAML2SB_API_KEY" "$BASE_URL/api"
-curl -H "Authorization: Bearer $YAML2SB_API_KEY" \
+curl -H "Authorization: Bearer $SUB2SB_API_KEY" "$BASE_URL/api"
+curl -H "Authorization: Bearer $SUB2SB_API_KEY" \
   "$BASE_URL/api/options?template=config_phone.json"
 ```
 
@@ -224,18 +224,18 @@ https://<project>.vercel.app/sub?url=<encoded-subscription>&template=<phone|open
 | `url` | Yes | Original HTTP(S) subscription URL; may appear multiple times |
 | `urls` | No | Multiple URLs, comma-separated |
 | `template` | No | `phone` / `openwrt` / `momo`; defaults to `phone` |
-| `api_key` | Conditional | Required when `YAML2SB_API_KEY` is configured |
+| `api_key` | Conditional | Required when `SUB2SB_API_KEY` is configured |
 
 ### Save subscription bundles and short links
 
 The web UI can save multiple subscription URLs or uploaded files as a reusable bundle. A short link reloads the remote sources and returns pure sing-box JSON.
 
-Management APIs require `YAML2SB_API_KEY` and persistent storage:
+Management APIs require `SUB2SB_API_KEY` and persistent storage:
 
 | Runtime | Storage |
 | --- | --- |
 | Local / self-hosted | SQLite |
-| Docker Compose | SQLite named volume `yaml2sb-data` |
+| Docker Compose | SQLite named volume `Sub2sb-data` |
 | Vercel | Upstash Redis |
 | Cloudflare Workers | Workers KV binding `SUBSCRIPTIONS` |
 
@@ -351,11 +351,11 @@ The default Docker deployment does not enable API authentication.
 Enable it with:
 
 ```sh
-export YAML2SB_API_KEY="$(openssl rand -hex 32)"
+export SUB2SB_API_KEY="$(openssl rand -hex 32)"
 docker compose up --build -d
 ```
 
-The Compose deployment stores subscription data in the named volume `yaml2sb-data`.
+The Compose deployment stores subscription data in the named volume `Sub2sb-data`.
 
 Without authentication:
 
@@ -365,7 +365,7 @@ docker compose up --build -d
 
 Open `http://localhost:8080`.
 
-You can change the host port with `YAML2SB_PORT`.
+You can change the host port with `SUB2SB_PORT`.
 
 ## Local web
 
@@ -387,7 +387,7 @@ For LAN access:
 python3 web_server.py --host 0.0.0.0 --port 8080
 ```
 
-Set `YAML2SB_API_KEY` before starting the process if authentication is required.
+Set `SUB2SB_API_KEY` before starting the process if authentication is required.
 
 ## Notes
 
@@ -399,7 +399,7 @@ Set `YAML2SB_API_KEY` before starting the process if authentication is required.
 
 ### Docker deployment notes
 
-When using Docker Compose, keep the same `YAML2SB_API_KEY` value across container restarts if API authentication is enabled. The SQLite named volume preserves saved subscriptions across container recreation.
+When using Docker Compose, keep the same `SUB2SB_API_KEY` value across container restarts if API authentication is enabled. The SQLite named volume preserves saved subscriptions across container recreation.
 
 ### Local web deployment notes
 
