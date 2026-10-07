@@ -1784,7 +1784,7 @@ def read_input(source):
 
 def prompt_interactive_args():
     """Collect CLI arguments through a short terminal menu."""
-    print("yaml2sb · sing-box 配置转换")
+    print("Sub2sb · sing-box 配置转换")
     print("输入一个或多个订阅链接或本地文件路径，每行一个；空行结束：")
     sources = []
     while True:
