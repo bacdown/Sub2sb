@@ -2583,6 +2583,68 @@ html:not(.dark) .divider {
               </div>
             </section>
           </div>
+<section class="compose-section" hidden aria-hidden="true">
+              <h3>匹配规则与顺序</h3>
+              <p class="hint">在此选择具体应用分流名称、规则集和目标出站，添加后可调整匹配优先顺序。地区选择仅作为目标出站，不会出现在应用名称中。</p>
+              <div class="match-builder">
+                <div>
+                  <label for="match-name">应用分流</label>
+                  <div class="match-name-fields">
+                    <select id="match-name" aria-label="应用分流名称"></select>
+                    <input id="new-match-name" type="text" placeholder="新增应用分流名称" aria-label="自定义应用分流名称" hidden>
+                    <button id="add-match-name" class="secondary" type="button" aria-label="添加应用" title="添加应用" hidden>＋</button>
+                  </div>
+                </div>
+                <div>
+                  <label for="match-rule-set">规则集</label>
+                  <select id="match-rule-set" aria-label="匹配规则规则集"></select>
+                </div>
+                <div>
+                  <label for="match-outbound">出站</label>
+                  <select id="match-outbound" aria-label="匹配规则出站"></select>
+                </div>
+                <div>
+                  <label for="add-match-rule">添加匹配规则</label>
+                  <button id="add-match-rule" class="match-add-btn" type="button">添加</button>
+                </div>
+              </div>
+              <details class="rule-link-details">
+                <summary>添加自定义规则集链接</summary>
+                <div class="rule-link-fields">
+                  <div>
+                    <label for="new-rule-tag">规则集名称</label>
+                    <input id="new-rule-tag" type="text" placeholder="例如 geosite-example" aria-label="自定义规则集标签">
+                  </div>
+                  <div>
+                    <label for="new-rule-url">规则集链接</label>
+                    <input id="new-rule-url" type="url" placeholder="https://example.com/rules.srs" aria-label="自定义规则集链接">
+                  </div>
+                  <div>
+                    <label for="new-rule-format">规则集格式</label>
+                    <select id="new-rule-format" aria-label="规则集格式">
+                      <option value="binary">binary（.srs）</option>
+                      <option value="source">source（JSON）</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="new-rule-outbound">规则集出站</label>
+                    <select id="new-rule-outbound" aria-label="自定义规则集出站"></select>
+                  </div>
+                  <div class="rule-link-action">
+                    <label for="add-rule-set">添加规则集</label>
+                    <button id="add-rule-set" class="secondary" type="button">添加规则集</button>
+                  </div>
+                </div>
+                <ul id="custom-rule-list" class="added-list"></ul>
+              </details>
+              <div class="rule-order-item rule-header">
+                <span class="rule-column-label">应用分流</span>
+                <span class="rule-column-label">规则集 / 匹配条件</span>
+                <span class="rule-column-label">出站（地区 / 手动自动）</span>
+                <span class="rule-column-label">顺序 / 删除</span>
+              </div>
+              <ol id="matching-rule-list" class="rule-order-list"></ol>
+            </section>
           <div hidden aria-hidden="true">
             <div id="group-choices"></div>
             <div id="rule-set-choices"></div>
@@ -3514,12 +3576,12 @@ html:not(.dark) .divider {
     );
     const advancedSources = {
       dns: document.querySelector(".compose-section:first-child"),
-      groups: document.querySelector(".match-builder"),
-      rules: document.querySelector(".rule-link-details"),
+      groups: null,
+      rules: null,
       moreLabel: document.querySelector('label[for="base-template"]'),
       more: document.querySelector(".base-template-controls"),
-      orderHeader: document.querySelector(".rule-header"),
-      orderList: document.querySelector("#matching-rule-list"),
+      orderHeader: null,
+      orderList: null,
     };
     const orderWrapper = document.createElement("div");
     orderWrapper.className = "rule-order-wrap";
