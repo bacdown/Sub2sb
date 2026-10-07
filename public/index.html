@@ -2269,7 +2269,13 @@ html:not(.dark) .divider {
 .compose-add-action .secondary { width:100%; }
 .compose-add-rule-fields label { font-weight:400; }
 .choice-selection-panel { min-width:0; }
-.choice-selection-panel .selection-tools { margin:0 0 6px; }
+.choice-selection-panel .selection-tools { display:flex; align-items:center; justify-content:flex-start; gap:10px; margin:0 0 6px; font-size:11px; line-height:1; }
+.selection-tools label { display:inline-flex; align-items:center; gap:4px; margin:0; font-size:11px; font-weight:400; }
+.selection-tools .text-button { margin:0; padding:0; border:0; background:transparent; color:var(--ui-muted); font:inherit; line-height:1; cursor:pointer; }
+.choice-select { width:100%; min-width:0; height:25px; min-height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:11px; }
+.rule-set-choice-select { height:25px; }
+.dns-option > span,
+#custom-dns-list .added-item { font-size:11px !important; font-weight:400; line-height:1.45; }
 .compose-add-title { margin-bottom:8px; font-size:13px; font-weight:700; }
 .compose-add-row { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(0,1.5fr) auto; align-items:start; gap:8px; }
 .compose-add-row input { width:100%; min-height:25px; height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:13px; }
@@ -3003,6 +3009,8 @@ html:not(.dark) .divider {
     }
 
     function checkedValues(container) {
+      const select = container.querySelector("select[multiple]");
+      if (select) return [...select.selectedOptions].map((option) => option.value);
       return [...container.querySelectorAll('input[type="checkbox"]:checked')]
         .map((input) => input.value);
     }
@@ -3021,10 +3029,29 @@ html:not(.dark) .divider {
       container.append(label);
     }
 
+    function renderRuleSetSelect(container, items, selectedValues = []) {
+      if (!container) return;
+      const selected = new Set(selectedValues);
+      container.replaceChildren();
+      const select = document.createElement("select");
+      select.multiple = true;
+      select.className = "choice-select rule-set-choice-select";
+      select.setAttribute("aria-label", "规则集");
+      for (const item of items) {
+        const option = document.createElement("option");
+        option.value = item.tag;
+        option.textContent = item.tag;
+        option.selected = selected.has(item.tag);
+        select.append(option);
+      }
+      container.append(select);
+    }
+
     function addSelectionTools(container, key) {
       const tools = document.createElement("div");
       tools.className = "selection-tools";
-      tools.innerHTML = '<label><input type="checkbox" data-select-all="'+key+'"> 全选</label><button type="button" class="text-button" data-invert-selection="'+key+'">反选</button>';
+      tools.dataset.selectionTools = key;
+      tools.innerHTML = '<label><input type="checkbox" data-select-all="'+key+'"><span>全选</span></label><button type="button" class="text-button" data-invert-selection="'+key+'">反选</button>';
       tools.querySelector('[data-select-all="'+key+'"]').addEventListener("change", (event) => {
         container.querySelectorAll('input[type="checkbox"]').forEach((input) => { if (!input.disabled) input.checked = event.target.checked; });
         container.dispatchEvent(new Event("change", { bubbles: true }));
@@ -3446,6 +3473,15 @@ html:not(.dark) .divider {
 
     function renderCustomItems() {
       renderGroupRuleSetChoices();
+      const selectedRuleSets = checkedValues(ruleSetChoices);
+      renderRuleSetSelect(
+        ruleSetChoices,
+        [
+          ...(configurationOptions?.rule_sets || []),
+          ...customRuleSets.map((item) => ({ tag: item.tag })),
+        ],
+        selectedRuleSets,
+      );
       renderInlineRuleSetOutbound();
       renderAddedItems(
         customDnsList,
@@ -3534,10 +3570,11 @@ html:not(.dark) .divider {
             item.required,
           );
         }
-        ruleSetChoices.replaceChildren();
-        for (const item of result.rule_sets) {
-          addChoice(ruleSetChoices, item.tag, item.tag);
-        }
+        renderRuleSetSelect(
+          ruleSetChoices,
+          result.rule_sets,
+          result.rule_sets.map((item) => item.tag),
+        );
         renderGroupRuleSetChoices();
         matchingRules = result.matching_rules.map((item) => ({
           ...item,
@@ -3743,10 +3780,8 @@ html:not(.dark) .divider {
       advancedHost.more?.appendChild(moreWrap);
     }
     function ensureSelectionTools() {
-      for (const [container, key] of [[groupChoices, "groups"], [ruleSetChoices, "rules"]]) {
-        if (container && !container.previousElementSibling?.classList.contains("selection-tools")) {
-          addSelectionTools(container, key);
-        }
+      if (groupChoices && !groupChoices.parentElement?.querySelector('[data-selection-tools="groups"]')) {
+        addSelectionTools(groupChoices, "groups");
       }
     }
     ensureSelectionTools();
