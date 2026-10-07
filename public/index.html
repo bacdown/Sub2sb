@@ -915,7 +915,8 @@
       box-shadow: 0 8px 28px rgb(33 48 80 / 6%);
     }
     .input-layout { gap: 14px; }
-    .controls-row { align-items: start; padding: 20px; }
+    .controls-row { align-items: start; padding: 20px; margin-top: 0; }
+    #convert-form > .controls-row { margin-top: 0; }
     .controls-step-head { grid-column: 1 / -1; }
     .step-head { display: flex; align-items: center; gap: 11px; margin-bottom: 2px; }
     .step-no { display: grid; width: 30px; height: 30px; flex: none; place-items: center; border-radius: 50%; color: var(--accent); background: var(--accent-soft); font-size: 12px; font-weight: 800; }
@@ -1339,7 +1340,9 @@
 html:not(.dark) .sb-logo { color: #30363d; }
 html.dark .sb-logo { color: #e8edf4; }
 input::placeholder, textarea::placeholder { color: var(--ui-muted, #69717a); opacity: .82; font-size: 12px; font-weight: 400; }
-.hint, .profile-save-hint, .dns-select-hint, .preview-hint, .file-row, .airport-selection-empty, .profile-selection-count { font-size: 12px; line-height: 1.55; }
+.hint, .profile-save-hint, .dns-select-hint, .file-row, .airport-selection-empty, .profile-selection-count { font-size: 12px; line-height: 1.55; }
+.json-placeholder { font-family: inherit; font-size: 11px; line-height: 1.6; }
+.preview-hint { font-size: 11px; line-height: 1.55; }
 input, textarea, select { font-size: 13px; }
 #save-profile-panel { padding: 18px 20px; }
 #save-profile-panel .profile-name-header { margin-bottom: 2px; }
