@@ -1,4 +1,4 @@
-# yaml2sb
+# Sub2sb
 
 **Language:** [中文](README.md) · [English](README.en.md)
 
@@ -61,7 +61,7 @@
 
 ### 通过 Vercel 网站部署
 
-![yaml2sb 网页界面示例](./docs/images/web-ui.png)
+![Sub2sb 网页界面示例](./docs/images/web-ui.png)
 
 1. 将本项目目录推送到 GitHub 仓库。
 2. 登录 [Vercel](https://vercel.com/)，选择 **Add New → Project**，导入该仓库。
@@ -90,14 +90,14 @@ vercel --prod
 
 在 Vercel 项目中打开 **Settings → Environment Variables**，添加：
 
-- **Key**：`YAML2SB_API_KEY`
+- **Key**：`SUB2SB_API_KEY`
 - **Value**：强随机密钥，例如在本机运行 `openssl rand -hex 32` 生成
 - **Environment**：选择需要保护的 Production、Preview 和/或 Development 环境
 
 保存后重新部署，使新变量应用到函数运行环境。也可用 Vercel CLI 添加生产环境变量：
 
 ```sh
-vercel env add YAML2SB_API_KEY production
+vercel env add SUB2SB_API_KEY production
 vercel --prod
 ```
 
@@ -105,16 +105,16 @@ CLI 会交互式提示输入密钥。不要把密钥写入仓库文件或提交�
 
 ### 启用订阅管理与短链接
 
-Vercel 函数没有持久本地磁盘，短链必须存入 Upstash Redis。短链管理同时要求 Redis 凭据和 `YAML2SB_API_KEY`，只配其中一项不会启用短链管理。
+Vercel 函数没有持久本地磁盘，短链必须存入 Upstash Redis。短链管理同时要求 Redis 凭据和 `SUB2SB_API_KEY`，只配其中一项不会启用短链管理。
 
-1. 打开 [Vercel Marketplace 的 Upstash for Redis](https://vercel.com/marketplace/upstash)，选择 **Install** / **Add Integration**，授权并选择 yaml2sb 的 Vercel 项目。
+1. 打开 [Vercel Marketplace 的 Upstash for Redis](https://vercel.com/marketplace/upstash)，选择 **Install** / **Add Integration**，授权并选择 Sub2sb 的 Vercel 项目。
 2. 在安装流程中选择现有 Upstash 数据库，或新建一个数据库后关联到项目。请确认关联的是实际要使用的 Vercel 项目，而不只是创建了一个未关联的 Redis 数据库。
 3. 打开 **Vercel → 项目 → Settings → Environment Variables**，确认存在 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`。两项都必须对 **Production** 生效；若要在 Preview 部署中管理短链，也要勾选 **Preview**。Marketplace 未自动注入变量时，可从 Upstash 数据库的 **REST API** 页面复制 REST URL 和 REST Token，在这里分别新增变量。不要将 token 放进仓库或公开日志。
-4. 在同一页面添加 `YAML2SB_API_KEY`，值使用强随机密钥（例如 `openssl rand -hex 32`）。它用于保护创建、列表、修改和删除短链的管理 API；短链读取地址 `/s/<id>` 本身是公开的。
+4. 在同一页面添加 `SUB2SB_API_KEY`，值使用强随机密钥（例如 `openssl rand -hex 32`）。它用于保护创建、列表、修改和删除短链的管理 API；短链读取地址 `/s/<id>` 本身是公开的。
 5. 保存后进入 **Deployments**，对目标 Production 分支重新部署。环境变量只会在新部署的函数中生效；Preview 也要单独重新部署对应分支。
 6. 按下文“验证短链存储”发送创建请求，再打开响应中的 `short_path`。若创建接口返回 `503`，先检查两个 Upstash 变量的名称、环境范围、值及部署是否已重新执行。
 
-Vercel KV 已停止提供新建服务；新项目请使用 Marketplace 中的 Upstash Redis 集成。不要设置 `YAML2SB_STORE=sqlite` 来绕过 Redis：Vercel 函数的本地文件系统不是持久存储。
+Vercel KV 已停止提供新建服务；新项目请使用 Marketplace 中的 Upstash Redis 集成。不要设置 `SUB2SB_STORE=sqlite` 来绕过 Redis：Vercel 函数的本地文件系统不是持久存储。
 
 ## 部署到 Cloudflare Workers
 
@@ -154,7 +154,7 @@ uv run --python 3.11 pywrangler deploy
 部署成功后地址形如：
 
 ```text
-https://yaml2sb.<你的子域>.workers.dev
+https://Sub2sb.<你的子域>.workers.dev
 ```
 
 ### 部署后验证
@@ -162,14 +162,14 @@ https://yaml2sb.<你的子域>.workers.dev
 先查看 Workers API 是否可访问：
 
 ```sh
-WORKER_URL='https://yaml2sb.<你的子域>.workers.dev'
+WORKER_URL='https://Sub2sb.<你的子域>.workers.dev'
 curl -fsS "$WORKER_URL/api" | python3 -m json.tool
 ```
 
 再用一条有效的订阅链接验证远程转换。`curl --get --data-urlencode` 会自动编码原订阅 URL：
 
 ```sh
-WORKER_URL='https://yaml2sb.<你的子域>.workers.dev'
+WORKER_URL='https://Sub2sb.<你的子域>.workers.dev'
 SUBSCRIPTION_URL='https://example.com/subscribe' # 替换为服务商提供的真实订阅地址
 curl --get --fail-with-body \
   --data-urlencode "url=$SUBSCRIPTION_URL" \
@@ -182,7 +182,7 @@ python3 -m json.tool sing-box.json > /dev/null
 启用 API Key 后，上述 `/api` 和 `/sub` 请求都需要认证。推荐使用请求头：
 
 ```sh
-curl -H "Authorization: Bearer $YAML2SB_API_KEY" "$WORKER_URL/api"
+curl -H "Authorization: Bearer $SUB2SB_API_KEY" "$WORKER_URL/api"
 ```
 
 成功时 `/sub` 返回可直接导入客户端的纯 sing-box JSON。测试时请使用有效订阅地址；不要把包含凭据的真实订阅链接提交到仓库或 issue。
@@ -192,10 +192,10 @@ curl -H "Authorization: Bearer $YAML2SB_API_KEY" "$WORKER_URL/api"
 在项目根目录运行以下命令，并按提示输入密钥：
 
 ```sh
-uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
+uv run --python 3.11 pywrangler secret put SUB2SB_API_KEY
 ```
 
-也可在 Cloudflare Dashboard 打开 **Workers & Pages → yaml2sb → Settings → Variables and Secrets**，新增名为 `YAML2SB_API_KEY` 的 **Secret**。保存 Secret 后重新部署 Worker。
+也可在 Cloudflare Dashboard 打开 **Workers & Pages → Sub2sb → Settings → Variables and Secrets**，新增名为 `SUB2SB_API_KEY` 的 **Secret**。保存 Secret 后重新部署 Worker。
 
 `wrangler` 是 Node.js 工具，本项目通过 `pywrangler` 调用它；不要直接运行 `uv run wrangler`。密钥使用方法见下文“API Key 使用方法”。
 
@@ -206,7 +206,7 @@ uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
 推荐用 Wrangler 管理绑定，确保后续从命令行部署时配置仍然存在。在项目根目录创建生产 namespace：
 
 ```sh
-npx wrangler kv namespace create yaml2sb-subscriptions
+npx wrangler kv namespace create Sub2sb-subscriptions
 ```
 
 命令输出中会包含 namespace ID。打开项目根目录的 `wrangler.toml`，将现有 `[[kv_namespaces]]` 配置中的 `id` 示例值替换为命令返回的 ID；不要重复追加第二个同名 binding：
@@ -220,7 +220,7 @@ id = "your-kv-namespace-id" # 替换为上一步返回的 namespace ID
 保存配置后，设置管理 API 密钥并重新部署：
 
 ```sh
-uv run --python 3.11 pywrangler secret put YAML2SB_API_KEY
+uv run --python 3.11 pywrangler secret put SUB2SB_API_KEY
 uv run --python 3.11 pywrangler deploy
 ```
 
@@ -229,7 +229,7 @@ uv run --python 3.11 pywrangler deploy
 如果需要隔离 Preview / 本地开发数据，另建一个 namespace：
 
 ```sh
-npx wrangler kv namespace create yaml2sb-subscriptions-preview
+npx wrangler kv namespace create Sub2sb-subscriptions-preview
 ```
 
 将返回的另一个 ID 作为 `preview_id` 加入同一个 binding 配置：
@@ -241,14 +241,14 @@ id = "<生产 namespace ID>"
 preview_id = "<预览 namespace ID>"
 ```
 
-生产和预览建议使用不同 namespace，避免测试数据写入生产短链存储。若改用 Cloudflare Dashboard 配置，打开 **Workers & Pages → yaml2sb → Settings → Bindings → Add binding**，选择 **KV namespace**，将 **Variable name** 填为 `SUBSCRIPTIONS`，再选中已创建的 namespace，保存并部署。之后若改用 Wrangler 部署，也要把该绑定及 namespace ID 写入 `wrangler.toml`，并以实际部署使用的配置为准。
+生产和预览建议使用不同 namespace，避免测试数据写入生产短链存储。若改用 Cloudflare Dashboard 配置，打开 **Workers & Pages → Sub2sb → Settings → Bindings → Add binding**，选择 **KV namespace**，将 **Variable name** 填为 `SUBSCRIPTIONS`，再选中已创建的 namespace，保存并部署。之后若改用 Wrangler 部署，也要把该绑定及 namespace ID 写入 `wrangler.toml`，并以实际部署使用的配置为准。
 
-短地址 `/s/<id>` 可公开访问，新增、编辑、删除和列表管理接口受 `YAML2SB_API_KEY` 保护。只使用 `/sub?url=...` 直链转换时无需创建 KV namespace 或 API Key。
+短地址 `/s/<id>` 可公开访问，新增、编辑、删除和列表管理接口受 `SUB2SB_API_KEY` 保护。只使用 `/sub?url=...` 直链转换时无需创建 KV namespace 或 API Key。
 
 ### 客户端远程配置示例
 
 ```text
-https://yaml2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&template=phone
+https://Sub2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&template=phone
 ```
 
 | template | 适用场景 |
@@ -261,7 +261,7 @@ https://yaml2sb.<你的子域>.workers.dev/sub?url=<URL编码后的原订阅>&te
 
 ## API Key 使用方法
 
-Vercel、Cloudflare Workers、本地网页版和 Docker Compose 都使用环境变量 `YAML2SB_API_KEY`。未设置或值为空时，API 不要求密钥，服务保持公开访问；设置后，受保护的 API 路由需要有效密钥。首页仍可公开打开。
+Vercel、Cloudflare Workers、本地网页版和 Docker Compose 都使用环境变量 `SUB2SB_API_KEY`。未设置或值为空时，API 不要求密钥，服务保持公开访问；设置后，受保护的 API 路由需要有效密钥。首页仍可公开打开。
 
 受保护路由包括 `GET /api`、`POST /api`、`GET /api/options`、`GET /sub`、`GET /api/sub` 和 `/api/subscriptions` 管理接口；本地网页版和 Docker 另有 `POST /fetch`。公开短地址 `GET /s/<id>` 不要求 API Key。密钥支持以下三种方式，优先使用请求头：
 
@@ -279,17 +279,17 @@ Vercel、Cloudflare Workers、本地网页版和 Docker Compose 都使用环境�
 
 ```sh
 BASE_URL='https://<项目名>.vercel.app' # Cloudflare Workers 替换为对应 workers.dev 地址
-export YAML2SB_API_KEY='部署时设置的同一个密钥'
+export SUB2SB_API_KEY='部署时设置的同一个密钥'
 ```
 
-Bearer Header 示例；`X-API-Key` 可替换为 `-H "X-API-Key: $YAML2SB_API_KEY"`：
+Bearer Header 示例；`X-API-Key` 可替换为 `-H "X-API-Key: $SUB2SB_API_KEY"`：
 
 ```sh
-curl -H "Authorization: Bearer $YAML2SB_API_KEY" "$BASE_URL/api"
-curl -H "Authorization: Bearer $YAML2SB_API_KEY" \
+curl -H "Authorization: Bearer $SUB2SB_API_KEY" "$BASE_URL/api"
+curl -H "Authorization: Bearer $SUB2SB_API_KEY" \
   "$BASE_URL/api/options?template=config_phone.json"
 curl -X POST "$BASE_URL/api" \
-  -H "Authorization: Bearer $YAML2SB_API_KEY" \
+  -H "Authorization: Bearer $SUB2SB_API_KEY" \
   -H 'Content-Type: application/json' \
   --data-binary @request.json
 ```
@@ -303,7 +303,7 @@ curl -X POST "$BASE_URL/api" \
 ```sh
 SUBSCRIPTION_URL='https://example.com/subscribe?user=abc&token=xyz'
 curl --get --fail-with-body \
-  -H "Authorization: Bearer $YAML2SB_API_KEY" \
+  -H "Authorization: Bearer $SUB2SB_API_KEY" \
   --data-urlencode "url=$SUBSCRIPTION_URL" \
   --data-urlencode 'template=phone' \
   "$BASE_URL/sub" \
@@ -363,7 +363,7 @@ https://<项目名>.vercel.app/sub?url=<URL编码后的原订阅>&template=<phon
 | `url` | 是 | 原订阅 HTTP(S) 链接；可出现多次 |
 | `urls` | 否 | 多个链接，逗号分隔 |
 | `template` | 否 | `phone` / `openwrt` / `momo`（默认 `phone`） |
-| `api_key` | 视配置 | 若设置了环境变量 `YAML2SB_API_KEY` 则必填 |
+| `api_key` | 视配置 | 若设置了环境变量 `SUB2SB_API_KEY` 则必填 |
 
 **示例：**
 
@@ -393,16 +393,16 @@ curl -o sing-box-momo.json \
 
 在网页输入多条订阅链接或选择多份 YAML/TXT 文件，填写组合名称和可选的节点筛选条件，点击“保存并生成短链接”。每次访问短链接都会重新拉取远程来源并返回纯 sing-box JSON；单条来源更新后无需重新生成短链接。名称筛选忽略大小写，包含词按任一命中保留，排除词优先。
 
-管理接口必须配置 `YAML2SB_API_KEY`，并按部署方式配置持久存储：Docker Compose 使用自动创建的 SQLite 命名卷；Vercel 使用 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`；Cloudflare Workers 绑定 KV namespace `SUBSCRIPTIONS`。未配置持久存储时管理接口会返回 `503`，不会创建易失短链接。
+管理接口必须配置 `SUB2SB_API_KEY`，并按部署方式配置持久存储：Docker Compose 使用自动创建的 SQLite 命名卷；Vercel 使用 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`；Cloudflare Workers 绑定 KV namespace `SUBSCRIPTIONS`。未配置持久存储时管理接口会返回 `503`，不会创建易失短链接。
 
 | 运行方式 | 短链接数据存储 | 设置方法 |
 | --- | --- | --- |
-| 本机运行 / 自建 Web | SQLite，默认 `data/subscriptions.sqlite3` | 确保该目录位于持久、可写磁盘；可通过 `YAML2SB_DB_PATH` 指定其他 SQLite 文件路径 |
-| Docker Compose | SQLite 命名卷 `yaml2sb-data` | Compose 已自动挂载到 `/data/subscriptions.sqlite3`；重建容器会保留数据，删除命名卷则会清空 |
+| 本机运行 / 自建 Web | SQLite，默认 `data/subscriptions.sqlite3` | 确保该目录位于持久、可写磁盘；可通过 `SUB2SB_DB_PATH` 指定其他 SQLite 文件路径 |
+| Docker Compose | SQLite 命名卷 `Sub2sb-data` | Compose 已自动挂载到 `/data/subscriptions.sqlite3`；重建容器会保留数据，删除命名卷则会清空 |
 | Vercel | Upstash Redis | 通过 [Vercel Marketplace](https://vercel.com/marketplace/upstash) 创建或关联数据库；详见[Vercel 部署说明](#部署到-vercel) |
 | Cloudflare Workers | Workers KV | 创建 namespace 并绑定为 `SUBSCRIPTIONS`；详见[Cloudflare Workers 部署说明](#部署到-cloudflare-workers) |
 
-以上四种方式都还需要配置 `YAML2SB_API_KEY` 才能管理订阅。`/s/<id>` 是公开读取地址，不需要 API Key。若只使用 `/sub?url=...` 远程转换直链，则不保存组合配置，也不需要 Redis、KV 或 SQLite。Docker 部署细节见 [Docker Compose](#使用-docker-compose-部署)，云平台请按各自部署章节绑定对应存储。
+以上四种方式都还需要配置 `SUB2SB_API_KEY` 才能管理订阅。`/s/<id>` 是公开读取地址，不需要 API Key。若只使用 `/sub?url=...` 远程转换直链，则不保存组合配置，也不需要 Redis、KV 或 SQLite。Docker 部署细节见 [Docker Compose](#使用-docker-compose-部署)，云平台请按各自部署章节绑定对应存储。
 
 #### 验证短链存储
 
@@ -410,14 +410,14 @@ curl -o sing-box-momo.json \
 
 ```sh
 BASE_URL='https://<你的部署域名>'
-export YAML2SB_API_KEY='<部署时设置的同一个密钥>'
+export SUB2SB_API_KEY='<部署时设置的同一个密钥>'
 ```
 
 用一个内嵌的测试 SOCKS5 节点创建短链，不需要真实订阅服务：
 
 ```sh
 CREATE_RESPONSE=$(curl --fail-with-body -sS -X POST "$BASE_URL/api/subscriptions" \
-  -H "Authorization: Bearer $YAML2SB_API_KEY" \
+  -H "Authorization: Bearer $SUB2SB_API_KEY" \
   -H 'Content-Type: application/json' \
   --data-binary '{"name":"storage-smoke-test","contents":["proxies:\n  - name: storage-smoke-test\n    type: socks5\n    server: 127.0.0.1\n    port: 1080\n"],"template":"phone"}')
 printf '%s\n' "$CREATE_RESPONSE"
@@ -432,14 +432,14 @@ curl --fail-with-body -sS "$BASE_URL$SHORT_PATH" | python3 -c 'import json,sys; 
 ```sh
 PROFILE_ID=${SHORT_PATH#/s/}
 curl --fail-with-body -sS -X DELETE "$BASE_URL/api/subscriptions/$PROFILE_ID" \
-  -H "Authorization: Bearer $YAML2SB_API_KEY"
+  -H "Authorization: Bearer $SUB2SB_API_KEY"
 ```
 
 常见故障判断：
 
 | 现象 | 优先检查 |
 | --- | --- |
-| 创建接口 `401 Unauthorized` | 请求密钥是否与部署环境的 `YAML2SB_API_KEY` 一致；Preview 和 Production 的密钥可能不同 |
+| 创建接口 `401 Unauthorized` | 请求密钥是否与部署环境的 `SUB2SB_API_KEY` 一致；Preview 和 Production 的密钥可能不同 |
 | Vercel 创建接口 `503`，提示配置 Upstash | `UPSTASH_REDIS_REST_URL` 与 `UPSTASH_REDIS_REST_TOKEN` 是否都存在、选中了当前部署环境，并在添加/修改变量后重新部署 |
 | Workers 创建接口 `503`，提示缺少 `SUBSCRIPTIONS` | namespace 是否已在 `wrangler.toml` 中绑定，binding 名称是否完全一致，部署是否在配置更新后重新执行 |
 | 创建返回成功，但 `/s/<id>` 返回 `404` | 访问的域名/部署环境是否与创建时相同；Vercel Preview、Production 及 Workers 的不同 namespace 数据互不共享 |
@@ -544,7 +544,7 @@ curl -X POST 'https://<项目名>.vercel.app/api' \
 
 程序会清理被取消规则集对应的规则和分流组引用；移除 DNS 服务器后，其余配置中指向该服务器的 DNS 引用会改指剩余可用 DNS。地区、手动/自动组和“延迟辅助”会作为出站保留，但不会作为应用名称显示。“延迟辅助”和直连不会出现在规则集的匹配目标出站选择器中；直连可作为自定义应用分流的初始出站，模板中已有的直连规则保持原样。
 
-同一功能也可通过 API 使用。`GET /api/options?template=config_phone.json` 返回对应基础模板可选的 DNS、分流组和规则集；分流组带有 `application` 标识，界面据此将应用组与地区出站区分，`matching_targets` 不包含应用组、直连或“延迟辅助”。配置了 `YAML2SB_API_KEY` 时，读取该接口也需要 API 密钥。转换请求的 `template_options` 可以传入 `dns_servers`、`custom_dns_servers`、`groups`、`custom_groups`、`rule_sets`、`custom_rule_sets`、`custom_matching_rules`、`rule_destinations`、`rule_order` 和 `rule_outbounds`。`custom_groups` 可通过 `rule_sets` 将规则集加入应用分流组；`custom_matching_rules` 可按名称、规则集和初始出站新增应用分流及匹配规则；`rule_order` 使用 `/api/options` 返回的匹配规则索引字符串，以及新增规则集对应的 `custom:<tag>` 或自定义匹配规则的 `builder-<序号>` 排列。`custom_dns_servers` 中的 DNS 对象按 sing-box DNS server 字段传入，例如 `{"tag":"doh","type":"https","server":"dns.example","server_port":443,"path":"/dns-query"}`。未提供 DNS 选择时，使用基础模板默认 DNS；被取消的内部 DNS 依赖仍会保留。
+同一功能也可通过 API 使用。`GET /api/options?template=config_phone.json` 返回对应基础模板可选的 DNS、分流组和规则集；分流组带有 `application` 标识，界面据此将应用组与地区出站区分，`matching_targets` 不包含应用组、直连或“延迟辅助”。配置了 `SUB2SB_API_KEY` 时，读取该接口也需要 API 密钥。转换请求的 `template_options` 可以传入 `dns_servers`、`custom_dns_servers`、`groups`、`custom_groups`、`rule_sets`、`custom_rule_sets`、`custom_matching_rules`、`rule_destinations`、`rule_order` 和 `rule_outbounds`。`custom_groups` 可通过 `rule_sets` 将规则集加入应用分流组；`custom_matching_rules` 可按名称、规则集和初始出站新增应用分流及匹配规则；`rule_order` 使用 `/api/options` 返回的匹配规则索引字符串，以及新增规则集对应的 `custom:<tag>` 或自定义匹配规则的 `builder-<序号>` 排列。`custom_dns_servers` 中的 DNS 对象按 sing-box DNS server 字段传入，例如 `{"tag":"doh","type":"https","server":"dns.example","server_port":443,"path":"/dns-query"}`。未提供 DNS 选择时，使用基础模板默认 DNS；被取消的内部 DNS 依赖仍会保留。
 
 ```json
 {
@@ -643,7 +643,7 @@ python3 sub2singbox.py ./subscription.yaml \
 - **带入远程订阅链接**：将勾选项目中的 URL 合并并去重，填入“远程订阅链接”页。检查模板和筛选选项后，点击“转换并下载 JSON”生成配置文件。
 - **生成组合订阅链接**：填写组合名称后保存所选订阅，生成稳定的 `/s/<id>` 短链接。客户端访问时会重新拉取组合中的来源并返回 sing-box JSON。
 
-订阅管理需要配置 `YAML2SB_API_KEY` 和对应部署方式的持久化存储。详细设置见“保存订阅组合与短链接”。
+订阅管理需要配置 `SUB2SB_API_KEY` 和对应部署方式的持久化存储。详细设置见“保存订阅组合与短链接”。
 
 要生成 sing-box 可远程使用的订阅地址，切换到“远程订阅链接”输入方式，每行填写一条上游订阅 URL，选择内置模板，然后点击“生成远程订阅链接”并复制结果到客户端的远程配置 / 订阅入口。生成的地址指向当前部署域名下的 `/sub`，不需要 Redis、KV 等持久化存储；客户端每次拉取时，服务端会重新下载上游订阅并转换。直链目前仅支持内置模板，且不能应用节点名称筛选；需要筛选、自定义模板，或从粘贴内容生成稳定地址时，请使用下方的“保存并生成短链接”，该功能需要配置 API Key 和持久化存储。
 
@@ -675,13 +675,13 @@ python3 sub2singbox.py ./subscription.yaml \
 默认不启用 API Key。需要启用时，在项目目录生成并导出一个强随机密钥，再启动 Compose：
 
 ```sh
-export YAML2SB_API_KEY="$(openssl rand -hex 32)"
+export SUB2SB_API_KEY="$(openssl rand -hex 32)"
 docker compose up --build -d
 ```
 
 Compose 会将该变量传入容器。后续重建或更新容器时，也要在当前 shell 中设置同一个值；否则新容器会按未设置密钥的公开模式运行。不要把密钥提交到仓库。
 
-Compose 会把 SQLite 订阅库写入命名卷 `yaml2sb-data`，容器重建后数据保留。启用订阅管理时必须配置 `YAML2SB_API_KEY`。
+Compose 会把 SQLite 订阅库写入命名卷 `Sub2sb-data`，容器重建后数据保留。启用订阅管理时必须配置 `SUB2SB_API_KEY`。
 
 未启用密钥时，直接在项目目录运行：
 
@@ -689,10 +689,10 @@ Compose 会把 SQLite 订阅库写入命名卷 `yaml2sb-data`，容器重建后�
 docker compose up --build -d
 ```
 
-打开 <http://localhost:8080> 使用网页。可通过 `YAML2SB_PORT` 修改宿主机映射端口，例如：
+打开 <http://localhost:8080> 使用网页。可通过 `SUB2SB_PORT` 修改宿主机映射端口，例如：
 
 ```sh
-YAML2SB_PORT=9090 docker compose up --build -d
+SUB2SB_PORT=9090 docker compose up --build -d
 ```
 
 部署后可用以下命令检查首页、API 和模板选项接口是否返回 HTTP 200：
@@ -704,7 +704,7 @@ curl --fail --silent --show-error -o /dev/null -w '模板选项 HTTP %{http_code
   'http://localhost:8080/api/options?template=config_phone.json'
 ```
 
-如果通过 `YAML2SB_PORT` 使用了其他宿主机端口，请相应替换命令中的 `8080`。启用了 API 密钥时，为后两条命令添加 `-H "Authorization: Bearer $YAML2SB_API_KEY"`。
+如果通过 `SUB2SB_PORT` 使用了其他宿主机端口，请相应替换命令中的 `8080`。启用了 API 密钥时，为后两条命令添加 `-H "Authorization: Bearer $SUB2SB_API_KEY"`。
 
 查看日志和停止服务：
 
@@ -716,11 +716,11 @@ docker compose down
 也可以直接构建并运行 Docker 镜像：
 
 ```sh
-docker build -t yaml2sb .
+docker build -t Sub2sb .
 docker run --rm -p 8080:8080 \
-  -e YAML2SB_API_KEY="$YAML2SB_API_KEY" \
-  -v yaml2sb-data:/data \
-  yaml2sb
+  -e SUB2SB_API_KEY="$SUB2SB_API_KEY" \
+  -v Sub2sb-data:/data \
+  Sub2sb
 ```
 
 ### 本地启动网页版
@@ -737,10 +737,10 @@ python3 web_server.py
 python3 web_server.py --host 0.0.0.0 --port 8080
 ```
 
-默认未启用令牌认证。若需启用，可在启动进程前设置 `YAML2SB_API_KEY`：
+默认未启用令牌认证。若需启用，可在启动进程前设置 `SUB2SB_API_KEY`：
 
 ```sh
-YAML2SB_API_KEY='替换为强随机密钥' python3 web_server.py
+SUB2SB_API_KEY='替换为强随机密钥' python3 web_server.py
 ```
 
-Docker Compose 会把当前 shell 中导出的 `YAML2SB_API_KEY` 传给容器；直接运行 Docker 镜像时使用 `-e YAML2SB_API_KEY="$YAML2SB_API_KEY"`。启用后，网页首页仍可打开，在页面的“API 访问密钥”栏输入密钥；调用 API 的客户端使用 `Authorization: Bearer <密钥>` 或 `X-API-Key: <密钥>` 请求头。密钥未设置时仍是公开访问，因此不要直接把未保护的服务暴露到公网；公网部署还应使用 HTTPS、访问控制和适当的用量限制。
+Docker Compose 会把当前 shell 中导出的 `SUB2SB_API_KEY` 传给容器；直接运行 Docker 镜像时使用 `-e SUB2SB_API_KEY="$SUB2SB_API_KEY"`。启用后，网页首页仍可打开，在页面的“API 访问密钥”栏输入密钥；调用 API 的客户端使用 `Authorization: Bearer <密钥>` 或 `X-API-Key: <密钥>` 请求头。密钥未设置时仍是公开访问，因此不要直接把未保护的服务暴露到公网；公网部署还应使用 HTTPS、访问控制和适当的用量限制。
