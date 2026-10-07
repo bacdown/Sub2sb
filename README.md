@@ -1,5 +1,7 @@
 # yaml2sb
 
+**Language:** [中文](README.md) · [English](README.en.md)
+
 将 Clash YAML、Base64 订阅或常见代理 URI 转换为 sing-box JSON。支持多文件 / 多订阅合并、节点名称筛选、保存订阅组合和短链接远程 JSON；提供本地网页版、Docker、Vercel、Cloudflare Workers 与命令行用法。
 
 ## 目录
