@@ -1518,10 +1518,21 @@ html.dark .dns-category-tab[aria-selected="true"] {
   color: var(--ui-text);
   box-shadow: 0 2px 7px rgb(0 0 0 / 6%);
 }
-.dns-option {
-  background: var(--ui-panel) !important;
+html.dark .choice-group {
+  background: var(--ui-panel);
+}
+html.dark .dns-option-list {
+  gap: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+html.dark .dns-option {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0;
   color: var(--ui-text) !important;
-  border-color: var(--ui-line) !important;
 }
 .dns-option[aria-checked="true"],
 .dns-option.selected {
