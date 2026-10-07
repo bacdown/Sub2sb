@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    YAML2SB_DB_PATH=/data/subscriptions.sqlite3
+    SUB2SB_DB_PATH=/data/subscriptions.sqlite3
 
 WORKDIR /app
 
