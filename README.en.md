@@ -24,7 +24,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Project Wiki
 
-See the [GitHub Wiki](https://github.com/bacdown/yaml2sb/wiki) for additional usage information.
+See the [GitHub Wiki](https://github.com/bacdown/Sub2sb/wiki) for additional usage information.
 
 ## Supported scope
 
