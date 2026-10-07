@@ -60,7 +60,7 @@ MAX_BODY_BYTES = 2 * 1024 * 1024
 MAX_SUBSCRIPTION_BYTES = 2 * 1024 * 1024
 MAX_REDIRECTS = 5
 REDIRECT_STATUSES = {301, 302, 303, 307, 308}
-PROFILE_PREFIX = "yaml2sb:profile:"
+PROFILE_PREFIX = "Sub2sb:profile:"
 MAX_PROFILE_COUNT = 1000
 
 CORS_HEADERS = {
@@ -118,7 +118,7 @@ async def _load_template(env, name: str | None) -> dict:
 
 def _api_key_from_env(env) -> str | None:
     try:
-        value = getattr(env, "YAML2SB_API_KEY", None)
+        value = getattr(env, "SUB2SB_API_KEY", None)
     except Exception:
         value = None
     if value is None:
@@ -370,7 +370,7 @@ class Default(WorkerEntrypoint):
         try:
             if path == "/api/subscriptions" or path.startswith("/api/subscriptions/"):
                 if not _api_key_from_env(self.env):
-                    return _json_response(503, {"error": "订阅管理需要先配置 YAML2SB_API_KEY"})
+                    return _json_response(503, {"error": "订阅管理需要先配置 SUB2SB_API_KEY"})
                 return await self._handle_profiles(request, method, path)
 
             if method == "GET" and path == "/api/options":
@@ -547,7 +547,7 @@ class Default(WorkerEntrypoint):
                         "url": "原订阅链接（必填）",
                         "urls": "多个订阅，逗号分隔（可选）",
                         "template": "phone | openwrt | momo（默认 phone）",
-                        "api_key": "若配置了 YAML2SB_API_KEY 则必填",
+                        "api_key": "若配置了 SUB2SB_API_KEY 则必填",
                     },
                     "example": "/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=phone",
                 },
