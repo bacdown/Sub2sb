@@ -2245,6 +2245,17 @@ html:not(.dark) .divider {
 }
 
     .language-picker{position:relative;flex:0 0 auto}.language-switcher{display:flex;align-items:center;justify-content:space-between;gap:8px;width:92px;height:34px;padding:0 10px;border:1px solid var(--ui-line-strong);border-radius:9px;background:var(--ui-input);color:var(--ui-text);font-size:11px;font-weight:650;outline:none;cursor:pointer}.language-switcher .chevron{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;opacity:.72}.language-menu{position:absolute;z-index:30;top:calc(100% + 6px);right:0;width:92px;padding:4px;border:1px solid var(--ui-line-strong);border-radius:9px;background:var(--ui-panel);box-shadow:0 10px 28px rgb(0 0 0 / 12%);display:none}.language-picker.open .language-menu{display:grid;gap:2px}.language-option{width:100%;height:30px;padding:0 9px;border:0;border-radius:6px;background:transparent;color:var(--ui-text);font-size:11px;text-align:left;cursor:pointer}.language-option:hover,.language-option.active{background:var(--ui-hover)} 
+/* Final DNS / advanced panel synchronization */
+.dns-category-tabs { margin-top: -4px !important; }
+.dns-grid { margin-top: 8px !important; }
+#advanced-groups-content > .choice-list,
+#advanced-rules-content > .choice-list {
+  max-height: 260px;
+  overflow: auto;
+  padding: 2px;
+}
+#advanced-order-content .rule-order-list { margin-top: 8px; }
+
   </style>
 <style>
     /* 来源区域与 indexdeo.html 保持一致 */
@@ -3577,13 +3588,15 @@ html:not(.dark) .divider {
     );
     const advancedSources = {
       dns: document.querySelector(".compose-section:first-child"),
-      groups: null,
-      rules: null,
+      groups: document.querySelector("#group-choices"),
+      rules: document.querySelector("#rule-set-choices"),
       moreLabel: document.querySelector('label[for="base-template"]'),
       more: document.querySelector(".base-template-controls"),
-      orderHeader: null,
-      orderList: null,
+      orderHeader: document.querySelector(".rule-header"),
+      orderList: document.querySelector("#matching-rule-list"),
     };
+    if (advancedSources.groups) advancedSources.groups.className = "choice-list";
+    if (advancedSources.rules) advancedSources.rules.className = "choice-list";
     const orderWrapper = document.createElement("div");
     orderWrapper.className = "rule-order-wrap";
     if (advancedSources.orderHeader) orderWrapper.appendChild(advancedSources.orderHeader);
