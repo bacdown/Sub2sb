@@ -164,7 +164,7 @@ async def _fetch_subscription(url: str) -> str:
         try:
             response = await fetch(
                 current_url,
-                headers={"User-Agent": "yaml2sb/1.0"},
+                headers={"User-Agent": "Sub2sb/1.0"},
                 redirect="manual",
             )
         except OSError as exc:
@@ -520,7 +520,7 @@ class Default(WorkerEntrypoint):
         return _json_response(
             200,
             {
-                "name": "yaml2sb",
+                "name": "Sub2sb",
                 "platform": "cloudflare-workers",
                 "methods": [
                     "GET /",
