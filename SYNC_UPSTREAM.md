@@ -1,4 +1,4 @@
-# 同步 yaml2sb 上游更新
+# 同步 Sub2sb 上游更新
 
 2sb 是独立开发的仓库；`origin` 指向 2sb，`upstream` 指向 yaml2sb。以下命令在终端中逐条执行，不要复制说明文字。
 
