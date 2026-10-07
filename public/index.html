@@ -1526,6 +1526,57 @@
     grid-row: auto !important;
   }
 }
+\n/* Layout correction: keep DNS selection beside choices and preview on desktop */
+.workspace {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 340px !important;
+  align-items: start !important;
+  gap: 18px !important;
+}
+.preview {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  position: sticky !important;
+  top: 88px !important;
+  align-self: start !important;
+}
+.dns-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px) !important;
+  align-items: start !important;
+}
+.dns-main {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+.dns-selected-panel {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+}
+.compose-panel > .hint:first-child {
+  display: none !important;
+}
+.compose-grid > .compose-section:nth-child(2) {
+  display: none !important;
+}
+@media (max-width: 720px) {
+  .workspace {
+    grid-template-columns: 1fr !important;
+  }
+  .preview {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    position: static !important;
+  }
+  .dns-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .dns-main,
+  .dns-selected-panel {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+}
 \n/* Final UI polish */
 .sb-logo { overflow: visible; }
 .sb-logo path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
@@ -2466,7 +2517,6 @@ html:not(.dark) .divider {
         </div>
       </section>
       <section id="compose-panel" class="compose-panel" aria-label="自定义配置制作" hidden>
-          <p class="hint">以所选内置配置为底稿。未开放的配置项保持原样；DNS、分流组和规则集的未选择项会从配置中移除。</p>
           <label for="base-template">基础配置</label>
           <div class="base-template-controls">
             <select id="base-template">
@@ -2492,15 +2542,14 @@ html:not(.dark) .divider {
                     <button class="dns-category-tab" type="button" data-dns-category="international" role="tab" aria-selected="false">国际 DNS</button>
                   </div>
                   <div class="dns-grid">
-                <fieldset class="choice-group" data-dns-panel="domestic">
-                  <legend>国内 DNS</legend>
-                  <div id="dns-domestic-options" class="dns-option-list" role="group" aria-label="国内 DNS 多选"></div>
-                </fieldset>
-                <fieldset class="choice-group" data-dns-panel="international" hidden>
-                  <legend>国际 DNS</legend>
-                  <div id="dns-international-options" class="dns-option-list" role="group" aria-label="国际 DNS 多选"></div>
-                </fieldset>
-              </div>
+                    <fieldset class="choice-group" data-dns-panel="domestic">
+                      <legend>国内 DNS</legend>
+                      <div id="dns-domestic-options" class="dns-option-list" role="group" aria-label="国内 DNS 多选"></div>
+                    </fieldset>
+                    <fieldset class="choice-group" data-dns-panel="international" hidden>
+                      <legend>国际 DNS</legend>
+                      <div id="dns-international-options" class="dns-option-list" role="group" aria-label="国际 DNS 多选"></div>
+                    </fieldset>
                   </div>
                 </div>
                 <aside class="dns-selected-panel">
@@ -2532,68 +2581,6 @@ html:not(.dark) .divider {
                 <button id="add-dns" class="secondary" type="button">添加 DNS</button>
               </div>
               </div>
-            </section>
-            <section class="compose-section">
-              <h3>匹配规则与顺序</h3>
-              <p class="hint">在此选择具体应用分流名称、规则集和目标出站，添加后可调整匹配优先顺序。地区选择仅作为目标出站，不会出现在应用名称中。</p>
-              <div class="match-builder">
-                <div>
-                  <label for="match-name">应用分流</label>
-                  <div class="match-name-fields">
-                    <select id="match-name" aria-label="应用分流名称"></select>
-                    <input id="new-match-name" type="text" placeholder="新增应用分流名称" aria-label="自定义应用分流名称" hidden>
-                    <button id="add-match-name" class="secondary" type="button" aria-label="添加应用" title="添加应用" hidden>＋</button>
-                  </div>
-                </div>
-                <div>
-                  <label for="match-rule-set">规则集</label>
-                  <select id="match-rule-set" aria-label="匹配规则规则集"></select>
-                </div>
-                <div>
-                  <label for="match-outbound">出站</label>
-                  <select id="match-outbound" aria-label="匹配规则出站"></select>
-                </div>
-                <div>
-                  <label for="add-match-rule">添加匹配规则</label>
-                  <button id="add-match-rule" class="match-add-btn" type="button">添加</button>
-                </div>
-              </div>
-              <details class="rule-link-details">
-                <summary>添加自定义规则集链接</summary>
-                <div class="rule-link-fields">
-                  <div>
-                    <label for="new-rule-tag">规则集名称</label>
-                    <input id="new-rule-tag" type="text" placeholder="例如 geosite-example" aria-label="自定义规则集标签">
-                  </div>
-                  <div>
-                    <label for="new-rule-url">规则集链接</label>
-                    <input id="new-rule-url" type="url" placeholder="https://example.com/rules.srs" aria-label="自定义规则集链接">
-                  </div>
-                  <div>
-                    <label for="new-rule-format">规则集格式</label>
-                    <select id="new-rule-format" aria-label="规则集格式">
-                      <option value="binary">binary（.srs）</option>
-                      <option value="source">source（JSON）</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="new-rule-outbound">规则集出站</label>
-                    <select id="new-rule-outbound" aria-label="自定义规则集出站"></select>
-                  </div>
-                  <div class="rule-link-action">
-                    <label for="add-rule-set">添加规则集</label>
-                    <button id="add-rule-set" class="secondary" type="button">添加规则集</button>
-                  </div>
-                </div>
-                <ul id="custom-rule-list" class="added-list"></ul>
-              </details>
-              <div class="rule-order-item rule-header">
-                <span class="rule-column-label">应用分流</span>
-                <span class="rule-column-label">规则集 / 匹配条件</span>
-                <span class="rule-column-label">出站（地区 / 手动自动）</span>
-                <span class="rule-column-label">顺序 / 删除</span>
-              </div>
-              <ol id="matching-rule-list" class="rule-order-list"></ol>
             </section>
           </div>
           <div hidden aria-hidden="true">
