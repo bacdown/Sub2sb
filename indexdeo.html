@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="yaml2sb 2.0 · Clash / Subscription → sing-box">
+  <title>yaml2sb 2.0 · Subscription → sing-box</title>
+  <style>
+    :root {
+      --bg:#f6f8fc; --surface:#fff; --surface-2:#f8faff; --line:#e5e9f2;
+      --text:#182033; --muted:#73809a; --accent:#536dfe; --accent-2:#7c4dff;
+      --accent-soft:#eef1ff; --success:#1e9e6a; --success-soft:#eaf9f2;
+      --danger:#d9534f; --danger-soft:#fff0ef; --sidebar:#111a2e; --sidebar-2:#18233b;
+      --shadow:0 10px 35px rgba(33,48,80,.07); --radius:14px; --radius-sm:9px;
+      --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI","Noto Sans SC",sans-serif;
+      color-scheme:light;
+    }
+    html.dark {
+      --bg:#0b1020; --surface:#111827; --surface-2:#151d2e; --line:#273249;
+      --text:#edf2ff; --muted:#91a0ba; --accent:#8293ff; --accent-2:#a681ff;
+      --accent-soft:#1b2442; --success:#45c995; --success-soft:#102d25;
+      --danger:#ff7771; --danger-soft:#321b1d; --sidebar:#080d19; --sidebar-2:#10182a;
+      --shadow:0 14px 40px rgba(0,0,0,.24); color-scheme:dark;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);min-height:100vh}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    input::placeholder, textarea::placeholder{
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","Noto Sans SC",sans-serif;
+      font-size:12px;
+      font-weight:400;
+      color:var(--muted);
+      opacity:.78;
+      letter-spacing:0;
+    }
+    input, textarea, select{font-size:12.5px;line-height:1.5;letter-spacing:0}
+    input, select{font-weight:450}
+    textarea{font-weight:400}
+    ::selection{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+    [hidden]{display:none!important}
+    .app{display:grid;grid-template-columns:244px minmax(0,1fr);min-height:100vh}
+    .sidebar{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,var(--sidebar),#0e1628);color:#dbe4ff;padding:20px 14px;display:flex;flex-direction:column}
+    .brand{display:flex;align-items:center;gap:11px;padding:4px 8px 24px}
+    .brand-mark{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#6b7cff,#8b5cf6);box-shadow:0 8px 18px rgba(91,92,246,.32);font-weight:900}
+    .brand-title{font-weight:800;font-size:19px;letter-spacing:-.03em}.brand-title span{color:#91a3ff;font-weight:500}
+    .brand-sub{font-size:10px;color:#8796b5;margin-top:2px}
+    .nav{display:grid;gap:4px}.nav button{border:0;background:transparent;color:#aebbd5;text-align:left;padding:11px 12px;border-radius:9px;display:flex;align-items:center;gap:11px;font-weight:650}
+    .nav button:hover{background:rgba(255,255,255,.06);color:#fff}.nav button.active{background:linear-gradient(90deg,#4256b9,#33478e);color:#fff;box-shadow:0 8px 18px rgba(34,50,130,.22)}
+    .nav-icon{width:20px;text-align:center;opacity:.9}.divider{height:1px;background:rgba(255,255,255,.09);margin:14px 6px}
+    .sidebar-bottom{margin-top:auto;display:grid;gap:10px}.version{font:11px var(--mono);color:#73809b;padding:0 8px}.side-link{color:#aebbd5;text-decoration:none;font-size:12px;padding:8px}
+    .main{min-width:0}.topbar{height:70px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:10}
+    .top-copy{font-size:13px;color:var(--muted)}.top-actions{display:flex;gap:8px;align-items:center}
+    .icon-btn,.ghost-btn{border:1px solid var(--line);background:var(--surface);color:var(--text);height:38px;border-radius:10px;padding:0 12px}.icon-btn{width:38px;padding:0}.ghost-btn:hover,.icon-btn:hover{background:var(--surface-2)}
+    .content{padding:28px;max-width:1500px;margin:auto}.page-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:22px}
+    .eyebrow{font-size:12px;color:var(--accent);font-weight:800;letter-spacing:.08em;text-transform:uppercase}.page-head h1{margin:5px 0 6px;font-size:28px;letter-spacing:-.035em}.page-head p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.6}
+    .workspace{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
+    .stack{display:grid;gap:14px}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .step{padding:20px}.step-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}.step-no{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:800}.step-title{font-weight:800}.step-desc{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+    .source-layout{display:grid;grid-template-columns:minmax(0,1fr) 235px;gap:14px}.source-tabs{display:flex;gap:5px;background:var(--surface-2);padding:4px;border-radius:10px;margin-bottom:10px}.source-tab{flex:1;border:0;background:transparent;color:var(--muted);padding:9px;border-radius:7px;font-size:12px;font-weight:650;letter-spacing:.005em}.source-tab.active{background:var(--surface);color:var(--text);box-shadow:0 2px 7px rgba(0,0,0,.06)}
+    textarea,input,select{width:100%;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:9px;outline:none}.url-box,textarea{padding:11px 12px}.url-box{min-height:45px;line-height:1.65}.source-text{min-height:126px;resize:vertical;font-family:var(--mono);font-size:12px;line-height:1.65}
+    input,select{height:40px;padding:0 11px}.field{display:grid;gap:7px}.field label{font-size:12px;font-weight:700;letter-spacing:.01em}.hint{font-size:11.5px;color:var(--muted);line-height:1.6;letter-spacing:.005em}
+    input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)}
+    .source-side{border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:14px}.source-side h3{font-size:12px;margin:0 0 9px}.source-side ul{padding:0;margin:0;list-style:none;display:grid;gap:8px}.source-side li{font-size:11px;color:var(--muted);display:flex;gap:7px}.source-side li::before{content:"✓";color:var(--success);font-weight:900}
+    .file-btn{display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--line);border-radius:9px;padding:9px 11px;color:var(--muted);font-size:12px;background:var(--surface-2);margin-top:9px}.file-btn input{display:none}
+    .templates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.template{position:relative;border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:14px;text-align:left;min-height:108px}.template:hover{border-color:#aebaff}.template.active{border:1.5px solid var(--accent);background:var(--accent-soft)}.template .check{position:absolute;right:10px;top:10px;color:var(--accent);font-size:13px}.template-icon{font-size:20px;margin-bottom:10px}.template-title{font-weight:800;font-size:12px}.template-desc{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
+    .filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .template-upload-row{display:flex;align-items:center;gap:10px;margin-top:9px;min-height:32px}
+    .template-upload{display:inline-flex;align-items:center;gap:7px;border:1px dashed #aebaff;background:var(--surface);color:var(--accent);border-radius:8px;height:32px;padding:0 10px;font-size:11px;font-weight:750}
+    .template-upload:hover{background:var(--accent-soft);border-color:var(--accent)}
+    .template-upload-sub{font-size:10px;font-weight:500;color:var(--muted);margin-left:1px}
+    .template-upload-row .status{margin:0;font-size:10.5px}
+    .cert-panel{grid-column:1 / -1;margin-top:2px;padding-top:15px;border-top:1px solid var(--line)}
+    .cert-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:11px}
+    .cert-title{font-size:12px;font-weight:800;white-space:nowrap}
+    .cert-subtitle{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+    .cert-segment{display:grid;grid-template-columns:repeat(3,minmax(76px,1fr));gap:3px;background:var(--surface-2);padding:4px;border-radius:10px;min-width:270px}
+    .cert-segment button{height:34px;border:0;background:transparent;color:var(--muted);border-radius:7px;font-size:11.5px;font-weight:750;padding:0 12px}
+    .cert-segment button:hover{color:var(--text)}
+    .cert-segment button.active{background:var(--surface);color:var(--text);box-shadow:0 2px 7px rgba(0,0,0,.07)}
+    .cert-types{display:flex;flex-wrap:wrap;gap:5px}
+    .cert-type{height:34px;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:8px;padding:0 14px;font-size:11.5px;font-weight:650}
+    .cert-type:hover{background:var(--surface-2);color:var(--text)}
+    .cert-type.active{background:var(--surface);border-color:var(--line);color:var(--text);box-shadow:0 2px 7px rgba(0,0,0,.06)}
+    .cert-reset{border:0;background:transparent;color:var(--muted);font-size:10.5px;padding:3px 0;margin-left:4px}
+    .cert-reset:hover{color:var(--accent)}
+    @media(max-width:800px){.templates{grid-template-columns:1fr 1fr}.cert-head{align-items:flex-start;flex-direction:column}.cert-segment{width:100%;min-width:0}.filter-grid{grid-template-columns:1fr}}
+    .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.chip{font:10px var(--mono);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:4px 7px;color:var(--muted)}
+    .advanced{padding:0 20px 20px}.advanced-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.adv-btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;text-align:left;padding:12px}.adv-btn:hover{border-color:#b2bcff;background:var(--accent-soft)}.adv-title{font-size:12px;font-weight:800}.adv-sub{font-size:10px;color:var(--muted);margin-top:4px}.adv-body{margin-top:10px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);padding:14px}.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.option-list{display:grid;gap:5px;max-height:190px;overflow:auto}.option{display:flex;align-items:center;gap:8px;padding:8px;border-radius:7px;font-size:11px}.option:hover{background:var(--surface)}.option input{width:15px;height:15px;padding:0}.advanced-actions{display:flex;gap:8px;margin-top:10px}
+    .primary{border:0;background:linear-gradient(135deg,var(--accent),#6f55f6);color:#fff;border-radius:10px;height:44px;padding:0 18px;font-weight:800;box-shadow:0 8px 18px rgba(83,109,254,.22)}.primary:hover{filter:brightness(1.05)}.primary:disabled{opacity:.6;cursor:wait}.secondary{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:9px;height:40px;padding:0 12px;font-size:12px;font-weight:700}.secondary:hover{background:var(--surface-2)}
+    .bottom-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px}.ready{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}.dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 4px var(--success-soft)}.bottom-actions{display:flex;gap:8px}
+    .preview{position:sticky;top:88px}.preview-card{padding:17px}.preview-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}.preview-title h2{font-size:14px;margin:0}.edit-link{border:0;background:transparent;color:var(--accent);font-size:11px;font-weight:700}.summary{border:1px solid var(--line);border-radius:11px;overflow:hidden}.summary-head{padding:13px;background:var(--surface-2);display:flex;gap:9px;align-items:center}.ok{width:24px;height:24px;border-radius:50%;background:var(--success-soft);color:var(--success);display:grid;place-items:center;font-size:12px}.summary-head strong{font-size:12px}.summary-head span{display:block;font-size:10px;color:var(--muted);margin-top:2px}.stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}.stat{padding:11px;text-align:center;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat b{display:block;font-size:17px}.stat span{font-size:10px;color:var(--muted)}
+    .config-list{margin-top:12px;border:1px solid var(--line);border-radius:11px;overflow:hidden}.config-row{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border-bottom:1px solid var(--line);font-size:11px}.config-row:last-child{border:0}.config-row span:last-child{font-family:var(--mono);color:var(--muted)}
+    .json-wrap{margin-top:12px;border-radius:11px;overflow:hidden;border:1px solid #222b3e}.json-head{height:39px;background:#182236;color:#cbd5e1;display:flex;align-items:center;justify-content:space-between;padding:0 11px;font-size:10px}.json-head button{border:0;background:transparent;color:#93a4c2}.json{background:#0e1524;color:#cbd5e1;padding:13px;min-height:190px;max-height:310px;overflow:auto;font:10px/1.65 var(--mono);white-space:pre}
+    .result{margin-top:12px;border:1px solid #bfead5;background:var(--success-soft);border-radius:11px;padding:12px}.result strong{font-size:12px}.result p{font-size:10px;color:var(--muted);margin:5px 0 0}.result-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:9px}.result-actions button{height:35px;font-size:10px;padding:0 7px}
+    .status{font-size:11px;color:var(--muted);min-height:18px;margin-top:8px}.status.error{color:var(--danger)}.status.success{color:var(--success)}
+    .page{display:none}.page.active{display:block}.manager{display:grid;gap:12px}.manager-card{padding:18px}.manager-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.manager-head h2{font-size:15px;margin:0}.profile{border:1px solid var(--line);border-radius:11px;padding:14px;display:grid;gap:8px}.profile-name{font-size:13px;font-weight:800}.profile-link{font:10px var(--mono);color:var(--accent);overflow-wrap:anywhere}.profile-meta{font-size:10px;color:var(--muted)}.profile-actions{display:flex;gap:7px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(5,10,22,.48);display:grid;place-items:center;padding:18px;z-index:30}.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.25);padding:20px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.modal-head h2{font-size:16px;margin:0}.close{border:0;background:var(--surface-2);color:var(--text);width:32px;height:32px;border-radius:8px}
+
+    /* yaml2sb 2.0 unified SVG icon system */
+    .icon{width:18px;height:18px;display:inline-block;flex:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;vertical-align:middle}
+    .icon.sm{width:15px;height:15px}.icon.xs{width:13px;height:13px}
+    .brand-mark{position:relative;overflow:hidden}
+    .brand-mark .logo-icon{width:24px;height:24px;stroke:#fff;stroke-width:1.8;fill:none}
+    .brand-mark:after{content:"";position:absolute;inset:auto -12px -15px auto;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.11)}
+    .nav-icon{width:20px;height:20px;display:grid;place-items:center}
+    .template-icon{height:22px;display:flex;align-items:center}
+    .template-icon .icon{width:21px;height:21px;color:var(--accent)}
+    .step-no .icon{width:16px;height:16px;stroke-width:2}
+    .config-row > span:first-child{display:flex;align-items:center;gap:7px}
+    .config-row .icon{color:var(--muted);width:15px;height:15px}
+    .ok .icon{width:13px;height:13px;stroke-width:2.4}
+    .ready .dot{flex:none}
+    .button-icon{display:inline-flex;align-items:center;gap:7px}
+    .edit-link,.json-head button{display:inline-flex;align-items:center;gap:5px}
+
+    @media(max-width:1100px){.workspace{grid-template-columns:1fr}.preview{position:static}.source-layout{grid-template-columns:1fr}.advanced-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:800px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto;padding:10px 12px}.brand{padding-bottom:10px}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap}.sidebar-bottom{display:none}.topbar{padding:0 14px}.content{padding:18px 12px}.templates{grid-template-columns:1fr 1fr}.filter-grid{grid-template-columns:1fr}.advanced-grid{grid-template-columns:1fr 1fr}.bottom-bar{align-items:stretch;flex-direction:column}.bottom-actions{width:100%}.bottom-actions .primary{flex:1}}
+    @media(max-width:520px){.templates,.advanced-grid{grid-template-columns:1fr}.mini-grid{grid-template-columns:1fr}.result-actions{grid-template-columns:1fr}.page-head{flex-direction:column}.top-copy{display:none}}
+  </style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-convert" viewBox="0 0 24 24">
+    <path d="M4 7h10"/><path d="m11 4 3 3-3 3"/>
+    <path d="M20 17H10"/><path d="m13 14-3 3 3 3"/>
+  </symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24">
+    <path d="m12 4 8 4-8 4-8-4 8-4Z"/><path d="m4 12 8 4 8-4"/><path d="m4 16 8 4 8-4"/>
+  </symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24">
+    <path d="M4 7h6M14 7h6M4 17h3M11 17h9"/>
+    <circle cx="12" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>
+  </symbol>
+  <symbol id="i-link" viewBox="0 0 24 24">
+    <path d="m9 15 6-6"/><path d="M7 18H6a4 4 0 0 1 0-8h4"/><path d="M17 6h1a4 4 0 0 1 0 8h-4"/>
+  </symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24">
+    <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/>
+    <path d="m19 13 2-1-2-1-.4-2 1.2-1.7-1.4-1.4L16.7 8 15 7.5 14 5h-4L9 7.5 7.3 8 5.6 6.8 4.2 8.2 5.4 9.9 5 12l-2 1 2 1 .4 2-1.2 1.7 1.4 1.4L7.3 17l1.7.5L10 20h4l1-2.5 1.7-.5 1.7 1.2 1.4-1.4-1.2-1.7.4-2Z"/>
+  </symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+  </symbol>
+  <symbol id="i-github" viewBox="0 0 24 24">
+    <path d="M15 22v-3.2c0-1.1-.4-1.8-1-2.2 3.3-.4 6.8-1.6 6.8-7.2 0-1.6-.6-2.9-1.6-3.9.2-.4.7-1.9-.2-3.8 0 0-1.3-.4-4.1 1.5a14 14 0 0 0-7.5 0C4.6 1.5 3.3 1.9 3.3 1.9c-.9 1.9-.4 3.4-.2 3.8-1 1-1.6 2.3-1.6 3.9 0 5.6 3.5 6.8 6.8 7.2-.6.4-1 1.1-1 2.2V22"/>
+    <path d="M7.5 18c-2 .6-2.4-1-3.2-1.3"/>
+  </symbol>
+  <symbol id="i-source" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+  <symbol id="i-template" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4"/><path d="M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/><circle cx="8" cy="6" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="12" cy="18" r="1.7"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M10 18h4"/></symbol>
+  <symbol id="i-router" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="9" rx="2"/><path d="M8 8V5M16 8V5M6 13h.01M10 13h.01M14 13h.01M18 13h.01"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="m12 3 8 4v10l-8 4-8-4V7l8-4Z"/><path d="m4 7 8 4 8-4M12 11v10"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  <symbol id="i-rules" viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 5v14M4 8l3-3 3 3M17 19V5M14 16l3 3 3-3"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v6c0 5-3.3 8-8 9-4.7-1-8-4-8-9V6l8-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h3a4 4 0 0 0 4-4v-4a4 4 0 0 1 4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.8-4L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14.8 4L20 15"/><path d="M20 20v-5h-5"/></symbol>
+  <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></symbol>
+</svg>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-label="yaml2sb logo">
+        <svg class="logo-icon" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M8 8.5 16 5l8 3.5-8 3.5L8 8.5Z" fill="rgba(255,255,255,.16)" stroke="none"/>
+          <path d="M8 8.5 16 5l8 3.5-8 3.5L8 8.5Z"/>
+          <path d="M8 13.5 16 17l8-3.5M8 18.5 16 22l8-3.5"/>
+          <path d="M16 17v10"/>
+          <path d="M12.5 25.5 16 28l3.5-2.5"/>
+        </svg>
+      </div>
+      <div><div class="brand-title">yaml2sb <span>2.0</span></div><div class="brand-sub">Clash / Subscription → sing-box</div></div>
+    </div>
+    <nav class="nav">
+      <button class="active" data-page="convert"><span class="nav-icon"><svg class="icon"><use href="#i-convert"/></svg></span>转换</button>
+      <button data-page="subscriptions"><span class="nav-icon"><svg class="icon"><use href="#i-layers"/></svg></span>订阅管理</button>
+      <button data-page="profiles"><span class="nav-icon"><svg class="icon"><use href="#i-sliders"/></svg></span>配置方案</button>
+      <button data-page="shortlinks"><span class="nav-icon"><svg class="icon"><use href="#i-link"/></svg></span>短链接</button>
+      <div class="divider"></div>
+      <button data-page="settings"><span class="nav-icon"><svg class="icon"><use href="#i-settings"/></svg></span>设置</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="version">v2.0.0 · UI prototype</div>
+      <a class="side-link" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener">◉ GitHub</a>
+    </div>
+  </aside>
+
+  <section class="main">
+    <header class="topbar">
+      <div class="top-copy">更简单的订阅转换，更强大的配置管理</div>
+      <div class="top-actions">
+        <button class="icon-btn" id="theme" title="切换深色模式"><svg class="icon"><use href="#i-sun"/></svg></button>
+        <a class="ghost-btn" href="https://github.com/bacdown/yaml2sb" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center"><svg class="icon sm"><use href="#i-github"/></svg> GitHub</a>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="page active" id="page-convert">
+        <div class="page-head">
+          <div><div class="eyebrow">yaml2sb 2.0</div><h1>订阅转换</h1><p>将 Clash / YAML / 订阅内容转换为 sing-box 配置，支持多订阅合并、节点筛选和高级规则。</p></div>
+        </div>
+
+        <div class="workspace">
+          <div class="stack">
+            <section class="card step">
+              <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-source"/></svg></div><div><div class="step-title">来源</div><div class="step-desc">添加订阅链接、上传文件或直接粘贴配置。</div></div></div>
+              <div class="source-layout">
+                <div>
+                  <div class="source-tabs">
+                    <button class="source-tab active" data-source="url">订阅 URL</button>
+                    <button class="source-tab" data-source="file">上传文件</button>
+                    <button class="source-tab" data-source="paste">粘贴配置</button>
+                  </div>
+                  <div id="source-url">
+                    <textarea id="urls" class="url-box" rows="3" placeholder="每行一个订阅地址&#10;https://example.com/subscribe"></textarea>
+                    <div class="hint" style="margin-top:7px">支持多个来源；转换接口沿用现有 <code>/api</code>。</div>
+                  </div>
+                  <div id="source-file" hidden>
+                    <label class="file-btn"><svg class="icon sm"><use href="#i-upload"/></svg>选择 YAML / TXT / JSON 文件<input id="files" type="file" multiple accept=".yaml,.yml,.txt,.json,text/plain,application/x-yaml"></label>
+                    <div id="file-info" class="hint" style="margin-top:8px">可多次选择，内容会合并提交；总大小不超过 2 MiB。</div>
+                    <textarea id="file-preview" class="source-text" style="margin-top:8px" hidden></textarea>
+                  </div>
+                  <div id="source-paste" hidden>
+                    <textarea id="content" class="source-text" placeholder="粘贴 Clash YAML、Base64 订阅，或 VMess / VLESS / Trojan / SS / Hysteria2 / TUIC URI"></textarea>
+                  </div>
+                </div>
+                <aside class="source-side">
+                  <h3>支持的来源</h3>
+                  <ul><li>HTTP / HTTPS 订阅 URL</li><li>YAML / TXT / JSON 文件</li><li>Base64 订阅内容</li><li>Clash 代理 URI</li></ul>
+                  <div style="margin-top:14px" class="field"><label>API 访问密钥</label><input id="api-key" type="password" placeholder="留空表示无需鉴权"></div>
+                  <div class="hint" style="margin-top:7px">仅随请求发送，不写入 localStorage。</div>
+                </aside>
+              </div>
+            </section>
+
+            <section class="card step">
+              <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-template"/></svg></div><div><div class="step-title">转换方案</div><div class="step-desc">选择适合客户端或路由器的基础模板。</div></div></div>
+              <div class="templates" id="templates">
+                <button class="template" data-template="config_phone.json"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-phone"/></svg></div><div class="template-title">手机客户端</div><div class="template-desc">SFA / SFI / Hiddify / NekoBox</div></button>
+                <button class="template active" data-template="config_openwrt.json"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-router"/></svg></div><div class="template-title">OpenWrt</div><div class="template-desc">sing-box / 旁路由 / 路由器</div></button>
+                <button class="template" data-template="momo.json"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-box"/></svg></div><div class="template-title">Momo</div><div class="template-desc">Momo 客户端配置</div></button>
+                <button class="template" data-template="compose"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-sliders"/></svg></div><div class="template-title">自定义</div><div class="template-desc">基于内置模板自由组合</div></button>
+              </div>
+              <div class="template-upload-row">
+                <button id="upload-template-trigger" type="button" class="template-upload"><svg class="icon sm"><use href="#i-upload"/></svg><span>上传模板</span><span class="template-upload-sub">使用本地 JSON 模板</span></button>
+                <input id="custom-template-file" type="file" accept=".json,application/json" hidden>
+                <div id="template-status" class="status"></div>
+              </div>
+            </section>
+
+            <section class="card step">
+              <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-filter"/></svg></div><div><div class="step-title">节点处理</div><div class="step-desc">只保留你需要的节点，避免生成无用配置。</div></div></div>
+              <div class="filter-grid">
+                <div class="field"><label>包含关键词</label><input id="include" placeholder="例如：JP, SG, HK"><div id="include-chips" class="chips"></div></div>
+                <div class="field"><label>排除关键词</label><input id="exclude" placeholder="例如：流量, 到期, 剩余"><div id="exclude-chips" class="chips"></div></div>
+                <div class="cert-panel">
+                  <div class="cert-head">
+                    <div><div class="cert-title">证书验证</div><div class="cert-subtitle">按节点类型分别设置证书策略；未单独设置的类型使用默认策略。</div></div>
+                    <div class="cert-segment" role="group" aria-label="证书验证策略">
+                      <button type="button" data-cert-choice="unchanged">不修改</button>
+                      <button type="button" data-cert-choice="verify">验证</button>
+                      <button type="button" data-cert-choice="skip">不验证</button>
+                    </div>
+                  </div>
+                  <div class="cert-types" role="tablist" aria-label="节点类型">
+                    <button type="button" class="cert-type active" data-cert-node="default">默认</button>
+                    <button type="button" class="cert-type" data-cert-node="vless">VLESS</button>
+                    <button type="button" class="cert-type" data-cert-node="vmess">VMess</button>
+                    <button type="button" class="cert-type" data-cert-node="trojan">Trojan</button>
+                    <button type="button" class="cert-type" data-cert-node="hysteria">Hysteria</button>
+                    <button type="button" class="cert-type" data-cert-node="hysteria2">Hysteria2</button>
+                    <button type="button" class="cert-type" data-cert-node="tuic">TUIC</button>
+                    <button type="button" class="cert-type" data-cert-node="anytls">AnyTLS</button>
+                    <button type="button" class="cert-reset" id="cert-reset-type">恢复跟随默认</button>
+                  </div>
+                  <select id="cert-default" hidden><option value="unchanged">不修改</option><option value="verify">验证</option><option value="skip">不验证</option></select>
+                  <div hidden>
+                    <select data-cert-type="vless"><option value="inherit">跟随默认</option><option value="unchanged">不修改</option><option value="verify">验证</option><option value="skip">不验证</option></select>
+                    <select data-cert-type="vmess"><option value="inherit">跟随默认</option><option value="unchanged">不修改</option><option value="verify">验证</option><option value="skip">不验证</option></select>
+                    <select data-cert-type="trojan"><option value="inherit">跟随默认</option><option value="unchanged">不修改</option><option value="verify">验证</option><option value="skip">不验证</option></select>
+                    <select data-cert-type="hysteria"><option value="inherit">跟随默认</option><option value="unchanged">不修改</option><option value="verify">验证</option><option value="skip">不验证</option></select>
+                    <select data-cert-type="hysteria2"><option value="inherit">跟随默认</option><option value="unchanged">不修改</option><option value="verify">验证</option><option value="skip">不验证</option></select>
+                    <select data-cert-type="tuic"><option value="inherit">跟随默认</option><option value="unchanged">不修改</option><option value="verify">验证</option><option value="skip">不验证</option></select>
+                    <select data-cert-type="anytls"><option value="inherit">跟随默认</option><option value="unchanged">不修改</option><option value="verify">验证</option><option value="skip">不验证</option></select>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card advanced">
+              <div class="step-head" style="padding-top:20px"><div class="step-no"><svg class="icon"><use href="#i-settings"/></svg></div><div><div class="step-title">高级配置</div><div class="step-desc">DNS、分流组、规则集、证书和出站配置按需展开。</div></div></div>
+              <div class="advanced-grid">
+                <button class="adv-btn" data-adv="dns"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-globe"/></svg>DNS</div><div class="adv-sub">国内 / 国际 DNS</div></button>
+                <button class="adv-btn" data-adv="groups"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-layers"/></svg>分流组</div><div class="adv-sub">应用分流</div></button>
+                <button class="adv-btn" data-adv="rules"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-rules"/></svg>规则集</div><div class="adv-sub">自定义规则</div></button>
+                <button class="adv-btn" data-adv="order"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-sort"/></svg>规则顺序</div><div class="adv-sub">匹配优先级</div></button>
+                <button class="adv-btn" data-adv="more"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-settings"/></svg>更多</div><div class="adv-sub">证书 / 其他选项</div></button>
+              </div>
+              <div id="advanced-body" class="adv-body" hidden>
+                <div id="adv-dns">
+                  <div class="mini-grid">
+                    <div class="field"><label>国内 DNS（最多 2 项）</label><div id="dns-domestic" class="option-list"></div></div>
+                    <div class="field"><label>国际 DNS（最多 2 项）</label><div id="dns-international" class="option-list"></div></div>
+                  </div>
+                </div>
+                <div id="adv-groups" hidden><div class="field"><label>应用分流组</label><div id="group-list" class="option-list"></div></div></div>
+                <div id="adv-rules" hidden>
+                  <div class="mini-grid">
+                    <div class="field"><label>规则集</label><div id="ruleset-list" class="option-list"></div></div>
+                    <div class="field"><label>自定义规则集链接</label><input id="custom-rule-tag" placeholder="例如：geosite-example"><input id="custom-rule-url" style="margin-top:7px" placeholder="https://example.com/rules.srs"><button id="add-rule" class="secondary button-icon" style="margin-top:7px"><svg class="icon sm"><use href="#i-plus"/></svg>添加规则集</button><div id="custom-rules" class="chips"></div></div>
+                  </div>
+                </div>
+                <div id="adv-order" hidden><div class="field"><label>规则匹配顺序</label><div id="rule-order" class="option-list"></div></div></div>
+                <div id="adv-more" hidden>
+                  <div class="mini-grid">
+                    <div class="field"><label>基础模板</label><select id="base-template"><option value="config_phone.json">手机客户端</option><option value="config_openwrt.json" selected>OpenWrt</option><option value="momo.json">Momo</option></select></div>
+                    <div class="field"><label>读取服务端配置选项</label><button id="reload-options" class="secondary button-icon"><svg class="icon sm"><use href="#i-refresh"/></svg>读取 / 刷新</button><div id="options-status" class="status"></div></div>
+                  </div>
+                </div>
+                <div class="advanced-actions"><button id="close-advanced" class="secondary button-icon"><svg class="icon sm"><use href="#i-chevron-up"/></svg>收起</button></div>
+              </div>
+            </section>
+
+            <section class="card bottom-bar">
+              <div class="ready"><span class="dot"></span><span id="ready-text">已选择 OpenWrt · 等待转换</span></div>
+              <div class="bottom-actions"><button id="generate-link" class="secondary">生成远程链接</button><button id="convert" class="primary">开始转换&nbsp; <svg class="icon sm" style="color:currentColor"><use href="#i-arrow-right"/></svg></button></div>
+            </section>
+            <div id="status" class="status"></div>
+          </div>
+
+          <aside class="preview">
+            <section class="card preview-card">
+              <div class="preview-title"><h2>配置预览</h2><button id="edit-preview" class="edit-link">编辑</button></div>
+              <div class="summary">
+                <div class="summary-head"><div class="ok"><svg class="icon"><use href="#i-check"/></svg></div><div><strong id="preview-template">OpenWrt 模板</strong><span id="preview-source">等待添加订阅来源</span></div></div>
+                <div class="stats"><div class="stat"><b id="source-count">0</b><span>订阅源</span></div><div class="stat"><b id="node-count">—</b><span>节点</span></div><div class="stat"><b id="rule-count">—</b><span>规则集</span></div></div>
+              </div>
+              <div class="config-list">
+                <div class="config-row"><span><svg class="icon"><use href="#i-globe"/></svg>DNS</span><span id="dns-summary">默认</span></div>
+                <div class="config-row"><span><svg class="icon"><use href="#i-layers"/></svg>分流组</span><span id="group-summary">默认</span></div>
+                <div class="config-row"><span><svg class="icon"><use href="#i-rules"/></svg>规则集</span><span id="rules-summary">默认</span></div>
+                <div class="config-row"><span><svg class="icon"><use href="#i-shield"/></svg>证书策略</span><span id="cert-summary">不修改</span></div>
+                <div class="config-row"><span><svg class="icon"><use href="#i-route"/></svg>出站配置</span><span id="outbound-summary">模板</span></div>
+              </div>
+              <div class="json-wrap">
+                <div class="json-head"><span>JSON PREVIEW</span><button id="copy-json"><svg class="icon xs"><use href="#i-copy"/></svg>复制</button></div>
+                <pre class="json" id="json-preview">{
+  "dns": { "servers": [...] },
+  "outbounds": [...],
+  "route": { "rules": [...] }
+}</pre>
+              </div>
+              <div class="result" id="result" hidden>
+                <strong class="button-icon"><svg class="icon sm"><use href="#i-check"/></svg>转换成功</strong>
+                <p id="result-text"></p>
+                <div class="result-actions"><button id="download" class="secondary">下载 JSON</button><button id="copy-config" class="secondary">复制配置</button><button id="result-link" class="secondary">创建短链接</button></div>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page" id="page-subscriptions">
+        <div class="page-head"><div><div class="eyebrow">Subscription Manager</div><h1>订阅管理</h1><p>保存机场订阅，组合多个来源，并管理远程配置入口。</p></div><button class="primary" id="refresh-subscriptions">刷新列表</button></div>
+        <div class="manager">
+          <section class="card manager-card"><div class="manager-head"><h2>添加订阅</h2></div><div class="mini-grid" style="margin-top:14px"><div class="field"><label>名称</label><input id="new-sub-name" placeholder="例如：日本机场"></div><div class="field"><label>订阅地址</label><input id="new-sub-url" placeholder="https://example.com/subscribe"></div></div><button class="primary" id="add-subscription" style="margin-top:12px">保存订阅</button><div id="sub-status" class="status"></div></section>
+          <section class="card manager-card"><div class="manager-head"><h2>已保存订阅</h2></div><div id="profiles-list" class="manager" style="margin-top:12px"></div></section>
+        </div>
+      </section>
+
+      <section class="page" id="page-profiles">
+        <div class="page-head"><div><div class="eyebrow">Profiles</div><h1>配置方案</h1><p>把模板、筛选和高级设置沉淀成可重复使用的工作流。</p></div></div>
+        <section class="card manager-card"><div class="manager-head"><h2>推荐的方案结构</h2></div><div class="templates" style="margin-top:14px">
+          <div class="template active"><div class="template-icon"><svg class="icon"><use href="#i-router"/></svg></div><div class="template-title">OpenWrt 主力</div><div class="template-desc">OpenWrt · JP / SG / HK · DNS + 分流</div></div>
+          <div class="template"><div class="template-icon"><svg class="icon"><use href="#i-phone"/></svg></div><div class="template-title">手机日常</div><div class="template-desc">Phone · 轻量规则 · 自动节点</div></div>
+          <div class="template"><div class="template-icon"><svg class="icon"><use href="#i-box"/></svg></div><div class="template-title">Momo</div><div class="template-desc">Momo · 默认出站</div></div>
+          <div class="template"><div class="template-icon"><svg class="icon"><use href="#i-plus"/></svg></div><div class="template-title">新建方案</div><div class="template-desc">从当前转换配置保存</div></div>
+        </div></section>
+      </section>
+
+      <section class="page" id="page-shortlinks">
+        <div class="page-head"><div><div class="eyebrow">Remote Links</div><h1>短链接</h1><p>集中管理远程 sing-box JSON 入口。实际数据来自服务端订阅管理 API。</p></div></div>
+        <section class="card manager-card"><div class="manager-head"><h2>远程订阅</h2><button class="secondary" id="refresh-shortlinks">刷新</button></div><div id="shortlinks-list" class="manager" style="margin-top:12px"><div class="hint">填写 API Key 后点击刷新。</div></div></section>
+      </section>
+
+      <section class="page" id="page-settings">
+        <div class="page-head"><div><div class="eyebrow">Settings</div><h1>设置</h1><p>本地界面偏好不会上传到服务器。</p></div></div>
+        <section class="card manager-card">
+          <div class="field"><label>主题</label><div style="display:flex;gap:8px"><button class="secondary" id="light-setting">浅色</button><button class="secondary" id="dark-setting">深色</button><button class="secondary" id="system-setting">跟随系统</button></div></div>
+          <div class="field" style="margin-top:18px"><label>API Key</label><input id="settings-api-key" type="password" placeholder="与转换页使用相同的 API Key"></div>
+          <div class="hint" style="margin-top:8px">当前原项目的 API Key 仅作为请求头 Authorization: Bearer 发送；本页面不主动持久化。</div>
+        </section>
+      </section>
+    </main>
+  </section>
+</div>
+
+<div id="modal-root" hidden></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const state = {
+    source: "url", template: "config_openwrt.json", baseTemplate: "config_openwrt.json",
+    customTemplate: null, options: null, files: [], customRules: [],
+    certPolicies: {default: "unchanged", vless: "inherit", vmess: "inherit", trojan: "inherit", hysteria: "inherit", hysteria2: "inherit", tuic: "inherit", anytls: "inherit"},
+    dnsDomestic: new Set(), dnsInternational: new Set(), groups: new Set(), rulesets: new Set(),
+    result: null
+  };
+
+  function apiHeaders(json=false) {
+    const key = $("#api-key").value.trim() || $("#settings-api-key").value.trim();
+    return {...(json ? {"Content-Type":"application/json"} : {}), ...(key ? {Authorization:`Bearer ${key}`} : {})};
+  }
+  function setStatus(msg, kind="") { const el=$("#status"); el.textContent=msg; el.className="status "+kind; }
+  function esc(v){ return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+  function lines(v){ return String(v||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean); }
+
+  // Navigation
+  $$(".nav button[data-page]").forEach(btn => btn.addEventListener("click", () => {
+    $$(".nav button").forEach(x=>x.classList.remove("active")); btn.classList.add("active");
+    $$(".page").forEach(x=>x.classList.remove("active")); $(`#page-${btn.dataset.page}`).classList.add("active");
+    if(btn.dataset.page==="subscriptions" || btn.dataset.page==="shortlinks") loadProfiles();
+  }));
+
+  // Theme
+  function applyTheme(mode) {
+    const dark = mode==="dark" || (mode==="system" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("yaml2sb-theme", mode);
+  }
+  $("#theme").onclick=()=>applyTheme(document.documentElement.classList.contains("dark")?"light":"dark");
+  $("#light-setting").onclick=()=>applyTheme("light"); $("#dark-setting").onclick=()=>applyTheme("dark"); $("#system-setting").onclick=()=>applyTheme("system");
+  applyTheme(localStorage.getItem("yaml2sb-theme")||"light");
+
+  // Source tabs
+  function selectSource(mode) {
+    state.source=mode;
+    $$(".source-tab").forEach(b=>b.classList.toggle("active",b.dataset.source===mode));
+    $("#source-url").hidden=mode!=="url"; $("#source-file").hidden=mode!=="file"; $("#source-paste").hidden=mode!=="paste";
+  }
+  $$(".source-tab").forEach(b=>b.onclick=()=>selectSource(b.dataset.source));
+
+  $("#files").addEventListener("change", async e => {
+    const files=[...e.target.files]; const total=files.reduce((n,f)=>n+f.size,0)+state.files.reduce((n,f)=>n+f.size,0);
+    if(total>2*1024*1024){ setStatus("已选择文件总大小不能超过 2 MiB。","error"); return; }
+    state.files.push(...files);
+    const texts=await Promise.all(state.files.map(f=>f.text()));
+    $("#file-preview").value=texts.join("\n");
+    $("#file-preview").hidden=false; $("#file-info").textContent=`已添加 ${state.files.length} 个文件：${state.files.map(f=>f.name).join("、")}`;
+  });
+
+  // Templates
+  function selectTemplate(t) {
+    state.template=t; $$(".template").forEach(x=>x.classList.toggle("active",x.dataset.template===t));
+    if(t==="compose") loadOptions(true);
+    updatePreview();
+  }
+  $$(".template[data-template]").forEach(b=>b.onclick=()=>selectTemplate(b.dataset.template));
+  $("#upload-template-trigger").onclick=()=>$("#custom-template-file").click();
+  $("#custom-template-file").addEventListener("change", async e=>{
+    const f=e.target.files[0]; if(!f)return;
+    try{
+      if(f.size>2*1024*1024) throw new Error("模板文件不能超过 2 MiB");
+      const obj=JSON.parse(await f.text());
+      if(!obj || Array.isArray(obj) || !Array.isArray(obj.outbounds)) throw new Error("JSON 根节点必须为对象且包含 outbounds 数组");
+      state.customTemplate=obj; state.template="upload"; $$(".template").forEach(x=>x.classList.remove("active"));
+      $("#template-status").textContent=`${f.name} · 已载入`; $("#template-status").className="status success"; updatePreview();
+    }catch(err){state.customTemplate=null;$("#template-status").textContent=err.message;$("#template-status").className="status error";}
+  });
+
+  // Filters
+  function chips(input, target) {
+    const values=lines($(input).value.replace(/,/g,"\n")); $(target).innerHTML=values.map(x=>`<span class="chip">${esc(x)}</span>`).join("");
+  }
+  $("#include").oninput=()=>{chips("#include","#include-chips");updatePreview()}; $("#exclude").oninput=()=>{chips("#exclude","#exclude-chips");updatePreview()};
+  const certTypes=["vless","vmess","trojan","hysteria","hysteria2","tuic","anytls"];
+  let activeCertNode="default";
+  function certSelectFor(node){return node==="default"?$("#cert-default"):$(`[data-cert-type="${node}"]`);}
+  function syncCertUI(){
+    const selected=certSelectFor(activeCertNode).value;
+    $$('[data-cert-choice]').forEach(btn=>btn.classList.toggle("active",btn.dataset.certChoice===selected));
+    $$('[data-cert-node]').forEach(btn=>btn.classList.toggle("active",btn.dataset.certNode===activeCertNode));
+  }
+  $$('[data-cert-node]').forEach(btn=>btn.onclick=()=>{activeCertNode=btn.dataset.certNode;syncCertUI()});
+  $$('[data-cert-choice]').forEach(btn=>btn.onclick=()=>{certSelectFor(activeCertNode).value=btn.dataset.certChoice;updatePreview();syncCertUI()});
+  $("#cert-reset-type").onclick=()=>{if(activeCertNode!=="default"){$(`[data-cert-type="${activeCertNode}"]`).value="inherit";updatePreview();syncCertUI()}};
+  syncCertUI();
+
+  // Advanced UI
+  let currentAdv="";
+  $$(".adv-btn").forEach(btn=>btn.onclick=()=>{
+    currentAdv=btn.dataset.adv; $("#advanced-body").hidden=false;
+    ["dns","groups","rules","order","more"].forEach(k=>$("#adv-"+k).hidden=k!==currentAdv);
+  });
+  $("#close-advanced").onclick=()=>$("#advanced-body").hidden=true;
+
+  function optionItem(container, item, set, key, label) {
+    const tag=item.tag||item.name||item;
+    const el=document.createElement("label"); el.className="option";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=set.has(tag); cb.dataset.key=key||tag;
+    cb.onchange=()=>{cb.checked?set.add(tag):set.delete(tag);updatePreview()}; el.append(cb,document.createTextNode(label||tag)); container.append(el);
+  }
+  function renderOptions() {
+    const o=state.options; if(!o)return;
+    $("#dns-domestic").replaceChildren(); $("#dns-international").replaceChildren();
+    (o.dns_servers||[]).forEach(x=>optionItem(x.category==="domestic"?$("#dns-domestic"):$("#dns-international"),x,x.category==="domestic"?state.dnsDomestic:state.dnsInternational,"",`${x.name||x.tag} · ${x.server||x.type||""}`));
+    $("#group-list").replaceChildren(); (o.groups||[]).filter(x=>x.application).forEach(x=>optionItem($("#group-list"),x,state.groups,"",`${x.tag}${x.required?" · 必需":""}`));
+    $("#ruleset-list").replaceChildren(); (o.rule_sets||[]).forEach(x=>optionItem($("#ruleset-list"),x,state.rulesets,"",x.tag));
+    $("#rule-order").innerHTML=(o.matching_rules||[]).map(x=>`<div class="option"><span style="width:24px;color:var(--muted)">${x.index+1}</span><span>${esc(x.outbound||"rule")}</span><span class="hint" style="margin-left:auto">${esc((x.match&&x.match.rule_set)||"默认")}</span></div>`).join("");
+    updatePreview();
+  }
+  async function loadOptions(reset=false) {
+    $("#options-status").textContent="正在读取…";
+    try{
+      const template=state.baseTemplate;
+      const r=await fetch(`/api/options?template=${encodeURIComponent(template)}`,{headers:apiHeaders()});
+      const data=await r.json(); if(!r.ok) throw new Error(data.error||"读取失败");
+      state.options=data; if(reset){state.dnsDomestic.clear();state.dnsInternational.clear();state.groups.clear();state.rulesets.clear();}
+      renderOptions(); $("#options-status").textContent=`已读取 ${data.dns_servers?.length||0} DNS、${data.groups?.length||0} 分流组、${data.rule_sets?.length||0} 规则集`; $("#options-status").className="status success";
+    }catch(e){$("#options-status").textContent=e.message;$("#options-status").className="status error";}
+  }
+  $("#reload-options").onclick=()=>loadOptions(false);
+  $("#base-template").onchange=e=>{state.baseTemplate=e.target.value;loadOptions(true)};
+
+  $("#add-rule").onclick=()=>{
+    const tag=$("#custom-rule-tag").value.trim(), url=$("#custom-rule-url").value.trim();
+    if(!tag||!url){setStatus("请填写自定义规则集名称和 URL。","error");return}
+    state.customRules.push({tag,url,format:"binary",outbound:""});
+    $("#custom-rule-tag").value="";$("#custom-rule-url").value="";
+    $("#custom-rules").innerHTML=state.customRules.map(x=>`<span class="chip">${esc(x.tag)} · ${esc(x.url)}</span>`).join("");
+    updatePreview();
+  };
+
+  function collectTemplateOptions(){
+    if(!state.options) throw new Error("请先在高级配置 → 更多中读取基础配置选项。");
+    return {
+      dns_servers:[...state.dnsDomestic,...state.dnsInternational],
+      custom_dns_servers:[],
+      groups:[...state.groups],
+      custom_groups:[],
+      rule_sets:[...state.rulesets],
+      custom_rule_sets:state.customRules,
+      rule_set_links_only:false,
+      custom_matching_rules:[],
+      rule_order:(state.options.matching_rules||[]).map(x=>String(x.index)),
+      rule_outbounds:{},
+      rule_destinations:{}
+    };
+  }
+
+  function payload() {
+    let p;
+    if(state.source==="url"){const u=lines($("#urls").value);if(!u.length)throw new Error("请先填写订阅 URL。");p={urls:u};}
+    else if(state.source==="file"){if(!state.files.length)throw new Error("请先选择文件。");p={contents:[$("#file-preview").value]};}
+    else {if(!$("#content").value.trim())throw new Error("请先粘贴订阅内容。");p={contents:[$("#content").value]};}
+    if(state.template==="upload"){if(!state.customTemplate)throw new Error("请先选择并上传有效的 JSON 模板。");p.template_json=state.customTemplate;}
+    else if(state.template==="compose"){p.template=state.baseTemplate;p.template_options=collectTemplateOptions();}
+    else p.template=state.template;
+    p.node_filter={include_names:lines($("#include").value.replace(/,/g,"\n")),exclude_names:lines($("#exclude").value.replace(/,/g,"\n")),tls_insecure:{}};
+    const certValue=v=>v==="skip"?true:v==="verify"?false:undefined;
+    const defaultCert=certValue($("#cert-default").value);
+    certTypes.forEach(k=>{
+      const selected=$(`[data-cert-type="${k}"]`).value;
+      const value=selected==="inherit"?defaultCert:certValue(selected);
+      if(value!==undefined) p.node_filter.tls_insecure[k]=value;
+    });
+    return p;
+  }
+
+  async function requestConversion(p){
+    const r=await fetch("/api",{method:"POST",headers:apiHeaders(true),body:JSON.stringify(p)});
+    const data=await r.json();if(!r.ok)throw new Error(data.error||"转换失败，请检查输入。");return data;
+  }
+
+  function updatePreview(){
+    const names={"config_phone.json":"手机客户端","config_openwrt.json":"OpenWrt","momo.json":"Momo",compose:"自定义",upload:"上传模板"};
+    const t=names[state.template]||state.template;
+    $("#preview-template").textContent=t+" 模板";
+    const urls=lines($("#urls").value);$("#source-count").textContent=state.source==="url"?urls.length:(state.source==="file"?state.files.length:(state.source==="paste"&&$("#content").value.trim()?1:0));
+    $("#preview-source").textContent=state.source==="url"?(urls.length?`${urls.length} 个远程来源`:"等待添加订阅来源"):"等待转换";
+    $("#dns-summary").textContent=(state.dnsDomestic.size+state.dnsInternational.size)||"默认";
+    $("#group-summary").textContent=state.groups.size||"默认";
+    $("#rules-summary").textContent=(state.rulesets.size+state.customRules.length)||"默认";
+    const certDefault=$("#cert-default").value;
+    const certOverrides=certTypes.filter(k=>$(`[data-cert-type="${k}"]`).value!=="inherit").length;
+    const certText=certOverrides?`${certOverrides} 类单独设置`:(certDefault==="unchanged"?"不修改":(certDefault==="skip"?"不验证":"验证"));
+    $("#cert-summary").textContent=certText;
+    $("#outbound-summary").textContent=t==="OpenWrt"?"6 个":"模板";
+    $("#ready-text").textContent=`已选择 ${t} · ${$("#source-count").textContent==="0"?"等待添加来源":"准备就绪"}`;
+  }
+
+  $("#convert").onclick=async()=>{
+    const b=$("#convert");b.disabled=true;setStatus("正在转换…");
+    try{
+      const result=await requestConversion(payload());state.result=result;
+      $("#node-count").textContent=result.node_count??"—";$("#rule-count").textContent=result.rule_count??"—";
+      $("#result").hidden=false;$("#result-text").textContent=`解析 ${result.node_count??"?"} 个节点 · ${lines($("#urls").value).length||1} 个来源`;
+      $("#json-preview").textContent=JSON.stringify(result.config,null,2).slice(0,12000);
+      setStatus("转换成功。配置已经生成，可下载或复制。","success");
+    }catch(e){setStatus(e.message,"error")}finally{b.disabled=false}
+  };
+
+  $("#download").onclick=()=>{
+    if(!state.result)return;const blob=new Blob([JSON.stringify(state.result.config,null,2)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sing-box-config.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
+  $("#copy-config").onclick=async()=>{if(state.result){await navigator.clipboard.writeText(JSON.stringify(state.result.config,null,2));setStatus("配置已复制。","success")}};
+  $("#copy-json").onclick=async()=>{await navigator.clipboard.writeText($("#json-preview").textContent);setStatus("JSON 预览已复制。","success")};
+
+  function remoteLink(){
+    try{
+      if(state.source!=="url")throw new Error("远程订阅直链需要使用订阅 URL 来源。");
+      const urls=lines($("#urls").value);if(!urls.length)throw new Error("请先填写订阅 URL。");
+      if(state.template==="custom"||state.template==="compose")throw new Error("直链仅支持内置模板；自定义配置请保存为订阅短链接。");
+      if(lines($("#include").value)||lines($("#exclude").value))throw new Error("远程直链不支持节点筛选，请保存为订阅组合。");
+      const p=new URLSearchParams();urls.forEach(u=>p.append("url",u));
+      p.set("template",state.template==="config_phone.json"?"phone":state.template==="config_openwrt.json"?"openwrt":"momo");
+      const key=$("#api-key").value.trim()||$("#settings-api-key").value.trim();if(key)p.set("api_key",key);
+      const link=`${location.origin}/sub?${p}`;showModal("远程订阅链接",`<div class="field"><label>sing-box 远程配置</label><input id="modal-link" value="${esc(link)}" readonly></div><button class="primary" style="margin-top:12px;width:100%" id="modal-copy">复制链接</button>`);
+      $("#modal-copy").onclick=async()=>{await navigator.clipboard.writeText(link);$("#modal-copy").textContent="已复制 ✓"};
+    }catch(e){setStatus(e.message,"error")}
+  }
+  $("#generate-link").onclick=remoteLink;$("#result-link").onclick=remoteLink;
+
+  // Profiles / subscription management
+  async function profileRequest(path,opts={}){
+    const key=$("#api-key").value.trim()||$("#settings-api-key").value.trim();if(!key)throw new Error("请先填写 API 访问密钥。");
+    const r=await fetch(path,{...opts,headers:{...(opts.body?{"Content-Type":"application/json"}:{}),Authorization:`Bearer ${key}`}});
+    const data=r.status===204?null:await r.json();if(!r.ok)throw new Error(data?.error||"订阅管理请求失败。");return data;
+  }
+  async function loadProfiles(){
+    try{
+      const list=await profileRequest("/api/subscriptions");
+      renderProfiles(list);
+    }catch(e){$("#profiles-list").innerHTML=`<div class="hint">${esc(e.message)}</div>`;$("#shortlinks-list").innerHTML=`<div class="hint">${esc(e.message)}</div>`}
+  }
+  function renderProfiles(list){
+    const html=list.length?list.map(p=>`<article class="profile"><div class="profile-name">${esc(p.name)}</div><div class="profile-meta">${p.source_type==="urls"?"远程订阅":"文本订阅"} · ${p.source_count} 个来源</div><div class="profile-link">${esc(location.origin+p.short_path)}</div><div class="profile-actions"><button class="secondary copy-profile" data-link="${esc(location.origin+p.short_path)}">复制短链接</button><button class="secondary delete-profile" data-id="${esc(p.id)}">删除</button></div></article>`).join(""):`<div class="hint">还没有保存的订阅配置。</div>`;
+    $("#profiles-list").innerHTML=html;$("#shortlinks-list").innerHTML=html;
+    $$(".copy-profile").forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.dataset.link);b.textContent="已复制 ✓";});
+    $$(".delete-profile").forEach(b=>b.onclick=async()=>{if(!confirm("确定删除这个订阅配置？现有短链接会失效。"))return;try{await profileRequest(`/api/subscriptions/${encodeURIComponent(b.dataset.id)}`,{method:"DELETE"});loadProfiles()}catch(e){alert(e.message)}});
+  }
+  $("#refresh-subscriptions").onclick=loadProfiles;$("#refresh-shortlinks").onclick=loadProfiles;
+  $("#add-subscription").onclick=async()=>{
+    const name=$("#new-sub-name").value.trim(),url=$("#new-sub-url").value.trim();if(!name||!url){$("#sub-status").textContent="请填写名称和订阅地址。";$("#sub-status").className="status error";return}
+    try{const r=await profileRequest("/api/subscriptions",{method:"POST",body:JSON.stringify({name,urls:[url]})});$("#sub-status").textContent=`已保存：${location.origin}${r.short_path}`;$("#sub-status").className="status success";$("#new-sub-name").value="";$("#new-sub-url").value="";loadProfiles()}catch(e){$("#sub-status").textContent=e.message;$("#sub-status").className="status error"}
+  };
+
+  // Save current config as subscription
+  $("#result-link").onclick=remoteLink;
+
+  // Modal
+  function showModal(title,body){
+    $("#modal-root").hidden=false;$("#modal-root").innerHTML=`<div class="modal-backdrop"><div class="modal"><div class="modal-head"><h2>${esc(title)}</h2><button class="close" id="modal-close">×</button></div>${body}</div></div>`;
+    $("#modal-close").onclick=()=>$("#modal-root").hidden=true;
+  }
+  $("#edit-preview").onclick=()=>document.querySelector(".advanced").scrollIntoView({behavior:"smooth",block:"center"});
+
+  // Initial option loading is intentionally lazy: only advanced custom mode calls /api/options.
+  updatePreview();
+})();
+</script>
+</body>
+</html>
