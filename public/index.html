@@ -238,7 +238,7 @@
     .dns-option-add { width: 100%; min-height: 38px; border: 0; background: transparent; text-align: left; font: inherit; font-size: 13px; line-height: 1.4; cursor: pointer; }
     .dns-option-add:hover { background: #f1f1ef; }
     .dns-select-hint { margin-top: 5px; }
-    .match-builder { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(190px, 1.2fr) minmax(190px, 1.2fr) minmax(150px, .8fr); align-items: end; gap: 10px; padding: 14px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
+    .match-builder { min-width: 0; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, .8fr); align-items: end; gap: 10px; padding: 14px; border: 1px solid #d9dcdf; border-radius: 4px; background: #f8f9fa; }
     .match-builder label { margin-bottom: 6px; font-size: 13px; font-weight: 600; text-align: center; }
     .match-builder .secondary { font-size: 13px; }
     .match-name-fields {
@@ -381,6 +381,39 @@
     .api-key-field { min-width: 0; container-type: inline-size; }
     .api-key-field > label { text-align: center; margin-bottom: 8px; }
     .api-key-input-wrap { position: relative; }
+    .api-key-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 40px;
+      gap: 7px;
+      align-items: stretch;
+    }
+    .api-key-reload {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      min-height: 40px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ui-line-strong);
+      border-radius: 9px;
+      background: var(--ui-panel-soft);
+      color: var(--ui-text);
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .api-key-reload:hover { background: var(--ui-hover); }
+    .api-key-reload:disabled { opacity: .6; cursor: wait; }
+    .api-key-reload svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
     #api-key {
       width: 100%;
       height: 40px;
@@ -2074,7 +2107,7 @@ html:not(.dark) .divider {
                 <aside class="source-side">
                   <h3>支持的来源</h3>
                   <ul><li>HTTP / HTTPS 订阅 URL</li><li>YAML / TXT / JSON 文件</li><li>Base64 订阅内容</li><li>Clash 代理 URI</li></ul>
-                  <div style="margin-top:14px" class="field"><label>API 访问密钥</label><input id="api-key" type="password" placeholder="留空表示无需鉴权"></div>
+                  <div style="margin-top:14px" class="field"><label>API 访问密钥</label><div class="api-key-row"><input id="api-key" type="password" placeholder="留空表示无需鉴权"><button id="reload-options-api-key" class="api-key-reload" type="button" aria-label="读取 / 刷新基础配置选项" title="读取 / 刷新基础配置选项"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M5.64 5.64A9 9 0 0 1 20 12M4 12a9 9 0 0 0 14.36 6.36"/></svg></button></div></div>
                   <div class="hint api-key-security-hint" style="margin-top:7px">仅随请求发送，不写入 localStorage。</div>
                 </aside>
               </div>
@@ -3152,8 +3185,35 @@ html:not(.dark) .divider {
       };
     }
 
+    const apiKeyReloadButton = document.querySelector("#reload-options-api-key");
+    let apiKeyReloadTimer = null;
+    async function reloadOptionsFromApiKey() {
+      if (template.value !== "compose") {
+        template.value = "compose";
+        template.dispatchEvent(new Event("change", { bubbles: true }));
+        return;
+      }
+      apiKeyReloadButton.disabled = true;
+      try {
+        await loadConfigurationOptions(false);
+      } finally {
+        apiKeyReloadButton.disabled = false;
+      }
+    }
     apiKey.addEventListener("input", () => {
       apiKeyHint.hidden = Boolean(apiKey.value);
+      clearTimeout(apiKeyReloadTimer);
+      if (!apiKey.value.trim()) return;
+      apiKeyReloadTimer = setTimeout(() => reloadOptionsFromApiKey(), 450);
+    });
+    apiKey.addEventListener("change", () => {
+      if (apiKey.value.trim()) reloadOptionsFromApiKey();
+    });
+    apiKey.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && apiKey.value.trim()) {
+        event.preventDefault();
+        reloadOptionsFromApiKey();
+      }
     });
 
     template.addEventListener("change", () => {
@@ -3243,6 +3303,7 @@ html:not(.dark) .divider {
 
     baseTemplate.addEventListener("change", () => loadConfigurationOptions(true));
     document.querySelector("#reload-options").addEventListener("click", () => loadConfigurationOptions());
+    apiKeyReloadButton.addEventListener("click", () => reloadOptionsFromApiKey());
     const dnsCategoryTabs = [...document.querySelectorAll("[data-dns-category]")];
     const dnsCategoryPanels = [...document.querySelectorAll("[data-dns-panel]")];
     function selectDnsCategory(category) {
