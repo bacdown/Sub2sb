@@ -2273,7 +2273,6 @@ html:not(.dark) .divider {
 .selection-tools label { display:inline-flex; align-items:center; gap:4px; margin:0; font-size:11px; font-weight:400; }
 .selection-tools .text-button { margin:0; padding:0; border:0; background:transparent; color:var(--ui-muted); font:inherit; line-height:1; cursor:pointer; }
 .choice-select { width:100%; min-width:0; height:25px; min-height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:11px; }
-.rule-set-choice-select { height:25px; }
 .dns-option > span,
 #custom-dns-list .added-item { font-size:11px !important; font-weight:400; line-height:1.45; }
 .compose-add-title { margin-bottom:8px; font-size:13px; font-weight:700; }
@@ -2281,12 +2280,83 @@ html:not(.dark) .divider {
 .compose-add-row input { width:100%; min-height:25px; height:25px; padding:0 8px; border:1px solid var(--ui-line-strong); border-radius:4px; background:var(--ui-input); color:var(--ui-text); font-size:13px; }
 .compose-add-row .secondary { min-height:25px; height:25px; padding:0 10px; font-size:13px; white-space:nowrap; }
 .compose-add-choices { min-width:0; min-height:25px; padding:0; }
-.compose-add-choices .choice-select { width:100%; }
+.multi-select-dropdown { position:relative; width:100%; min-width:0; }
+.multi-select-dropdown > summary {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  min-height:25px;
+  height:25px;
+  padding:0 8px;
+  border:1px solid var(--ui-line-strong);
+  border-radius:4px;
+  background:var(--ui-input);
+  color:var(--ui-text);
+  font-size:11px;
+  line-height:1;
+  cursor:pointer;
+  list-style:none;
+  user-select:none;
+}
+.multi-select-dropdown > summary::-webkit-details-marker { display:none; }
+.multi-select-dropdown > summary::after { content:"⌄"; margin-left:8px; color:var(--ui-muted); font-size:12px; }
+.multi-select-dropdown[open] > summary { border-color:var(--ui-accent); }
+.multi-select-dropdown[open] > summary::after { content:"⌃"; }
+.multi-select-options {
+  position:absolute;
+  z-index:30;
+  top:calc(100% + 4px);
+  left:0;
+  right:0;
+  display:grid;
+  gap:1px;
+  max-height:220px;
+  overflow-y:auto;
+  padding:4px;
+  border:1px solid var(--ui-line-strong);
+  border-radius:5px;
+  background:var(--ui-panel);
+  box-shadow:0 8px 20px rgb(0 0 0 / 10%);
+}
+.multi-select-option {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-height:28px;
+  margin:0;
+  padding:4px 6px;
+  border-radius:3px;
+  color:var(--ui-text);
+  font-size:11px;
+  font-weight:400;
+  line-height:1.3;
+  cursor:pointer;
+}
+.multi-select-option:hover { background:var(--ui-hover); }
+.multi-select-option input { flex:none; margin:0; }
+.rule-set-choice-list {
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+  padding:0 !important;
+}
+.rule-set-choice-list .choice {
+  min-height:28px;
+  align-items:center;
+  padding:4px 2px;
+  border-bottom:1px solid var(--ui-line);
+  font-size:11px;
+}
+.rule-set-choice-list .choice:last-child { border-bottom:0; }
+.rule-set-choice-list .choice input { margin:0 5px 0 0; }
 #advanced-groups-content > .choice-list,
 #advanced-rules-content > .choice-list {
-  max-height: 260px;
-  overflow: auto;
-  padding: 2px;
+  max-height:none;
+  overflow:visible;
+  padding:2px;
 }
 #advanced-groups-content > .compose-add-panel { margin-top:10px; }
 #advanced-rules-content > .rule-link-details { margin-top:10px; }
@@ -3029,22 +3099,48 @@ html:not(.dark) .divider {
       container.append(label);
     }
 
-    function renderRuleSetSelect(container, items, selectedValues = []) {
+    function renderRuleSetChoices(container, items, selectedValues = []) {
       if (!container) return;
       const selected = new Set(selectedValues);
       container.replaceChildren();
-      const select = document.createElement("select");
-      select.multiple = true;
-      select.className = "choice-select rule-set-choice-select";
-      select.setAttribute("aria-label", "规则集");
+      container.classList.add("rule-set-choice-list");
+      items.forEach((item) => {
+        addChoice(container, item.tag, item.tag, selected.has(item.tag));
+      });
+    }
+
+    function renderMultiSelectDropdown(container, items, selectedValues = [], placeholder = "选择规则集") {
+      if (!container) return;
+      const selected = new Set(selectedValues);
+      container.replaceChildren();
+      const details = document.createElement("details");
+      details.className = "multi-select-dropdown";
+      const summary = document.createElement("summary");
+      const label = document.createElement("span");
+      label.className = "multi-select-label";
+      const updateLabel = () => {
+        const values = [...panel.querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value);
+        label.textContent = values.length ? (values.length > 2 ? `已选择 ${values.length} 项` : values.join("、")) : placeholder;
+      };
+      summary.append(label);
+      const panel = document.createElement("div");
+      panel.className = "multi-select-options";
       for (const item of items) {
-        const option = document.createElement("option");
-        option.value = item.tag;
-        option.textContent = item.tag;
-        option.selected = selected.has(item.tag);
-        select.append(option);
+        const option = document.createElement("label");
+        option.className = "multi-select-option";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = item.tag;
+        input.checked = selected.has(item.tag);
+        const text = document.createElement("span");
+        text.textContent = item.tag;
+        option.append(input, text);
+        input.addEventListener("change", updateLabel);
+        panel.append(option);
       }
-      container.append(select);
+      details.append(summary, panel);
+      container.append(details);
+      updateLabel();
     }
 
     function addSelectionTools(container, key) {
@@ -3456,17 +3552,18 @@ html:not(.dark) .divider {
       const container = document.querySelector("#new-group-rule-sets");
       if (!container) return;
       const selected = checkedValues(container);
-      renderRuleSetSelect(
+      renderMultiSelectDropdown(
         container,
         allRuleSetTags().map((tag) => ({ tag })),
         selected,
+        "选择规则集",
       );
     }
 
     function renderCustomItems() {
       renderGroupRuleSetChoices();
       const selectedRuleSets = checkedValues(ruleSetChoices);
-      renderRuleSetSelect(
+      renderRuleSetChoices(
         ruleSetChoices,
         [
           ...(configurationOptions?.rule_sets || []),
@@ -3562,7 +3659,7 @@ html:not(.dark) .divider {
             item.required,
           );
         }
-        renderRuleSetSelect(
+        renderRuleSetChoices(
           ruleSetChoices,
           result.rule_sets,
           result.rule_sets.map((item) => item.tag),
