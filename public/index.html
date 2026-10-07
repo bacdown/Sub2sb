@@ -370,21 +370,22 @@
     .api-key-input-wrap { position: relative; }
     #api-key {
       width: 100%;
-      height: 36px;
-      min-height: 36px;
-      padding: 0 8px;
-      border: 1px solid #c9cdd1;
-      border-radius: 4px;
+      height: 40px;
+      min-height: 40px;
+      padding: 0 11px;
+      border: 1px solid var(--ui-line-strong);
+      border-radius: 9px;
       outline: none;
-      background: #fff;
-      color: #37352f;
-      font-size: 13px;
+      background: var(--ui-input);
+      color: var(--ui-text);
+      font-size: 12.5px;
+      line-height: 1.5;
       text-align: left;
       box-shadow: none;
     }
     #api-key:focus {
-      border-color: #a5a4a0;
-      box-shadow: 0 0 0 2px rgb(55 53 47 / 8%);
+      border-color: var(--ui-accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 14%, transparent);
     }
     .api-key-security-hint { white-space: nowrap; }
     .api-key-hint {
@@ -830,6 +831,18 @@
     .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px #eaf9f2; }
     .bottom-actions { display: flex; gap: 8px; }
     .bottom-actions .primary { width: auto; }
+    .bottom-actions { gap: 7px; }
+    .bottom-actions .secondary,
+    .bottom-actions .primary {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1;
+    }
+    .bottom-actions .primary { font-weight: 700; }
+    .bottom-actions .primary .icon { width: 15px; height: 15px; }
     html.dark .source-layout, html.dark .subscription-controls, html.dark .adv-btn { background: var(--surface); }
     .preview { position: sticky; top: 88px; min-width: 0; }
     .preview-card { padding: 17px; }
@@ -2246,7 +2259,7 @@ html:not(.dark) .divider {
             <section class="card preview-card" aria-label="配置预览">
               <div class="preview-title"><h2>配置预览</h2><button class="edit-link" id="edit-preview" type="button">编辑选项</button></div>
               <div class="summary">
-                <div class="summary-head"><span class="ok"><svg class="icon"><use href="#i-check"/></svg></span><div><strong id="preview-template">iPhone 配置</strong><span id="preview-source">等待添加订阅来源</span></div></div>
+                <div class="summary-head"><div class="ok"><svg class="icon"><use href="#i-check"/></svg></div><div><strong id="preview-template">iPhone 配置</strong><span id="preview-source">等待添加订阅来源</span></div></div>
                 <div class="stats"><div class="stat"><b id="source-count">0</b><span>订阅源</span></div><div class="stat"><b id="preview-node-count">—</b><span>节点</span></div><div class="stat"><b id="preview-rule-count">—</b><span>规则集</span></div></div>
               </div>
               <div class="config-list">
