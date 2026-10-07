@@ -2311,8 +2311,6 @@ html:not(.dark) .divider {
   right:0;
   display:grid;
   gap:1px;
-  max-height:220px;
-  overflow-y:auto;
   padding:4px;
   border:1px solid var(--ui-line-strong);
   border-radius:5px;
@@ -4106,6 +4104,8 @@ html:not(.dark) .divider {
       customGroups.push({ tag: name, rule_sets: ruleSets });
       input.value = "";
       document.querySelectorAll("#new-group-rule-sets input[type=\"checkbox\"]").forEach((item) => { item.checked = false; });
+      const groupRuleSetDetails = document.querySelector("#new-group-rule-sets .multi-select-dropdown");
+      if (groupRuleSetDetails) groupRuleSetDetails.removeAttribute("open");
       renderCustomItems();
       renderMatchBuilderOptions();
       renderMatchingRules();
