@@ -304,11 +304,14 @@
     .rule-link-fields {
       display: grid;
       grid-template-columns: minmax(110px, .9fr) minmax(200px, 2fr) minmax(120px, .85fr) minmax(110px, .9fr) minmax(96px, auto);
-      align-items: end;
+      align-items: start;
       gap: 10px;
       margin-top: 12px;
     }
-    .rule-link-fields label { margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+    .rule-link-fields label { height:18px; margin:0 0 6px; font-size:13px; font-weight:400; line-height:18px; }
+    .rule-link-fields > label { display:grid; grid-template-rows:18px 25px; gap:6px; }
+    .rule-link-fields .rule-link-action { display:grid; grid-template-rows:18px 25px; gap:6px; }
+    .rule-link-fields .rule-link-action .compose-field-label { height:18px; margin:0; line-height:18px; }
     #new-rule-tag,
     #new-rule-url { height: 25px; min-height: 25px; }
     #add-rule-set { height: 25px; min-height: 25px; }
@@ -2261,11 +2264,11 @@ html:not(.dark) .divider {
 #advanced-rules-content .choice-list { border:0 !important; background:transparent !important; }
 .dns-selected-panel h3 { margin-top:0; }
 .compose-add-panel { margin-top:10px; padding-top:10px; border-top:1px solid var(--ui-line); }
-.compose-add-fields { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(0,1.5fr) auto; align-items:end; gap:8px; }
+.compose-add-fields { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(0,1.5fr) auto; align-items:start; gap:8px; }
 .compose-add-fields > .compose-field,
 .compose-add-fields > .compose-add-action { min-height:58px; }
 .compose-add-fields > .compose-field > .compose-field-label,
-.compose-add-fields > .compose-add-action > .compose-field-label { height:18px; margin-bottom:6px; }
+.compose-add-fields > .compose-add-action > .compose-field-label { height:18px; margin:0 0 6px; line-height:18px; }
 .compose-add-fields > .compose-field input,
 .compose-add-fields > .compose-field select,
 .compose-add-fields > .compose-field .multi-select-dropdown > summary,
@@ -2328,36 +2331,40 @@ html:not(.dark) .divider {
 .multi-select-option {
   display:flex;
   align-items:center;
-  gap:7px;
+  width:100%;
   min-height:28px;
   margin:0;
   padding:4px 6px;
+  border:0;
   border-radius:3px;
   color:var(--ui-text);
+  background:transparent;
+  font:inherit;
   font-size:11px;
   font-weight:400;
   line-height:1.3;
+  text-align:left;
   cursor:pointer;
 }
-.multi-select-option:hover { background:var(--ui-hover); }
-.multi-select-option input { flex:none; margin:0; }
+.multi-select-option:hover,
+.multi-select-option[data-selected="true"] { background:var(--ui-hover); }
+.multi-select-option[data-selected="true"] { color:var(--ui-accent); font-weight:600; }
 .rule-set-choice-list {
   display:grid !important;
-  grid-template-columns:1fr !important;
-  gap:0 !important;
-  max-height:none !important;
-  overflow:visible !important;
-  padding:0 !important;
+  grid-template-columns:repeat(auto-fit, minmax(155px, 1fr)) !important;
+  gap:8px !important;
+  max-height:220px !important;
+  overflow:auto !important;
+  padding:2px !important;
 }
 .rule-set-choice-list .choice {
-  min-height:28px;
-  align-items:center;
-  padding:4px 2px;
-  border-bottom:1px solid var(--ui-line);
-  font-size:11px;
+  min-height:0;
+  align-items:flex-start;
+  padding:0;
+  border-bottom:0;
+  font-size:13px;
 }
-.rule-set-choice-list .choice:last-child { border-bottom:0; }
-.rule-set-choice-list .choice input { margin:0 5px 0 0; }
+.rule-set-choice-list .choice input { margin:2px 0 0; }
 #advanced-rules-content .choice-selection-panel { margin-top:0; }
 #advanced-rules-content .selection-tools { margin-bottom:6px; }
 #advanced-groups-content > .choice-list,
@@ -3089,6 +3096,11 @@ html:not(.dark) .divider {
     function checkedValues(container) {
       const select = container.querySelector("select[multiple]");
       if (select) return [...select.selectedOptions].map((option) => option.value);
+      const dropdown = container.querySelector(".multi-select-dropdown");
+      if (dropdown) {
+        return [...dropdown.querySelectorAll(".multi-select-option[data-selected=\"true\"]")]
+          .map((option) => option.dataset.value);
+      }
       return [...container.querySelectorAll('input[type="checkbox"]:checked')]
         .map((input) => input.value);
     }
@@ -3126,24 +3138,30 @@ html:not(.dark) .divider {
       const summary = document.createElement("summary");
       const label = document.createElement("span");
       label.className = "multi-select-label";
-      const updateLabel = () => {
-        const values = [...panel.querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value);
-        label.textContent = values.length ? (values.length > 2 ? `已选择 ${values.length} 项` : values.join("、")) : placeholder;
-      };
-      summary.append(label);
       const panel = document.createElement("div");
       panel.className = "multi-select-options";
+      const updateLabel = () => {
+        const values = [...panel.querySelectorAll(".multi-select-option[data-selected=\"true\"]")]
+          .map((option) => option.dataset.value);
+        label.textContent = values.length
+          ? (values.length > 2 ? `已选择 ${values.length} 项` : values.join("、"))
+          : placeholder;
+      };
+      summary.append(label);
       for (const item of items) {
-        const option = document.createElement("label");
+        const option = document.createElement("button");
+        option.type = "button";
         option.className = "multi-select-option";
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.value = item.tag;
-        input.checked = selected.has(item.tag);
+        option.dataset.value = item.tag;
+        option.dataset.selected = String(selected.has(item.tag));
         const text = document.createElement("span");
         text.textContent = item.tag;
-        option.append(input, text);
-        input.addEventListener("change", updateLabel);
+        option.append(text);
+        option.addEventListener("click", (event) => {
+          event.preventDefault();
+          option.dataset.selected = String(option.dataset.selected !== "true");
+          updateLabel();
+        });
         panel.append(option);
       }
       details.append(summary, panel);
