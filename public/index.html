@@ -820,6 +820,8 @@
     .adv-btn:hover, .adv-btn[aria-pressed="true"] { border-color: #b2bcff; background: var(--accent-soft); }
     .adv-title { font-size: 12px; font-weight: 800; }
     .adv-sub { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .advanced-panel { padding-top: 16px; }
+    .advanced-panel[hidden] { display: none !important; }
     .bottom-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
     .ready { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
     .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px #eaf9f2; }
@@ -969,7 +971,7 @@
       .filter-grid { grid-template-columns: 1fr; }
     }
   
-    /* ---- UI refinement: yaml2sb 2.0 ---- */
+    /* ---- UI refinement: yaml2sb ---- */
     :root {
       --ui-bg: #f5f6f7;
       --ui-panel: #ffffff;
@@ -1843,7 +1845,7 @@ html.dark .rule-link-details {
       <main class="content">
         <section class="page active" id="page-convert">
         <div class="page-head">
-          <div><div class="eyebrow">yaml2sb 2.0</div><h1 id="page-title">订阅转换</h1><p>将 Clash / YAML / 订阅内容转换为 sing-box 配置，支持多订阅合并、节点筛选和高级规则。</p></div>
+          <div><div class="eyebrow">yaml2sb</div><h1 id="page-title">订阅转换</h1><p>将 Clash / YAML / 订阅内容转换为 sing-box 配置，支持多订阅合并、节点筛选和高级规则。</p></div>
         </div>
         <div class="workspace">
           <div class="stack">
@@ -1940,13 +1942,27 @@ html.dark .rule-link-details {
           </section>
       </div>
       <section class="card advanced">
-        <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-settings"/></svg></div><div><div class="step-title">高级配置</div><div class="step-desc">DNS、分流组、规则集和匹配顺序按需展开。</div></div></div>
-        <div class="advanced-grid">
-          <button class="adv-btn" type="button" data-adv="dns"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-globe"/></svg>DNS</div><div class="adv-sub">国内 / 国际 DNS</div></button>
-          <button class="adv-btn" type="button" data-adv="groups"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-layers"/></svg>分流组</div><div class="adv-sub">应用分流与出站</div></button>
-          <button class="adv-btn" type="button" data-adv="rules"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-rules"/></svg>规则集</div><div class="adv-sub">内置 / 自定义规则</div></button>
-          <button class="adv-btn" type="button" data-adv="order"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-sort"/></svg>规则顺序</div><div class="adv-sub">调整匹配优先级</div></button>
-          <button class="adv-btn" type="button" data-adv="more"><div class="adv-title button-icon"><svg class="icon sm"><use href="#i-sliders"/></svg>更多</div><div class="adv-sub">自定义模板选项</div></button>
+        <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-settings"/></svg></div><div><div class="step-title">高级配置</div><div class="step-desc">按分项展开配置，保持当前页面位置与操作状态。</div></div></div>
+        <div class="advanced-grid" role="tablist" aria-label="高级配置分项">
+          <button class="adv-btn" type="button" data-adv="dns" role="tab" aria-selected="true" aria-controls="advanced-panel-dns" aria-pressed="true"><span class="adv-title"><svg class="icon sm"><use href="#i-globe"/></svg>DNS</span></button>
+          <button class="adv-btn" type="button" data-adv="groups" role="tab" aria-selected="false" aria-controls="advanced-panel-groups" aria-pressed="false"><span class="adv-title"><svg class="icon sm"><use href="#i-layers"/></svg>分流组</span></button>
+          <button class="adv-btn" type="button" data-adv="rules" role="tab" aria-selected="false" aria-controls="advanced-panel-rules" aria-pressed="false"><span class="adv-title"><svg class="icon sm"><use href="#i-rules"/></svg>规则集</span></button>
+          <button class="adv-btn" type="button" data-adv="order" role="tab" aria-selected="false" aria-controls="advanced-panel-order" aria-pressed="false"><span class="adv-title"><svg class="icon sm"><use href="#i-sort"/></svg>规则顺序</span></button>
+          <button class="adv-btn" type="button" data-adv="more" role="tab" aria-selected="false" aria-controls="advanced-panel-more" aria-pressed="false"><span class="adv-title"><svg class="icon sm"><use href="#i-sliders"/></svg>更多</span></button>
+        </div>
+        <div class="advanced-panel" id="advanced-panel-dns" role="tabpanel">
+          <div id="advanced-dns-content"></div>
+        </div>        <div class="advanced-panel" id="advanced-panel-groups" role="tabpanel" hidden>
+          <div id="advanced-groups-content"></div>
+        </div>
+        <div class="advanced-panel" id="advanced-panel-rules" role="tabpanel" hidden>
+          <div id="advanced-rules-content"></div>
+        </div>
+        <div class="advanced-panel" id="advanced-panel-order" role="tabpanel" hidden>
+          <div id="advanced-order-content"></div>
+        </div>
+        <div class="advanced-panel" id="advanced-panel-more" role="tabpanel" hidden>
+          <div id="advanced-more-content"></div>
         </div>
       </section>
       <section id="compose-panel" class="compose-panel" aria-label="自定义配置制作" hidden>
@@ -2974,23 +2990,63 @@ html.dark .rule-link-details {
       template.dispatchEvent(new Event("change", { bubbles: true }));
       customTemplateFile.click();
     });
-    const advancedTargets = {
-      dns: ".dns-grid",
-      groups: ".match-builder",
-      rules: ".rule-link-details",
-      order: "#matching-rule-list",
-      more: ".base-template-controls",
+    const advancedPanels = Object.fromEntries(
+      [...document.querySelectorAll(".advanced-panel")].map((panel) => [panel.id.replace("advanced-panel-", ""), panel]),
+    );
+    const advancedSources = {
+      dns: document.querySelector(".compose-section:first-child"),
+      groups: document.querySelector(".match-builder"),
+      rules: document.querySelector(".rule-link-details"),
+      moreLabel: document.querySelector('label[for="base-template"]'),
+      more: document.querySelector(".base-template-controls"),
+      orderHeader: document.querySelector(".rule-header"),
+      orderList: document.querySelector("#matching-rule-list"),
+    };
+    const orderWrapper = document.createElement("div");
+    orderWrapper.className = "rule-order-wrap";
+    if (advancedSources.orderHeader) orderWrapper.appendChild(advancedSources.orderHeader);
+    if (advancedSources.orderList) orderWrapper.appendChild(advancedSources.orderList);
+    advancedSources.order = orderWrapper;
+    const advancedHost = {};
+    Object.entries({
+      dns: advancedSources.dns,
+      groups: advancedSources.groups,
+      rules: advancedSources.rules,
+      order: advancedSources.order,
+      more: advancedSources.more,
+    }).forEach(([key, source]) => {
+      if (!source) return;
+      const host = document.querySelector(`#advanced-${key}-content`);
+      if (host) {
+        advancedHost[key] = host;
+        host.appendChild(source);
+      }
+    });
+    if (advancedSources.moreLabel && advancedSources.more) {
+      const moreWrap = document.createElement("div");
+      moreWrap.className = "advanced-more-fields";
+      moreWrap.appendChild(advancedSources.moreLabel);
+      moreWrap.appendChild(advancedSources.more);
+      advancedHost.more?.appendChild(moreWrap);
+    }
+    const activateAdvanced = (key) => {
+      document.querySelectorAll("[data-adv]").forEach((button) => {
+        const selected = button.dataset.adv === key;
+        button.setAttribute("aria-pressed", String(selected));
+        button.setAttribute("aria-selected", String(selected));
+      });
+      Object.entries(advancedPanels).forEach(([name, panel]) => {
+        panel.hidden = name !== key;
+      });
     };
     document.querySelectorAll("[data-adv]").forEach((control) => control.addEventListener("click", () => {
       if (template.value !== "compose") {
         template.value = "compose";
         template.dispatchEvent(new Event("change", { bubbles: true }));
       }
-      document.querySelectorAll("[data-adv]").forEach((button) => {
-        button.setAttribute("aria-pressed", String(button === control));
-      });
-      document.querySelector(advancedTargets[control.dataset.adv])?.scrollIntoView({ behavior: "smooth", block: "center" });
+      activateAdvanced(control.dataset.adv);
     }));
+    activateAdvanced("dns");
 
     baseTemplate.addEventListener("change", () => loadConfigurationOptions(true));
     document.querySelector("#reload-options").addEventListener("click", () => loadConfigurationOptions());
