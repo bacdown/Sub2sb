@@ -301,8 +301,8 @@
       visibility: hidden;
       user-select: none;
     }
-    .rule-order-list { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
-    .rule-order-item { display: grid; grid-template-columns: minmax(140px, .7fr) minmax(150px, 1fr) minmax(190px, 1.2fr) minmax(89px, auto); align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #d9dcdf; border-radius: 4px; background: #fff; }
+    .rule-order-list { display: grid; gap: 0; margin: 8px 0 0; padding: 6px 8px; list-style: none; border: 1px solid var(--ui-line); border-radius: 8px; background: var(--ui-panel); }
+    .rule-order-item { display: grid; grid-template-columns: minmax(140px, .7fr) minmax(150px, 1fr) minmax(190px, 1.2fr) minmax(89px, auto); align-items: center; gap: 8px; padding: 8px 10px; border: 0; border-radius: 0; background: transparent; }
     .rule-summary { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
     .rule-group-name { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
     .rule-set-name { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
@@ -1785,11 +1785,11 @@ html.dark .rule-link-details {
   min-height: 40px;
 }
 .rule-order-item.rule-header {
-  margin-top: 12px;
-  background: var(--ui-panel);
+  margin-top: 0;
+  background: transparent;
 }
 .rule-order-item {
-  background: var(--ui-panel);
+  background: transparent;
 }
 @media (max-width: 900px) {
   .advanced-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
