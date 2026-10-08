@@ -2912,24 +2912,88 @@ html.dark .theme-options .secondary[aria-pressed="true"] {
   border-color: var(--ui-line) !important;
 }
 
-/* Custom DNS: tighter type/category, slightly wider port */
+/* Custom DNS: two rows — tag/type/server/port · category/path/add */
+.custom-dns-fields {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ui-line);
+}
+.custom-dns-fields .compose-add-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
 .custom-dns-add-fields {
   display: grid !important;
-  grid-template-columns:
-    minmax(100px, 1.1fr)
-    88px
-    96px
-    minmax(140px, 1.6fr)
-    72px
-    minmax(100px, 1fr)
-    max-content !important;
+  gap: 10px !important;
+  grid-template-columns: 1fr !important;
+}
+.custom-dns-row {
+  display: grid !important;
   gap: 8px !important;
   align-items: start !important;
 }
-.custom-dns-add-fields > .compose-field,
-.custom-dns-add-fields > .compose-add-action {
-  width: auto;
-  min-width: 0;
+.custom-dns-row-primary {
+  grid-template-columns:
+    minmax(110px, 1.1fr)
+    88px
+    minmax(150px, 1.8fr)
+    72px !important;
+}
+.custom-dns-row-secondary {
+  grid-template-columns:
+    96px
+    minmax(140px, 1.4fr)
+    max-content !important;
+}
+.custom-dns-add-fields .compose-field,
+.custom-dns-add-fields .compose-add-action {
+  display: grid !important;
+  grid-template-rows: 18px 25px !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+.custom-dns-add-fields .compose-field-label {
+  height: 18px !important;
+  margin: 0 !important;
+  line-height: 18px !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: var(--ui-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.custom-dns-add-fields input,
+.custom-dns-add-fields select,
+.custom-dns-add-fields .secondary,
+#new-dns-tag,
+#new-dns-type,
+#new-dns-category,
+#new-dns-server,
+#new-dns-port,
+#new-dns-path,
+#add-dns {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 25px !important;
+  min-height: 25px !important;
+  max-height: 25px !important;
+  box-sizing: border-box !important;
+  padding: 0 8px !important;
+  border: 1px solid var(--ui-line-strong) !important;
+  border-radius: 4px !important;
+  background: var(--ui-input) !important;
+  color: var(--ui-text) !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  font-weight: 400 !important;
+}
+.custom-dns-add-fields input::placeholder {
+  color: var(--ui-muted);
+  opacity: 0.9;
+  font-size: 12px;
 }
 .custom-dns-add-fields #new-dns-type {
   width: 88px !important;
@@ -2949,35 +3013,50 @@ html.dark .theme-options .secondary[aria-pressed="true"] {
   width: 72px !important;
   min-width: 72px !important;
   max-width: 72px !important;
-  text-align: left;
 }
-.custom-dns-add-fields #add-dns {
+/* Match “添加分流组” secondary button */
+.custom-dns-add-fields #add-dns,
+.custom-dns-add-fields .compose-add-action .secondary {
   width: auto !important;
-  min-width: 5.5em !important;
+  min-width: 0 !important;
+  padding: 0 10px !important;
   white-space: nowrap !important;
+  cursor: pointer;
+  background: var(--ui-input) !important;
+  border: 1px solid var(--ui-line-strong) !important;
+  border-radius: 4px !important;
+  color: var(--ui-text) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  box-shadow: none !important;
 }
-@media (max-width: 900px) {
-  .custom-dns-add-fields {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+.custom-dns-add-fields #add-dns:hover,
+.custom-dns-add-fields .compose-add-action .secondary:hover {
+  background: var(--ui-hover) !important;
+}
+@media (max-width: 720px) {
+  .custom-dns-row-primary {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .custom-dns-row-secondary {
+    grid-template-columns: 1fr 1fr !important;
   }
   .custom-dns-add-fields #new-dns-type,
   .custom-dns-add-fields #new-dns-category,
-  .custom-dns-add-fields #new-dns-port,
-  .custom-dns-add-fields #add-dns {
+  .custom-dns-add-fields #new-dns-port {
     width: 100% !important;
     min-width: 0 !important;
     max-width: none !important;
   }
-}
-@media (max-width: 560px) {
-  .custom-dns-add-fields {
-    grid-template-columns: 1fr 1fr !important;
-  }
-  .custom-dns-add-fields > .compose-add-action {
+  .custom-dns-add-fields .compose-add-action {
     grid-column: 1 / -1;
+  }
+  .custom-dns-add-fields #add-dns {
+    width: 100% !important;
   }
 }
 </style>
+
 
 </head>
 <body>
@@ -3217,45 +3296,49 @@ html.dark .theme-options .secondary[aria-pressed="true"] {
               <p id="dns-selection-status" class="hint dns-selection-status" aria-live="polite"></p>
               <div id="custom-dns-fields" class="custom-dns-fields" hidden>
                 <div class="compose-add-title">自定义 DNS 服务器</div>
-                <div class="compose-add-fields compose-add-align custom-dns-add-fields">
-                  <div class="compose-field">
-                    <span class="compose-field-label">标签</span>
-                    <input id="new-dns-tag" type="text" placeholder="如 custom-dns" aria-label="自定义 DNS 标签">
+                <div class="custom-dns-add-fields">
+                  <div class="custom-dns-row custom-dns-row-primary">
+                    <div class="compose-field">
+                      <span class="compose-field-label">标签</span>
+                      <input id="new-dns-tag" type="text" placeholder="如 custom-dns" aria-label="自定义 DNS 标签">
+                    </div>
+                    <div class="compose-field">
+                      <span class="compose-field-label">类型</span>
+                      <select id="new-dns-type" aria-label="自定义 DNS 类型">
+                        <option value="https">HTTPS</option>
+                        <option value="tls">TLS</option>
+                        <option value="quic">QUIC</option>
+                        <option value="h3">HTTP/3</option>
+                        <option value="udp">UDP</option>
+                        <option value="tcp">TCP</option>
+                        <option value="local">本地 DNS</option>
+                      </select>
+                    </div>
+                    <div class="compose-field custom-dns-server-field">
+                      <span class="compose-field-label">服务器</span>
+                      <input id="new-dns-server" type="text" placeholder="1.1.1.1 或域名" aria-label="DNS 服务器地址">
+                    </div>
+                    <div class="compose-field custom-dns-port-field">
+                      <span class="compose-field-label">端口</span>
+                      <input id="new-dns-port" type="number" min="1" max="65535" placeholder="可选" aria-label="DNS 服务器端口">
+                    </div>
                   </div>
-                  <div class="compose-field">
-                    <span class="compose-field-label">类型</span>
-                    <select id="new-dns-type" aria-label="自定义 DNS 类型">
-                      <option value="https">HTTPS</option>
-                      <option value="tls">TLS</option>
-                      <option value="quic">QUIC</option>
-                      <option value="h3">HTTP/3</option>
-                      <option value="udp">UDP</option>
-                      <option value="tcp">TCP</option>
-                      <option value="local">本地 DNS</option>
-                    </select>
-                  </div>
-                  <div class="compose-field">
-                    <span class="compose-field-label">分类</span>
-                    <select id="new-dns-category" aria-label="自定义 DNS 类型分类">
-                      <option value="domestic">国内 DNS</option>
-                      <option value="international">国际 DNS</option>
-                    </select>
-                  </div>
-                  <div class="compose-field custom-dns-server-field">
-                    <span class="compose-field-label">服务器</span>
-                    <input id="new-dns-server" type="text" placeholder="1.1.1.1 或域名" aria-label="DNS 服务器地址">
-                  </div>
-                  <div class="compose-field custom-dns-port-field">
-                    <span class="compose-field-label">端口</span>
-                    <input id="new-dns-port" type="number" min="1" max="65535" placeholder="可选" aria-label="DNS 服务器端口">
-                  </div>
-                  <div class="compose-field custom-dns-path-field">
-                    <span class="compose-field-label">DoH 路径</span>
-                    <input id="new-dns-path" type="text" placeholder="/dns-query" aria-label="DoH 路径">
-                  </div>
-                  <div class="compose-field compose-add-action">
-                    <span class="compose-field-label" aria-hidden="true">添加</span>
-                    <button id="add-dns" class="secondary" type="button">添加 DNS</button>
+                  <div class="custom-dns-row custom-dns-row-secondary">
+                    <div class="compose-field">
+                      <span class="compose-field-label">分类</span>
+                      <select id="new-dns-category" aria-label="自定义 DNS 类型分类">
+                        <option value="domestic">国内 DNS</option>
+                        <option value="international">国际 DNS</option>
+                      </select>
+                    </div>
+                    <div class="compose-field custom-dns-path-field">
+                      <span class="compose-field-label">DoH 路径</span>
+                      <input id="new-dns-path" type="text" placeholder="/dns-query" aria-label="DoH 路径">
+                    </div>
+                    <div class="compose-field compose-add-action">
+                      <span class="compose-field-label" aria-hidden="true">添加</span>
+                      <button id="add-dns" class="secondary" type="button">添加 DNS</button>
+                    </div>
                   </div>
                 </div>
               </div>
