@@ -2848,42 +2848,80 @@ header.topbar,
 .certificate-type-list {
   margin-top: 2px;
 }
+.certificate-type-list .filter-mode-tab {
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+}
 
-/* Theme option selected state — deeper fill */
+/* Keyword inputs match protocol button height (28px) */
+.filter-keyword-field #include,
+.filter-keyword-field #exclude,
+#include,
+#exclude {
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  box-sizing: border-box !important;
+}
+
+/* Theme option selected — soft contrast like home toggle tabs */
 .theme-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+  padding: 3px;
+  width: fit-content;
+  border-radius: 6px;
+  background: var(--ui-panel-soft);
 }
 .theme-options .secondary {
-  min-width: 76px;
+  min-width: 72px;
+  min-height: 28px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid transparent !important;
+  border-radius: 4px;
+  background: transparent !important;
+  color: var(--ui-muted) !important;
+  box-shadow: none !important;
+  font-size: 12px;
+  font-weight: 600;
   transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.theme-options .secondary:hover {
+  color: var(--ui-text) !important;
+  background: color-mix(in srgb, var(--ui-panel) 70%, transparent) !important;
 }
 .theme-options .secondary.is-active,
 .theme-options .secondary[aria-pressed="true"] {
-  color: #fff !important;
-  background: var(--ui-accent) !important;
-  border-color: var(--ui-accent) !important;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--ui-accent) 28%, transparent);
+  color: var(--ui-text) !important;
+  background: var(--ui-panel) !important;
+  border-color: var(--ui-line) !important;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%) !important;
   font-weight: 650;
 }
 html.dark .theme-options .secondary.is-active,
 html.dark .theme-options .secondary[aria-pressed="true"] {
-  color: #0b1018 !important;
-  background: var(--ui-accent) !important;
-  border-color: var(--ui-accent) !important;
+  color: var(--ui-text) !important;
+  background: var(--ui-panel) !important;
+  border-color: var(--ui-line) !important;
 }
 
-/* Custom DNS: widths fit option text; reflow layout */
+/* Custom DNS: tighter type/category, slightly wider port */
 .custom-dns-add-fields {
   display: grid !important;
   grid-template-columns:
-    minmax(110px, 1fr)
-    max-content
-    max-content
-    minmax(150px, 1.6fr)
-    max-content
-    minmax(110px, 1fr)
+    minmax(100px, 1.1fr)
+    88px
+    96px
+    minmax(140px, 1.6fr)
+    72px
+    minmax(100px, 1fr)
     max-content !important;
   gap: 8px !important;
   align-items: start !important;
@@ -2894,19 +2932,23 @@ html.dark .theme-options .secondary[aria-pressed="true"] {
   min-width: 0;
 }
 .custom-dns-add-fields #new-dns-type {
-  width: auto !important;
-  min-width: 6.5em !important;
-  padding-right: 22px !important;
+  width: 88px !important;
+  min-width: 88px !important;
+  max-width: 88px !important;
+  padding-left: 6px !important;
+  padding-right: 18px !important;
 }
 .custom-dns-add-fields #new-dns-category {
-  width: auto !important;
-  min-width: 7.5em !important;
-  padding-right: 22px !important;
+  width: 96px !important;
+  min-width: 96px !important;
+  max-width: 96px !important;
+  padding-left: 6px !important;
+  padding-right: 18px !important;
 }
 .custom-dns-add-fields #new-dns-port {
-  width: 4.5em !important;
-  min-width: 4.5em !important;
-  max-width: 5.5em !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
   text-align: left;
 }
 .custom-dns-add-fields #add-dns {
