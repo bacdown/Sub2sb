@@ -279,7 +279,11 @@ def parse_vmess(uri):
 
 def parse_vless(uri):
     """
-    解析 vless://UUID@host:port?...#name
+    解析 VLESS URI，支持两种常见格式：
+
+    1. 标准：vless://UUID@host:port?type=ws&security=tls&...#name
+    2. 部分客户端（如 Quantumult X / 旧版分享链接）：
+       vless://base64(none:UUID@host:port)?obfs=websocket&obfsParam=host&tls=1&peer=sni&remarks=name&...
     """
     parsed = urllib.parse.urlsplit(uri)
     params = urllib.parse.parse_qs(parsed.query)
@@ -287,18 +291,56 @@ def parse_vless(uri):
     def get_param(key, default=""):
         return params.get(key, [default])[0]
 
-    if not parsed.hostname:
-        raise ValueError("VLESS 缺少服务器地址")
+    uuid = None
+    server = parsed.hostname
+    port = parsed.port or 443
+    tag = node_name(parsed, "VLESS")
 
-    if not parsed.username:
+    # 标准格式：vless://UUID@host:port
+    if parsed.username and parsed.hostname:
+        uuid = urllib.parse.unquote(parsed.username)
+    else:
+        # 非标准：vless://base64(none:UUID@host:port)?...
+        # urlsplit 会把整段 base64 当成 netloc，hostname 全小写且无端口
+        encoded = (parsed.netloc or "").split("?")[0]
+        if not encoded and uri.startswith("vless://"):
+            encoded = uri[len("vless://"):].split("?", 1)[0].split("#", 1)[0]
+        decoded = b64decode_auto(encoded)
+        if decoded and "@" in decoded:
+            # none:uuid@host:port  或  uuid@host:port
+            userinfo, address = decoded.rsplit("@", 1)
+            if ":" in userinfo:
+                # none:uuid  → 取 uuid
+                _, uuid = userinfo.split(":", 1)
+            else:
+                uuid = userinfo
+            if ":" in address:
+                host_part, port_part = address.rsplit(":", 1)
+                server = host_part
+                try:
+                    port = int(port_part)
+                except ValueError:
+                    port = 443
+            else:
+                server = address
+                port = 443
+
+    if not server:
+        raise ValueError("VLESS 缺少服务器地址")
+    if not uuid:
         raise ValueError("VLESS 缺少 UUID")
+
+    # remarks 常作为节点名（非标准格式没有 fragment）
+    remarks = get_param("remarks") or get_param("remark")
+    if remarks:
+        tag = urllib.parse.unquote(remarks)
 
     outbound = {
         "type": "vless",
-        "tag": node_name(parsed, "VLESS"),
-        "server": parsed.hostname,
-        "server_port": parsed.port or 443,
-        "uuid": urllib.parse.unquote(parsed.username),
+        "tag": tag,
+        "server": server,
+        "server_port": port,
+        "uuid": uuid,
     }
 
     flow = get_param("flow")
@@ -308,24 +350,33 @@ def parse_vless(uri):
     packet_encoding = get_param("packetEncoding") or get_param(
         "packet-encoding"
     )
-
     if packet_encoding:
         outbound["packet_encoding"] = packet_encoding
 
-    network = get_param("type", "tcp").lower()
+    # 传输层：标准 type=ws/grpc/http，或非标准 obfs=websocket/http
+    network = (
+        get_param("type")
+        or get_param("obfs")
+        or "tcp"
+    ).lower()
+    if network in ("websocket", "ws"):
+        network = "ws"
+    elif network in ("http", "h2"):
+        network = "http"
 
     if network == "ws":
         transport = {
             "type": "ws",
             "path": get_param("path", "/"),
         }
-
-        host = get_param("host")
+        # host / obfsParam 作为 WebSocket Host
+        host = (
+            get_param("host")
+            or get_param("obfsParam")
+            or get_param("obfs-param")
+        )
         if host:
-            transport["headers"] = {
-                "Host": host
-            }
-
+            transport["headers"] = {"Host": host}
         outbound["transport"] = transport
 
     elif network == "grpc":
@@ -343,20 +394,32 @@ def parse_vless(uri):
             "path": get_param("path", "/"),
         }
 
+    # TLS：标准 security=tls/reality，或非标准 tls=1
     security = get_param("security").lower()
-
-    if security in ("tls", "reality"):
+    tls_flag = get_param("tls").lower() in ("1", "true", "yes", "tls")
+    if security in ("tls", "reality") or tls_flag:
+        server_name = (
+            get_param("sni")
+            or get_param("peer")
+            or server
+        )
         tls = {
             "enabled": True,
-            "server_name": get_param("sni") or parsed.hostname,
+            "server_name": server_name,
         }
 
-        fingerprint = get_param("fp")
+        fingerprint = _normalize_utls_fingerprint(
+            get_param("fp") or get_param("fingerprint")
+        )
         if fingerprint:
             tls["utls"] = {
                 "enabled": True,
                 "fingerprint": fingerprint,
             }
+
+        alpn = get_param("alpn")
+        if alpn:
+            tls["alpn"] = [a.strip() for a in alpn.split(",") if a.strip()]
 
         if security == "reality":
             tls["reality"] = {
@@ -366,6 +429,10 @@ def parse_vless(uri):
             }
 
         if get_param("allowInsecure").lower() in (
+            "1",
+            "true",
+            "yes",
+        ) or get_param("insecure").lower() in (
             "1",
             "true",
             "yes",
