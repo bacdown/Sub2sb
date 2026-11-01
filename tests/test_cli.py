@@ -25,7 +25,7 @@ class InteractiveCliTests(unittest.TestCase):
         self.assertIsNone(args.output)
 
     def test_menu_accepts_custom_template_and_output_path(self):
-        answers = ["./subscription.yaml", "", "4", "./custom.json", "./result.json"]
+        answers = ["./subscription.yaml", "", "5", "./custom.json", "./result.json"]
         with patch("builtins.input", side_effect=answers), patch("sys.stdout", new_callable=io.StringIO):
             args = prompt_interactive_args()
 

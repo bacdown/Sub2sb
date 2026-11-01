@@ -11,6 +11,7 @@ from pathlib import Path
 
 from subscription_utils import collect_subscription_urls, validate_public_url_syntax
 from sub2singbox import normalize_certificate_policies
+from template_registry import resolve_template_id
 
 MAX_PROFILE_BYTES = 2 * 1024 * 1024
 PROFILE_PREFIX = "Sub2sb:profile:"
@@ -75,12 +76,14 @@ def validate_profile(payload):
     )
 
     template = payload.get("template", "phone")
-    if not isinstance(template, str) or template.strip().lower() not in {
-        "phone", "config_phone", "config_phone.json",
-        "openwrt", "config_openwrt", "config_openwrt.json",
-        "momo", "momo.json",
-    }:
-        raise ValueError("template 必须是 phone、openwrt 或 momo")
+    if not isinstance(template, str):
+        raise ValueError("template 必须是 phone、linux、windows 或 momo")
+    try:
+        resolve_template_id(template)
+    except ValueError:
+        raise ValueError(
+            "template 必须是 phone、linux、windows 或 momo"
+        ) from None
     if payload.get("template_json") is not None:
         custom_template = payload["template_json"]
         if (

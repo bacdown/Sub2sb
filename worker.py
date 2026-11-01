@@ -5,7 +5,7 @@ Cloudflare Workers 入口：在线将订阅转换为 sing-box JSON。
 
 支持：
   GET  /             网页 UI（与 Vercel 相同结构）
-  GET  /sub?url=...&template=phone|openwrt|momo
+  GET  /sub?url=...&template=phone|linux|windows|momo
   GET  /api          API 说明
   POST /api          JSON 转换（content / url / urls / template_json）
   OPTIONS *          CORS
@@ -37,7 +37,7 @@ if str(ROOT) not in sys.path:
 
 from converter import convert_contents  # noqa: E402
 from sub2singbox import normalize_certificate_policies  # noqa: E402
-from template_options import get_template_options  # noqa: E402
+from template_options import apply_template_options, get_template_options  # noqa: E402
 from subscription_utils import (  # noqa: E402
     SubscriptionFetchError,
     SubscriptionTooLargeError,
@@ -45,17 +45,15 @@ from subscription_utils import (  # noqa: E402
     validate_public_url_syntax,
 )
 
+# 模板注册表是单一事实源（见 template_registry.py），含 openwrt 弃用别名
+from template_registry import (  # noqa: E402
+    alias_file_map as _alias_file_map,
+    resolve_template_file as _resolve_template_file,
+    short_aliases as _short_aliases,
+)
+
 DEFAULT_TEMPLATE = "config_phone.json"
-TEMPLATE_ALIASES = {
-    "phone": "config_phone.json",
-    "config_phone": "config_phone.json",
-    "config_phone.json": "config_phone.json",
-    "openwrt": "config_openwrt.json",
-    "config_openwrt": "config_openwrt.json",
-    "config_openwrt.json": "config_openwrt.json",
-    "momo": "momo.json",
-    "momo.json": "momo.json",
-}
+TEMPLATE_ALIASES = _alias_file_map()
 MAX_BODY_BYTES = 2 * 1024 * 1024
 MAX_SUBSCRIPTION_BYTES = 2 * 1024 * 1024
 MAX_REDIRECTS = 5
@@ -84,14 +82,7 @@ def _json_response(status: int, payload: dict | list, extra_headers: dict | None
 def _resolve_template_name(name: str | None) -> str:
     if not name or not str(name).strip():
         return DEFAULT_TEMPLATE
-    key = str(name).strip().lower()
-    resolved = TEMPLATE_ALIASES.get(key) or TEMPLATE_ALIASES.get(str(name).strip())
-    if resolved is None:
-        raise ValueError(
-            "不支持的模板名称；可选：phone / openwrt / momo "
-            "（或 config_phone.json / config_openwrt.json / momo.json）"
-        )
-    return resolved
+    return _resolve_template_file(str(name))
 
 
 async def _load_asset_text(env, name: str) -> str:
@@ -290,7 +281,7 @@ def _validate_profile(payload: dict) -> dict:
     try:
         _resolve_template_name(template_name)
     except ValueError as exc:
-        raise ValueError("template 必须是 phone、openwrt 或 momo") from exc
+        raise ValueError("template 必须是 phone、linux、windows 或 momo") from exc
     if payload.get("template_json") is not None:
         _load_custom_template(payload["template_json"])
         if payload.get("template_options") is not None:
@@ -504,6 +495,8 @@ class Default(WorkerEntrypoint):
             if "template_json" in profile
             else await _load_template(self.env, profile.get("template", DEFAULT_TEMPLATE))
         )
+        if "template_json" not in profile and profile.get("template_options") is not None:
+            template = apply_template_options(template, profile["template_options"])
         config, _node_count = _convert(contents, template, profile.get("node_filter", {}))
         return Response(
             json.dumps(config, ensure_ascii=False, indent=2),
@@ -534,11 +527,7 @@ class Default(WorkerEntrypoint):
                     "POST /api",
                 ],
                 "templates": sorted(set(TEMPLATE_ALIASES.values())),
-                "template_aliases": {
-                    "phone": "config_phone.json",
-                    "openwrt": "config_openwrt.json",
-                    "momo": "momo.json",
-                },
+                "template_aliases": _short_aliases(),
                 "default_template": DEFAULT_TEMPLATE,
                 "web_ui": "/",
                 "subscription": {
@@ -546,7 +535,7 @@ class Default(WorkerEntrypoint):
                     "query": {
                         "url": "原订阅链接（必填）",
                         "urls": "多个订阅，逗号分隔（可选）",
-                        "template": "phone | openwrt | momo（默认 phone）",
+                        "template": "phone | linux | windows | momo（默认 phone；openwrt 为 linux 的弃用别名）",
                         "api_key": "若配置了 SUB2SB_API_KEY 则必填",
                     },
                     "example": "/sub?url=https%3A%2F%2Fexample.com%2Fsubscribe&template=phone",
@@ -602,6 +591,15 @@ class Default(WorkerEntrypoint):
             template_obj = _load_custom_template(payload["template_json"])
         else:
             template_obj = await _load_template(self.env, template_name)
+
+        if payload.get("template_options") is not None:
+            if "template_json" in payload:
+                raise ValueError("自定义模板不能与 template_options 同时使用")
+            if not isinstance(payload["template_options"], dict):
+                raise ValueError("template_options 必须是对象")
+            template_obj = apply_template_options(
+                template_obj, payload["template_options"]
+            )
 
         contents: list[str] = []
         if "url" in payload or "urls" in payload:

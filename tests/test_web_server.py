@@ -330,7 +330,7 @@ class WebServerTests(unittest.TestCase):
         self.assertNotIn("延迟辅助", options["matching_targets"])
 
     def test_all_builtin_templates_use_udp_for_ip_dns(self):
-        for template_name in ("config_phone.json", "config_openwrt.json", "momo.json"):
+        for template_name in ("config_phone.json", "config_linux.json", "config_windows.json", "momo.json"):
             with self.subTest(template=template_name):
                 dns_servers = _load_named_template(template_name)["dns"]["servers"]
                 alibaba_dns = next(server for server in dns_servers if server["tag"] == "alibaba-cloud-dns")
@@ -417,7 +417,7 @@ class WebServerTests(unittest.TestCase):
         self.assertIn("默认代理", games_group["outbounds"])
 
     def test_empty_composition_options_preserve_each_builtin_template(self):
-        for template_name in ("config_phone.json", "config_openwrt.json", "momo.json"):
+        for template_name in ("config_phone.json", "config_linux.json", "config_windows.json", "momo.json"):
             with self.subTest(template=template_name):
                 original = convert_request({
                     "content": SAMPLE_SUBSCRIPTION,

@@ -248,7 +248,8 @@
               <div class="step-head"><div class="step-no"><svg class="icon"><use href="#i-template"/></svg></div><div><div class="step-title">转换方案</div><div class="step-desc">选择适合客户端或路由器的基础模板。</div></div></div>
               <div class="templates" id="templates">
                 <button class="template" data-template="config_phone.json"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-phone"/></svg></div><div class="template-title">手机客户端</div><div class="template-desc">SFA / SFI / Hiddify / NekoBox</div></button>
-                <button class="template active" data-template="config_openwrt.json"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-router"/></svg></div><div class="template-title">OpenWrt</div><div class="template-desc">sing-box / 旁路由 / 路由器</div></button>
+                <button class="template active" data-template="config_linux.json"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-router"/></svg></div><div class="template-title">Linux</div><div class="template-desc">sing-box / 桌面 / 服务器</div></button>
+                <button class="template" data-template="config_windows.json"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-box"/></svg></div><div class="template-title">Windows</div><div class="template-desc">sing-box / GUI / NekoBox</div></button>
                 <button class="template" data-template="momo.json"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-box"/></svg></div><div class="template-title">Momo</div><div class="template-desc">Momo 客户端配置</div></button>
                 <button class="template" data-template="compose"><span class="check">✓</span><div class="template-icon"><svg class="icon"><use href="#i-sliders"/></svg></div><div class="template-title">自定义</div><div class="template-desc">基于内置模板自由组合</div></button>
               </div>
@@ -324,7 +325,7 @@
                 <div id="adv-order" hidden><div class="field"><label>规则匹配顺序</label><div id="rule-order" class="option-list"></div></div></div>
                 <div id="adv-more" hidden>
                   <div class="mini-grid">
-                    <div class="field"><label>基础模板</label><select id="base-template"><option value="config_phone.json">手机客户端</option><option value="config_openwrt.json" selected>OpenWrt</option><option value="momo.json">Momo</option></select></div>
+                    <div class="field"><label>基础模板</label><select id="base-template"><option value="config_phone.json">手机客户端</option><option value="config_linux.json" selected>Linux</option><option value="config_windows.json">Windows</option><option value="momo.json">Momo</option></select></div>
                     <div class="field"><label>读取服务端配置选项</label><button id="reload-options" class="secondary button-icon"><svg class="icon sm"><use href="#i-refresh"/></svg>读取 / 刷新</button><div id="options-status" class="status"></div></div>
                   </div>
                 </div>
@@ -333,7 +334,7 @@
             </section>
 
             <section class="card bottom-bar">
-              <div class="ready"><span class="dot"></span><span id="ready-text">已选择 OpenWrt · 等待转换</span></div>
+              <div class="ready"><span class="dot"></span><span id="ready-text">已选择 Linux · 等待转换</span></div>
               <div class="bottom-actions"><button id="generate-link" class="secondary">生成远程链接</button><button id="convert" class="primary">开始转换&nbsp; <svg class="icon sm" style="color:currentColor"><use href="#i-arrow-right"/></svg></button></div>
             </section>
             <div id="status" class="status"></div>
@@ -343,7 +344,7 @@
             <section class="card preview-card">
               <div class="preview-title"><h2>配置预览</h2><button id="edit-preview" class="edit-link">编辑</button></div>
               <div class="summary">
-                <div class="summary-head"><div class="ok"><svg class="icon"><use href="#i-check"/></svg></div><div><strong id="preview-template">OpenWrt 模板</strong><span id="preview-source">等待添加订阅来源</span></div></div>
+                <div class="summary-head"><div class="ok"><svg class="icon"><use href="#i-check"/></svg></div><div><strong id="preview-template">Linux 模板</strong><span id="preview-source">等待添加订阅来源</span></div></div>
                 <div class="stats"><div class="stat"><b id="source-count">0</b><span>订阅源</span></div><div class="stat"><b id="node-count">—</b><span>节点</span></div><div class="stat"><b id="rule-count">—</b><span>规则集</span></div></div>
               </div>
               <div class="config-list">
@@ -382,7 +383,7 @@
       <section class="page" id="page-profiles">
         <div class="page-head"><div><div class="eyebrow">Profiles</div><h1>配置方案</h1><p>把模板、筛选和高级设置沉淀成可重复使用的工作流。</p></div></div>
         <section class="card manager-card"><div class="manager-head"><h2>推荐的方案结构</h2></div><div class="templates" style="margin-top:14px">
-          <div class="template active"><div class="template-icon"><svg class="icon"><use href="#i-router"/></svg></div><div class="template-title">OpenWrt 主力</div><div class="template-desc">OpenWrt · JP / SG / HK · DNS + 分流</div></div>
+          <div class="template active"><div class="template-icon"><svg class="icon"><use href="#i-router"/></svg></div><div class="template-title">Linux 主力</div><div class="template-desc">Linux · JP / SG / HK · DNS + 分流</div></div>
           <div class="template"><div class="template-icon"><svg class="icon"><use href="#i-phone"/></svg></div><div class="template-title">手机日常</div><div class="template-desc">Phone · 轻量规则 · 自动节点</div></div>
           <div class="template"><div class="template-icon"><svg class="icon"><use href="#i-box"/></svg></div><div class="template-title">Momo</div><div class="template-desc">Momo · 默认出站</div></div>
           <div class="template"><div class="template-icon"><svg class="icon"><use href="#i-plus"/></svg></div><div class="template-title">新建方案</div><div class="template-desc">从当前转换配置保存</div></div>
@@ -413,7 +414,7 @@
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
   const state = {
-    source: "url", template: "config_openwrt.json", baseTemplate: "config_openwrt.json",
+    source: "url", template: "config_linux.json", baseTemplate: "config_linux.json",
     customTemplate: null, options: null, files: [], customRules: [],
     certPolicies: {default: "unchanged", vless: "inherit", vmess: "inherit", trojan: "inherit", hysteria: "inherit", hysteria2: "inherit", tuic: "inherit", anytls: "inherit"},
     dnsDomestic: new Set(), dnsInternational: new Set(), groups: new Set(), rulesets: new Set(),
@@ -586,7 +587,7 @@
   }
 
   function updatePreview(){
-    const names={"config_phone.json":"手机客户端","config_openwrt.json":"OpenWrt","momo.json":"Momo",compose:"自定义",upload:"上传模板"};
+    const names={"config_phone.json":"手机客户端","config_linux.json":"Linux","config_windows.json":"Windows","momo.json":"Momo",compose:"自定义",upload:"上传模板"};
     const t=names[state.template]||state.template;
     $("#preview-template").textContent=t+" 模板";
     const urls=lines($("#urls").value);$("#source-count").textContent=state.source==="url"?urls.length:(state.source==="file"?state.files.length:(state.source==="paste"&&$("#content").value.trim()?1:0));
@@ -598,7 +599,7 @@
     const certOverrides=certTypes.filter(k=>$(`[data-cert-type="${k}"]`).value!=="inherit").length;
     const certText=certOverrides?`${certOverrides} 类单独设置`:(certDefault==="unchanged"?"不修改":(certDefault==="skip"?"不验证":"验证"));
     $("#cert-summary").textContent=certText;
-    $("#outbound-summary").textContent=t==="OpenWrt"?"6 个":"模板";
+    $("#outbound-summary").textContent=t==="Linux"?"6 个":"模板";
     $("#ready-text").textContent=`已选择 ${t} · ${$("#source-count").textContent==="0"?"等待添加来源":"准备就绪"}`;
   }
 
@@ -627,7 +628,7 @@
       if(state.template==="custom"||state.template==="compose")throw new Error("直链仅支持内置模板；自定义配置请保存为订阅短链接。");
       if(lines($("#include").value)||lines($("#exclude").value))throw new Error("远程直链不支持节点筛选，请保存为订阅组合。");
       const p=new URLSearchParams();urls.forEach(u=>p.append("url",u));
-      p.set("template",state.template==="config_phone.json"?"phone":state.template==="config_openwrt.json"?"openwrt":"momo");
+      p.set("template",{"config_phone.json":"phone","config_linux.json":"linux","config_openwrt.json":"linux","config_windows.json":"windows","momo.json":"momo"}[state.template]||"momo");
       const key=$("#api-key").value.trim()||$("#settings-api-key").value.trim();if(key)p.set("api_key",key);
       const link=`${location.origin}/sub?${p}`;showModal("远程订阅链接",`<div class="field"><label>sing-box 远程配置</label><input id="modal-link" value="${esc(link)}" readonly></div><button class="primary" style="margin-top:12px;width:100%" id="modal-copy">复制链接</button>`);
       $("#modal-copy").onclick=async()=>{await navigator.clipboard.writeText(link);$("#modal-copy").textContent="已复制 ✓"};

@@ -73,11 +73,21 @@ VALID_UTLS_FINGERPRINTS = frozenset({
 })
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-BUILTIN_TEMPLATES = (
-    ("1", "手机配置", "config_phone.json"),
-    ("2", "OpenWrt 配置", "config_openwrt.json"),
-    ("3", "Momo 配置", "momo.json"),
-)
+try:
+    # 模板注册表是单一事实源（template_registry.py）
+    from template_registry import TEMPLATES as _REGISTRY_TEMPLATES
+
+    BUILTIN_TEMPLATES = tuple(
+        (str(index + 1), info["label"], info["file"])
+        for index, info in enumerate(_REGISTRY_TEMPLATES.values())
+    )
+except ImportError:  # 单文件独立使用 sub2singbox.py 时的兜底
+    BUILTIN_TEMPLATES = (
+        ("1", "手机配置", "config_phone.json"),
+        ("2", "Linux 配置", "config_linux.json"),
+        ("3", "Windows 配置", "config_windows.json"),
+        ("4", "Momo 配置", "momo.json"),
+    )
 
 SUBSCRIPTION_INFO_KEYWORDS = (
     "剩余流量",
@@ -1665,6 +1675,71 @@ def merge_nodes_into_template(template, outbounds):
                 ])
             )
 
+    # 兜底：模板若不含预设的中文策略组名（例如通用自定义模板），上面的
+    # 定向填充不会命中任何组，节点将无处可挂。这里把尚未被任何策略组
+    # 引用的节点挂到模板自带的 urltest 组、route.final 指向的 selector
+    # 组与空 selector 组；最终仍有节点无处可挂时明确报错，避免生成
+    # “节点存在但选不到”的静默坏配置。
+    node_tag_set = set(node_tags)
+
+    def _referenced_node_tags():
+        referenced = set()
+        for item in groups.values():
+            if item.get("type") in ("selector", "urltest"):
+                members = item.get("outbounds")
+                if isinstance(members, list):
+                    referenced.update(
+                        tag for tag in members if tag in node_tag_set
+                    )
+        return referenced
+
+    has_groups = any(
+        item.get("type") in ("selector", "urltest") for item in groups.values()
+    )
+    unreferenced = [
+        tag for tag in node_tags if tag not in _referenced_node_tags()
+    ]
+    if unreferenced and has_groups:
+        mount_tags = []
+        for item in groups.values():
+            if item.get("type") == "urltest":
+                mount_tags.append(item.get("tag"))
+        route_config = config.get("route")
+        final_tag = (
+            route_config.get("final") if isinstance(route_config, dict) else None
+        )
+        if (
+            isinstance(final_tag, str)
+            and final_tag in groups
+            and groups[final_tag].get("type") == "selector"
+            and final_tag not in mount_tags
+        ):
+            mount_tags.append(final_tag)
+        for item in groups.values():
+            if (
+                item.get("type") == "selector"
+                and not item.get("outbounds")
+                and item.get("tag") not in mount_tags
+            ):
+                mount_tags.append(item.get("tag"))
+        for tag in mount_tags:
+            group = groups[tag]
+            members = group.get("outbounds", [])
+            if not isinstance(members, list):
+                raise ValueError(f"策略组 {tag} 的 outbounds 必须是数组")
+            group["outbounds"] = list(dict.fromkeys([*members, *unreferenced]))
+        unreferenced = [
+            tag for tag in node_tags if tag not in _referenced_node_tags()
+        ]
+    if unreferenced and has_groups:
+        raise ValueError(
+            "模板中的策略组（selector / urltest）无法挂载节点："
+            "请保留至少一个 urltest 组、空的 selector 组，"
+            "或让 route.final 指向一个 selector 组"
+        )
+    # 模板完全不含策略组时（如 {"outbounds": []} 的极简模板）沿用旧行为：
+    # 节点直接追加到 outbounds，不报错。
+
     config["outbounds"].extend(outbounds)
     return config
 
@@ -1866,19 +1941,21 @@ def prompt_interactive_args():
     print("\n选择 sing-box 模板：")
     for number, label, _ in BUILTIN_TEMPLATES:
         print(f"{number}. {label}")
-    print("4. 自定义模板文件")
+    custom_number = str(len(BUILTIN_TEMPLATES) + 1)
+    builtin_numbers = {number for number, _, _ in BUILTIN_TEMPLATES}
+    print(f"{custom_number}. 自定义模板文件")
     while True:
-        choice = input("请选择 [1-4]（默认 1）：").strip() or "1"
-        if choice in ("1", "2", "3"):
+        choice = input(f"请选择 [1-{custom_number}]（默认 1）：").strip() or "1"
+        if choice in builtin_numbers:
             config_path = str(PROJECT_ROOT / "templates" / BUILTIN_TEMPLATES[int(choice) - 1][2])
             break
-        if choice == "4":
+        if choice == custom_number:
             config_path = input("请输入 sing-box JSON 模板文件路径：").strip()
             if config_path:
                 break
             print("模板文件路径不能为空。")
             continue
-        print("无效选项，请输入 1 到 4。")
+        print(f"无效选项，请输入 1 到 {custom_number}。")
 
     output_path = input("输出文件路径（留空使用默认路径）：").strip() or None
     return argparse.Namespace(subscription=sources, output=output_path, config=config_path)
@@ -1956,12 +2033,12 @@ def main():
                     break
 
             template_name = os.path.basename(config_path).lower()
-            if template_name == "config_phone.json":
-                output_name = "sing-box-phone.json"
-            elif template_name == "config_openwrt.json":
-                output_name = "sing-box-openwrt.json"
-            else:
-                output_name = "sing-box.json"
+            output_name = {
+                "config_phone.json": "sing-box-phone.json",
+                "config_linux.json": "sing-box-linux.json",
+                "config_openwrt.json": "sing-box-linux.json",
+                "config_windows.json": "sing-box-windows.json",
+            }.get(template_name, "sing-box.json")
             output_path = os.path.join(output_directory, output_name)
 
         template = None
