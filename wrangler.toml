@@ -1,4 +1,5 @@
 # Cloudflare Workers（Python）部署配置
+# 已连接 GitHub 自动部署（Workers Builds）：push 到 main 自动构建发布
 # https://developers.cloudflare.com/workers/languages/python/
 #
 # 本地：uv sync --group dev && uv run pywrangler dev
